@@ -1,0 +1,249 @@
+<div class="session-settings-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <button mat-icon-button class="back-button" (click)="onBack()" [attr.aria-label]="'Go back'">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="title-section">
+        <h1 class="page-title">Session Management</h1>
+        <p class="page-description">Manage your active sessions and security</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p class="loading-text">Loading sessions...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error && !isLoading" class="error-message">
+    <mat-icon>error</mat-icon>
+    <div class="error-content">
+      <p class="error-text">{{ error }}</p>
+      <button mat-button (click)="loadSessions()" class="retry-button">
+        <mat-icon>refresh</mat-icon>
+        Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="successMessage" class="success-message">
+    <mat-icon>check_circle</mat-icon>
+    <p class="success-text">{{ successMessage }}</p>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!loading && !error" class="content-wrapper">
+    
+    <!-- Current Session Card -->
+    <mat-card class="current-session-card">
+      <mat-card-header>
+        <div mat-card-avatar class="session-avatar">
+          <mat-icon>devices</mat-icon>
+        </div>
+        <mat-card-title>Current Session</mat-card-title>
+        <mat-card-subtitle>This device and session</mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div class="session-details" *ngIf="currentSession">
+          <div class="detail-row">
+            <div class="detail-item">
+              <mat-icon class="detail-icon">computer</mat-icon>
+              <div class="detail-content">
+                <span class="detail-label">Device</span>
+                <span class="detail-value">{{ currentSession.deviceName || 'Unknown Device' }}</span>
+              </div>
+            </div>
+            
+            <div class="detail-item">
+              <mat-icon class="detail-icon">location_on</mat-icon>
+              <div class="detail-content">
+                <span class="detail-label">Location</span>
+                <span class="detail-value">{{ currentSession.location || 'Unknown Location' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="detail-row">
+            <div class="detail-item">
+              <mat-icon class="detail-icon">access_time</mat-icon>
+              <div class="detail-content">
+                <span class="detail-label">Last Activity</span>
+                <span class="detail-value">{{ currentSession.lastActivity | date:'medium' }}</span>
+              </div>
+            </div>
+            
+            <div class="detail-item">
+              <mat-icon class="detail-icon">language</mat-icon>
+              <div class="detail-content">
+                <span class="detail-label">IP Address</span>
+                <span class="detail-value">{{ currentSession.ipAddress || 'Unknown' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="detail-row">
+            <div class="detail-item">
+              <mat-icon class="detail-icon">web</mat-icon>
+              <div class="detail-content">
+                <span class="detail-label">Browser</span>
+                <span class="detail-value">{{ currentSession.userAgent || 'Unknown Browser' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Active Sessions Card -->
+    <mat-card class="sessions-card">
+      <mat-card-header>
+        <div mat-card-avatar class="sessions-avatar">
+          <mat-icon>security</mat-icon>
+        </div>
+        <mat-card-title>Active Sessions</mat-card-title>
+        <mat-card-subtitle>
+          {{ sessions.length }} active session{{ sessions.length !== 1 ? 's' : '' }}
+        </mat-card-subtitle>
+        
+        <div class="card-actions">
+          <button mat-icon-button (click)="loadSessions()" [attr.aria-label]="'Refresh sessions'">
+            <mat-icon>refresh</mat-icon>
+          </button>
+        </div>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div *ngIf="sessions.length === 0" class="no-sessions">
+          <mat-icon class="no-sessions-icon">devices_off</mat-icon>
+          <p class="no-sessions-text">No active sessions found</p>
+        </div>
+        
+        <div *ngIf="sessions.length > 0" class="sessions-list">
+          <div *ngFor="let session of sessions; trackBy: trackBySessionId; let i = index" 
+               class="session-item" 
+               [class.current]="session.isCurrent">
+            
+            <div class="session-info">
+              <div class="session-primary">                <div class="session-device">
+                  <mat-icon class="device-icon">{{ getDeviceIcon(session.deviceType || 'unknown') }}</mat-icon>
+                  <span class="device-name">{{ session.deviceName || 'Unknown Device' }}</span>
+                  <mat-chip *ngIf="session.isCurrent" class="current-chip" color="primary">
+                    Current
+                  </mat-chip>
+                </div>
+                
+                <div class="session-location">
+                  <mat-icon class="location-icon">location_on</mat-icon>
+                  <span class="location-text">{{ session.location || 'Unknown Location' }}</span>
+                </div>
+              </div>
+              
+              <div class="session-secondary">
+                <div class="session-details-grid">
+                  <div class="detail-group">
+                    <span class="detail-label">Last Activity</span>
+                    <span class="detail-value">{{ session.lastActivity | date:'short' }}</span>
+                  </div>
+                  
+                  <div class="detail-group">
+                    <span class="detail-label">IP Address</span>
+                    <span class="detail-value">{{ session.ipAddress || 'Unknown' }}</span>
+                  </div>
+                  
+                  <div class="detail-group">
+                    <span class="detail-label">Started</span>
+                    <span class="detail-value">{{ session.createdAt | date:'short' }}</span>
+                  </div>
+                  
+                  <div class="detail-group" *ngIf="session.userAgent">
+                    <span class="detail-label">Browser</span>
+                    <span class="detail-value">{{ getBrowserName(session.userAgent) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="session-actions">
+              <button *ngIf="!session.isCurrent" 
+                      mat-stroked-button 
+                      color="warn"
+                      (click)="onRevokeSession(session)"
+                      [disabled]="revokingSessionId === session.id"
+                      [attr.aria-label]="'Revoke session for ' + (session.deviceName || 'Unknown Device')">
+                <mat-spinner *ngIf="revokingSessionId === session.id" diameter="16"></mat-spinner>
+                <mat-icon *ngIf="revokingSessionId !== session.id">block</mat-icon>
+                {{ revokingSessionId === session.id ? 'Revoking...' : 'Revoke' }}
+              </button>
+              
+              <span *ngIf="session.isCurrent" class="current-session-label">
+                This Session
+              </span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Security Actions Card -->
+    <mat-card class="security-actions-card">
+      <mat-card-header>
+        <div mat-card-avatar class="security-avatar">
+          <mat-icon>shield</mat-icon>
+        </div>
+        <mat-card-title>Security Actions</mat-card-title>
+        <mat-card-subtitle>Manage all sessions and security settings</mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div class="security-actions">
+          <div class="action-item">
+            <div class="action-info">
+              <h4 class="action-title">Sign Out All Other Sessions</h4>
+              <p class="action-description">
+                This will sign you out of all other devices and sessions, but keep this current session active.
+              </p>
+            </div>
+            <button mat-raised-button 
+                    color="warn"
+                    (click)="onLogoutAllOtherSessions()"
+                    [disabled]="loggingOutAll"
+                    class="action-button">
+              <mat-spinner *ngIf="loggingOutAll" diameter="16"></mat-spinner>
+              <mat-icon *ngIf="!loggingOutAll">logout</mat-icon>
+              {{ loggingOutAll ? 'Signing Out...' : 'Sign Out Others' }}
+            </button>
+          </div>
+          
+          <div class="action-item critical">
+            <div class="action-info">
+              <h4 class="action-title">Sign Out All Sessions</h4>
+              <p class="action-description">
+                This will sign you out of all sessions including this one. You'll need to sign in again.
+              </p>
+            </div>
+            <button mat-raised-button 
+                    color="warn"
+                    (click)="onLogoutAllSessions()"
+                    [disabled]="loggingOutAll"
+                    class="action-button critical">
+              <mat-spinner *ngIf="loggingOutAll" diameter="16"></mat-spinner>
+              <mat-icon *ngIf="!loggingOutAll">power_settings_new</mat-icon>
+              {{ loggingOutAll ? 'Signing Out...' : 'Sign Out All' }}
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+<!-- Confirmation Dialog for Session Revocation -->
+<div *ngIf="false">
+  <!-- This is handled by Angular Material Dialog Service in the component -->
+</div>

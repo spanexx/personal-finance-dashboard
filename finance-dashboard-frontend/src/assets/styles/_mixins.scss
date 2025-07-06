@@ -1,0 +1,211 @@
+// Global SCSS mixins
+@import './variables';
+
+// Responsive breakpoints
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == xs {
+    @media (max-width: #{$breakpoint-sm - 1}) {
+      @content;
+    }
+  } @else if $breakpoint == sm {
+    @media (min-width: $breakpoint-sm) and (max-width: #{$breakpoint-md - 1}) {
+      @content;
+    }
+  } @else if $breakpoint == md {
+    @media (min-width: $breakpoint-md) and (max-width: #{$breakpoint-lg - 1}) {
+      @content;
+    }
+  } @else if $breakpoint == lg {
+    @media (min-width: $breakpoint-lg) and (max-width: #{$breakpoint-xl - 1}) {
+      @content;
+    }
+  } @else if $breakpoint == xl {
+    @media (min-width: $breakpoint-xl) and (max-width: #{$breakpoint-xxl - 1}) {
+      @content;
+    }
+  } @else if $breakpoint == xxl {
+    @media (min-width: $breakpoint-xxl) {
+      @content;
+    }
+  }
+}
+
+// Up breakpoints (from this breakpoint and up)
+@mixin respond-up($breakpoint) {
+  @if $breakpoint == sm {
+    @media (min-width: $breakpoint-sm) {
+      @content;
+    }
+  } @else if $breakpoint == md {
+    @media (min-width: $breakpoint-md) {
+      @content;
+    }
+  } @else if $breakpoint == lg {
+    @media (min-width: $breakpoint-lg) {
+      @content;
+    }
+  } @else if $breakpoint == xl {
+    @media (min-width: $breakpoint-xl) {
+      @content;
+    }
+  } @else if $breakpoint == xxl {
+    @media (min-width: $breakpoint-xxl) {
+      @content;
+    }
+  }
+}
+
+// Down breakpoints (from this breakpoint and down)
+@mixin respond-down($breakpoint) {
+  @if $breakpoint == xs {
+    @media (max-width: #{$breakpoint-sm - 1}) {
+      @content;
+    }
+  } @else if $breakpoint == sm {
+    @media (max-width: #{$breakpoint-md - 1}) {
+      @content;
+    }
+  } @else if $breakpoint == md {
+    @media (max-width: #{$breakpoint-lg - 1}) {
+      @content;
+    }
+  } @else if $breakpoint == lg {
+    @media (max-width: #{$breakpoint-xl - 1}) {
+      @content;
+    }
+  } @else if $breakpoint == xl {
+    @media (max-width: #{$breakpoint-xxl - 1}) {
+      @content;
+    }
+  }
+}
+
+// Mobile mixin for max-width: 600px
+@mixin mobile {
+  @media (max-width: 600px) {
+    @content;
+  }
+}
+
+// Flexbox mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// Typography mixins
+@mixin heading-1 {
+  font-size: $font-size-3xl;
+  font-weight: $font-weight-bold;
+  line-height: 1.2;
+}
+
+@mixin heading-2 {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  line-height: 1.25;
+}
+
+@mixin heading-3 {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  line-height: 1.3;
+}
+
+@mixin heading-4 {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  line-height: 1.4;
+}
+
+@mixin body-text {
+  font-size: $font-size-base;
+  font-weight: $font-weight-regular;
+  line-height: 1.5;
+}
+
+@mixin small-text {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-regular;
+  line-height: 1.5;
+}
+
+// Card styling
+@mixin card {
+  background-color: $surface-light;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-md;
+  overflow: hidden;
+}
+
+// Button mixins
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $border-radius-md;
+  font-weight: $font-weight-medium;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@mixin primary-button {
+  @include button-base;
+  background-color: $primary-500;
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background-color: $primary-600;
+  }
+  
+  &:active:not(:disabled) {
+    background-color: $primary-700;
+  }
+}
+
+@mixin secondary-button {
+  @include button-base;
+  background-color: $secondary-500;
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background-color: $secondary-600;
+  }
+  
+  &:active:not(:disabled) {
+    background-color: $secondary-700;
+  }
+}
+
+@mixin outline-button {
+  @include button-base;
+  background-color: transparent;
+  border: 1px solid $primary-500;
+  color: $primary-500;
+  
+  &:hover:not(:disabled) {
+    background-color: rgba($primary-500, 0.05);
+  }
+  
+  &:active:not(:disabled) {
+    background-color: rgba($primary-500, 0.1);
+  }
+}

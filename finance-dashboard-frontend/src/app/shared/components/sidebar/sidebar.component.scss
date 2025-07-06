@@ -1,0 +1,162 @@
+@import '../../../../assets/styles/variables';
+@import '../../../../assets/styles/mixins';
+
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: $surface-light;
+  color: $text-primary;
+  transition: all 0.3s ease;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  padding: $spacing-4;
+  height: 64px;
+  border-bottom: 1px solid $neutral-200;
+  
+  .logo-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: $primary-500;
+    color: white;
+    border-radius: $border-radius-md;
+    font-weight: $font-weight-bold;
+    font-size: $font-size-md;
+  }
+  
+  .logo-text {
+    margin-left: $spacing-3;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $primary-500;
+    white-space: nowrap;
+  }
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: $spacing-4 0;
+  overflow-y: auto;
+  
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .nav-item {
+    margin-bottom: $spacing-1;
+    
+    a {
+      display: flex;
+      align-items: center;
+      padding: $spacing-2 $spacing-4;
+      color: $neutral-700;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+      
+      &:hover {
+        background-color: $neutral-100;
+        color: $primary-500;
+      }
+      
+      &.active {
+        color: $primary-500;
+        background-color: rgba($primary-500, 0.05);
+        border-left-color: $primary-500;
+      }
+    }
+    
+    .material-icons {
+      margin-right: $spacing-3;
+    }
+    
+    .nav-text {
+      white-space: nowrap;
+    }
+  }
+}
+
+.sidebar-footer {
+  padding: $spacing-3 $spacing-4;
+  border-top: 1px solid $neutral-200;
+  display: flex;
+  flex-direction: column;
+  
+  .toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: $spacing-1;
+    color: $neutral-600;
+    cursor: pointer;
+    align-self: flex-end;
+    
+    &:hover {
+      color: $primary-500;
+    }
+  }
+  
+  .footer-links {
+    margin-top: $spacing-3;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+    
+    a {
+      display: flex;
+      align-items: center;
+      color: $neutral-600;
+      font-size: $font-size-sm;
+      text-decoration: none;
+      padding: $spacing-1 0;
+      
+      &:hover {
+        color: $primary-500;
+      }
+      
+      .material-icons {
+        font-size: $font-size-md;
+        margin-right: $spacing-2;
+      }
+    }
+  }
+}
+
+// Styling for collapsed sidebar
+.sidebar-container:not(.expanded) {
+  .sidebar-logo {
+    justify-content: center;
+    padding: $spacing-3;
+  }
+  
+  .sidebar-nav {
+    .nav-item a {
+      padding: $spacing-2;
+      justify-content: center;
+      
+      .material-icons {
+        margin-right: 0;
+      }
+    }
+  }
+  
+  .sidebar-footer {
+    align-items: center;
+    padding: $spacing-2;
+    
+    .toggle-btn {
+      align-self: center;
+    }
+  }
+}

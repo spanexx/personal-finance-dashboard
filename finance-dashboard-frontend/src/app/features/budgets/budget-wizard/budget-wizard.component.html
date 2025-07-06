@@ -1,0 +1,793 @@
+<div class="budget-wizard-container">
+  <mat-card class="wizard-card">
+    <mat-card-header>
+      <mat-card-title>Create New Budget</mat-card-title>
+      <mat-card-subtitle>Follow the steps to set up your budget with templates and smart recommendations</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <mat-stepper #stepper orientation="horizontal" [linear]="true" class="budget-stepper">
+        
+        <!-- Step 1: Basic Information -->
+        <mat-step [stepControl]="basicInfoForm" label="Basic Info">
+          <div class="step-content">
+            <h3>Budget Information</h3>
+            <form [formGroup]="basicInfoForm" class="step-form">
+              
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Budget Name</mat-label>
+                <input matInput formControlName="name" placeholder="e.g., Monthly Household Budget">
+                <mat-icon matSuffix>edit</mat-icon>
+                <mat-error *ngIf="basicInfoForm.get('name')?.hasError('required')">
+                  Budget name is required
+                </mat-error>
+                <mat-error *ngIf="basicInfoForm.get('name')?.hasError('minlength')">
+                  Name must be at least 2 characters
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Description (Optional)</mat-label>
+                <textarea matInput formControlName="description" rows="3" 
+                         placeholder="Describe your budget goals and priorities"></textarea>
+                <mat-icon matSuffix>description</mat-icon>
+              </mat-form-field>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Budget Period</mat-label>
+                  <mat-select formControlName="period">
+                    <mat-option value="weekly">Weekly</mat-option>
+                    <mat-option value="monthly">Monthly</mat-option>
+                    <mat-option value="quarterly">Quarterly</mat-option>
+                    <mat-option value="yearly">Yearly</mat-option>
+                  </mat-select>
+                  <mat-icon matSuffix>schedule</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Start Date</mat-label>
+                  <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+                  <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #startPicker></mat-datepicker>
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>End Date</mat-label>
+                <input matInput [matDatepicker]="endPicker" formControlName="endDate" readonly>
+                <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                <mat-datepicker #endPicker></mat-datepicker>
+                <mat-hint>Automatically calculated based on period</mat-hint>
+              </mat-form-field>
+            </form>
+          </div>
+
+          <div class="step-actions">
+            <button mat-raised-button color="primary" 
+                    [disabled]="!basicInfoForm.valid"
+                    (click)="nextStep()">
+              Next: Choose Template
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </mat-step>
+
+        <!-- Step 2: Template Selection -->
+        <mat-step [stepControl]="templateForm" label="Template">
+          <div class="step-content">
+            <h3>Choose a Budget Template</h3>
+            <p class="step-description">
+              Select a template to get started quickly, or skip to create a custom budget from scratch.
+            </p>
+
+            <form [formGroup]="templateForm">
+              <div class="template-grid">
+                
+                <!-- Predefined Templates -->
+                <div class="template-section">
+                  <h4>Popular Templates</h4>
+                  <div class="template-cards">
+                    <div *ngFor="let template of predefinedTemplates" 
+                         class="template-card"
+                         [class.selected]="selectedTemplate?.id === template.id"
+                         (click)="selectTemplate(template)">
+                      
+                      <div class="template-header">
+                        <h5>{{ template.name }}</h5>
+                        <mat-icon class="template-icon">account_balance_wallet</mat-icon>
+                      </div>
+                      
+                      <p class="template-description">{{ template.description }}</p>
+                      
+                      <div class="template-allocations">
+                        <div *ngFor="let allocation of template.allocations; let i = index"
+                             class="allocation-preview"
+                             [style.background-color]="allocation.color"
+                             [style.width.%]="allocation.percentage"
+                             [matTooltip]="allocation.categoryName + ': ' + allocation.percentage + '%'">
+                        </div>
+                      </div>
+                      
+                      <div class="template-breakdown">
+                        <div *ngFor="let allocation of template.allocations.slice(0, 3)" 
+                             class="breakdown-item">
+                          <span class="category-name">{{ allocation.categoryName }}</span>
+                          <span class="percentage">{{ allocation.percentage }}%</span>
+                        </div>
+                        <div *ngIf="template.allocations.length > 3" class="more-categories">
+                          +{{ template.allocations.length - 3 }} more categories
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- User Templates -->
+                <div class="template-section" *ngIf="budgetTemplates.length > predefinedTemplates.length">
+                  <h4>Your Templates</h4>
+                  <div class="template-cards">
+                    <div *ngFor="let template of budgetTemplates | slice:predefinedTemplates.length" 
+                         class="template-card user-template"
+                         [class.selected]="selectedTemplate?.id === template.id"
+                         (click)="selectTemplate(template)">
+                      
+                      <div class="template-header">
+                        <h5>{{ template.name }}</h5>
+                        <div class="template-meta">
+                          <span class="usage-count" *ngIf="template.usageCount">
+                            Used {{ template.usageCount }} times
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <p class="template-description">{{ template.description }}</p>
+                      
+                      <div class="template-allocations">
+                        <div *ngFor="let allocation of template.allocations"
+                             class="allocation-preview"
+                             [style.background-color]="allocation.color"
+                             [style.width.%]="allocation.percentage">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Custom Template Option -->
+                <div class="template-section">
+                  <div class="template-card custom-template"
+                       [class.selected]="!selectedTemplate"
+                       (click)="selectedTemplate = null; templateForm.patchValue({useTemplate: false, selectedTemplateId: ''})">
+                    
+                    <div class="template-header">
+                      <h5>Start from Scratch</h5>
+                      <mat-icon class="template-icon">build</mat-icon>
+                    </div>
+                    
+                    <p class="template-description">
+                      Create a completely custom budget with your own categories and allocations.
+                    </p>
+                    
+                    <div class="custom-template-benefits">
+                      <div class="benefit-item">
+                        <mat-icon>check</mat-icon>
+                        <span>Full customization</span>
+                      </div>
+                      <div class="benefit-item">
+                        <mat-icon>check</mat-icon>
+                        <span>Your own categories</span>
+                      </div>
+                      <div class="benefit-item">
+                        <mat-icon>check</mat-icon>
+                        <span>Flexible allocations</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button (click)="previousStep()">
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+            <button mat-raised-button color="primary" (click)="nextStep()">
+              Next: Income & Sources
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </mat-step>
+
+        <!-- Step 3: Income Estimation -->
+        <mat-step [stepControl]="incomeForm" label="Income">
+          <div class="step-content">
+            <h3>Income Sources & Estimation</h3>
+            <p class="step-description">
+              Add your income sources to calculate your total monthly income for budget allocation.
+            </p>
+
+            <form [formGroup]="incomeForm" class="step-form">
+              
+              <!-- Income Sources -->
+              <div class="income-sources-section">
+                <h4>Income Sources</h4>
+                  <div formArrayName="incomeSources" class="income-sources-list">
+                  <div *ngFor="let source of getIncomeSourcesControls(); let i = index"
+                       [formGroupName]="i" class="income-source-item">
+                    
+                    <mat-card class="source-card">
+                      <mat-card-content>
+                        <div class="source-form-row">
+                          <mat-form-field appearance="outline" class="source-name">
+                            <mat-label>Income Source Name</mat-label>
+                            <input matInput formControlName="name" placeholder="e.g., Salary, Freelance">
+                            <mat-icon matSuffix>work</mat-icon>
+                          </mat-form-field>
+
+                          <mat-form-field appearance="outline" class="source-amount">
+                            <mat-label>Amount</mat-label>
+                            <input matInput type="number" formControlName="amount" 
+                                   (change)="calculateTotalIncome()" placeholder="0">
+                            <span matPrefix>$</span>
+                          </mat-form-field>
+
+                          <mat-form-field appearance="outline" class="source-frequency">
+                            <mat-label>Frequency</mat-label>
+                            <mat-select formControlName="frequency" (selectionChange)="calculateTotalIncome()">
+                              <mat-option value="weekly">Weekly</mat-option>
+                              <mat-option value="biweekly">Bi-weekly</mat-option>
+                              <mat-option value="monthly">Monthly</mat-option>
+                              <mat-option value="quarterly">Quarterly</mat-option>
+                              <mat-option value="yearly">Yearly</mat-option>
+                            </mat-select>
+                          </mat-form-field>
+
+                          <div class="source-actions">
+                            <mat-slide-toggle formControlName="isActive" 
+                                            (change)="calculateTotalIncome()"
+                                            [checked]="source.get('isActive')?.value">
+                              Active
+                            </mat-slide-toggle>
+                              <button mat-icon-button color="warn" 
+                                    (click)="removeIncomeSource(i)"
+                                    *ngIf="getIncomeSourcesLength() > 1"
+                                    matTooltip="Remove income source">
+                              <mat-icon>delete</mat-icon>
+                            </button>
+                          </div>
+                        </div>
+                      </mat-card-content>
+                    </mat-card>
+                  </div>
+                </div>
+
+                <button mat-stroked-button (click)="addIncomeSource()" class="add-source-btn">
+                  <mat-icon>add</mat-icon>
+                  Add Income Source
+                </button>
+              </div>
+
+              <!-- Total Income Display -->
+              <mat-card class="total-income-card">
+                <mat-card-content>
+                  <div class="total-income-display">
+                    <div class="income-label">Total Monthly Income</div>
+                    <div class="income-amount">{{ formatCurrency(incomeForm.get('totalIncome')?.value) }}</div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Emergency Fund & Savings -->
+              <div class="savings-section">
+                <h4>Emergency Fund & Savings</h4>
+                
+                <mat-card class="savings-card">
+                  <mat-card-content>
+                    <div class="savings-option">
+                      <mat-checkbox formControlName="includeEmergencyFund">
+                        Include Emergency Fund
+                      </mat-checkbox>
+                      
+                      <div *ngIf="incomeForm.get('includeEmergencyFund')?.value" class="savings-slider">
+                        <mat-form-field appearance="outline" class="percentage-field">
+                          <mat-label>Emergency Fund %</mat-label>
+                          <input matInput type="number" formControlName="emergencyFundPercentage"
+                                 min="0" max="50" (change)="updateCategoryAllocations()">
+                          <span matSuffix>%</span>
+                        </mat-form-field>
+                        
+                        <div class="amount-display">
+                          {{ formatCurrency((incomeForm.get('totalIncome')?.value || 0) * 
+                             (incomeForm.get('emergencyFundPercentage')?.value || 0) / 100) }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="savings-option">
+                      <mat-checkbox formControlName="includeSavings">
+                        Include General Savings
+                      </mat-checkbox>
+                      
+                      <div *ngIf="incomeForm.get('includeSavings')?.value" class="savings-slider">
+                        <mat-form-field appearance="outline" class="percentage-field">
+                          <mat-label>Savings %</mat-label>
+                          <input matInput type="number" formControlName="savingsPercentage"
+                                 min="0" max="100" (change)="updateCategoryAllocations()">
+                          <span matSuffix>%</span>
+                        </mat-form-field>
+                        
+                        <div class="amount-display">
+                          {{ formatCurrency((incomeForm.get('totalIncome')?.value || 0) * 
+                             (incomeForm.get('savingsPercentage')?.value || 0) / 100) }}
+                        </div>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+            </form>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button (click)="previousStep()">
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+            <button mat-raised-button color="primary" 
+                    [disabled]="!incomeForm.valid || (incomeForm.get('totalIncome')?.value || 0) <= 0"
+                    (click)="nextStep()">
+              Next: Category Allocation
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </mat-step>
+
+        <!-- Step 4: Category Allocation -->
+        <mat-step [stepControl]="categoryForm" label="Categories">
+          <div class="step-content">
+            <h3>Category Allocation</h3>
+            <p class="step-description">
+              Allocate your income across different categories. Drag to reorder and adjust amounts or percentages.
+            </p>
+
+            <form [formGroup]="categoryForm" class="step-form">
+              
+              <!-- Allocation Type Toggle -->
+              <div class="allocation-controls">
+                <mat-card class="controls-card">
+                  <mat-card-content>
+                    <div class="control-row">
+                      <mat-form-field appearance="outline">
+                        <mat-label>Allocation Method</mat-label>
+                        <mat-select formControlName="allocationType" (selectionChange)="updateCategoryAllocations()">
+                          <mat-option value="percentage">Percentage</mat-option>
+                          <mat-option value="fixed">Fixed Amount</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+
+                      <button mat-stroked-button (click)="autoBalanceCategories()" 
+                              matTooltip="Distribute remaining income equally across categories">
+                        <mat-icon>balance</mat-icon>
+                        Auto Balance
+                      </button>
+
+                      <button mat-stroked-button (click)="addCategoryAllocation()">
+                        <mat-icon>add</mat-icon>
+                        Add Category
+                      </button>
+                    </div>
+
+                    <!-- Allocation Summary -->
+                    <div class="allocation-summary">
+                      <div class="summary-item">
+                        <span class="label">Total Allocated:</span>
+                        <span class="value" [class.over-budget]="getTotalAllocatedPercentage() > 100">
+                          {{ formatPercentage(getTotalAllocatedPercentage()) }}
+                        </span>
+                      </div>
+                      <div class="summary-item">
+                        <span class="label">Remaining:</span>
+                        <span class="value" [class.negative]="getRemainingPercentage() < 0">
+                          {{ formatPercentage(getRemainingPercentage()) }}
+                        </span>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+
+              <!-- Category Allocations -->
+              <div formArrayName="categories" class="categories-container">
+                <div cdkDropList (cdkDropListDropped)="onCategoryDrop($event)" class="categories-list">
+                    <div *ngFor="let category of getCategoriesControls(); let i = index"
+                       [formGroupName]="i" 
+                       cdkDrag
+                       class="category-allocation-item">
+                    
+                    <mat-card class="category-card">
+                      <mat-card-content>
+                        <div class="category-header">
+                          <div class="category-info">
+                            <mat-icon [style.color]="category.get('categoryColor')?.value" class="category-icon">
+                              {{ category.get('categoryIcon')?.value }}
+                            </mat-icon>
+                            <span class="category-name">{{ category.get('categoryName')?.value }}</span>
+                          </div>
+                          
+                          <button mat-icon-button color="warn" 
+                                  (click)="removeCategoryAllocation(i)"
+                                  matTooltip="Remove category">
+                            <mat-icon>close</mat-icon>
+                          </button>
+                        </div>
+
+                        <div class="allocation-inputs">
+                          <mat-form-field appearance="outline" class="percentage-input">
+                            <mat-label>Percentage</mat-label>
+                            <input matInput type="number" formControlName="percentage"
+                                   min="0" max="100" step="0.1"
+                                   (change)="updateCategoryAllocations()">
+                            <span matSuffix>%</span>
+                          </mat-form-field>
+
+                          <mat-form-field appearance="outline" class="amount-input">
+                            <mat-label>Amount</mat-label>
+                            <input matInput type="number" formControlName="fixedAmount"
+                                   min="0" step="0.01"
+                                   (change)="updateCategoryAllocations()">
+                            <span matPrefix>$</span>
+                          </mat-form-field>
+                        </div>
+
+                        <!-- Visual Progress Bar -->
+                        <div class="allocation-progress">
+                          <mat-progress-bar mode="determinate" 
+                                          [value]="category.get('percentage')?.value || 0"
+                                          [color]="(category.get('percentage')?.value || 0) > 100 ? 'warn' : 'primary'">
+                          </mat-progress-bar>
+                          <span class="progress-label">
+                            {{ formatCurrency(category.get('fixedAmount')?.value || 0) }}
+                          </span>
+                        </div>
+
+                        <!-- Notes -->
+                        <mat-form-field appearance="outline" class="notes-field" *ngIf="category.get('notes')">
+                          <mat-label>Notes</mat-label>
+                          <textarea matInput formControlName="notes" rows="2"></textarea>
+                        </mat-form-field>
+                      </mat-card-content>
+                    </mat-card>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Validation Messages -->
+              <div class="validation-section" *ngIf="validationResults.errors.length > 0 || validationResults.warnings.length > 0">
+                <mat-card class="validation-card">
+                  <mat-card-content>
+                    <div *ngFor="let error of validationResults.errors" class="validation-message error">
+                      <mat-icon>error</mat-icon>
+                      <span>{{ error }}</span>
+                    </div>
+                    
+                    <div *ngFor="let warning of validationResults.warnings" class="validation-message warning">
+                      <mat-icon>warning</mat-icon>
+                      <span>{{ warning }}</span>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+            </form>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button (click)="previousStep()">
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+            <button mat-raised-button color="primary" 
+                    [disabled]="!categoryForm.valid || !validationResults.isValid"
+                    (click)="nextStep()">
+              Next: Settings & Alerts
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </mat-step>
+
+        <!-- Step 5: Settings & Alerts -->
+        <mat-step [stepControl]="settingsForm" label="Settings">
+          <div class="step-content">
+            <h3>Budget Settings & Alerts</h3>
+            <p class="step-description">
+              Configure alert thresholds, notifications, and rollover settings for your budget.
+            </p>
+
+            <form [formGroup]="settingsForm" class="step-form">
+              
+              <!-- Alert Settings -->
+              <mat-card class="settings-section">
+                <mat-card-header>
+                  <mat-card-title>Budget Alerts</mat-card-title>
+                  <mat-card-subtitle>Get notified when you're approaching your budget limits</mat-card-subtitle>
+                </mat-card-header>
+                
+                <mat-card-content>
+                  <div class="settings-row">
+                    <mat-slide-toggle formControlName="alertsEnabled">
+                      Enable Budget Alerts
+                    </mat-slide-toggle>
+                  </div>
+
+                  <div *ngIf="settingsForm.get('alertsEnabled')?.value" class="alert-thresholds">
+                    <mat-form-field appearance="outline" class="threshold-field">
+                      <mat-label>Warning Threshold</mat-label>
+                      <input matInput type="number" formControlName="warningThreshold"
+                             min="50" max="100">
+                      <span matSuffix>%</span>
+                      <mat-hint>Get warned when you reach this percentage of your budget</mat-hint>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="threshold-field">
+                      <mat-label>Critical Threshold</mat-label>
+                      <input matInput type="number" formControlName="criticalThreshold"
+                             min="80" max="100">
+                      <span matSuffix>%</span>
+                      <mat-hint>Get urgent alerts when you reach this percentage</mat-hint>
+                    </mat-form-field>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Notification Settings -->
+              <mat-card class="settings-section">
+                <mat-card-header>
+                  <mat-card-title>Notifications</mat-card-title>
+                  <mat-card-subtitle>Choose how you want to receive budget notifications</mat-card-subtitle>
+                </mat-card-header>
+                
+                <mat-card-content>
+                  <div class="notification-options">
+                    <div class="notification-option">
+                      <mat-checkbox formControlName="emailNotifications">
+                        Email Notifications
+                      </mat-checkbox>
+                      <mat-icon matTooltip="Receive budget alerts via email">info</mat-icon>
+                    </div>
+
+                    <div class="notification-option">
+                      <mat-checkbox formControlName="pushNotifications">
+                        Push Notifications
+                      </mat-checkbox>
+                      <mat-icon matTooltip="Receive budget alerts as push notifications">info</mat-icon>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Rollover Settings -->
+              <mat-card class="settings-section">
+                <mat-card-header>
+                  <mat-card-title>Budget Rollover</mat-card-title>
+                  <mat-card-subtitle>Carry over unspent amounts to the next budget period</mat-card-subtitle>
+                </mat-card-header>
+                
+                <mat-card-content>
+                  <div class="settings-row">
+                    <mat-slide-toggle formControlName="rolloverEnabled">
+                      Enable Budget Rollover
+                    </mat-slide-toggle>
+                  </div>
+
+                  <div *ngIf="settingsForm.get('rolloverEnabled')?.value" class="rollover-settings">
+                    <mat-form-field appearance="outline" class="rollover-field">
+                      <mat-label>Max Rollover Percentage</mat-label>
+                      <input matInput type="number" formControlName="maxRolloverPercentage"
+                             min="0" max="100">
+                      <span matSuffix>%</span>
+                      <mat-hint>Maximum percentage of unspent amount to carry over</mat-hint>
+                    </mat-form-field>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Advanced Settings -->
+              <mat-card class="settings-section">
+                <mat-card-header>
+                  <mat-card-title>Advanced Settings</mat-card-title>
+                </mat-card-header>
+                
+                <mat-card-content>
+                  <div class="settings-row">
+                    <mat-slide-toggle formControlName="autoAdjustAllocations">
+                      Auto-adjust Allocations
+                    </mat-slide-toggle>
+                    <span class="setting-description">
+                      Automatically adjust category allocations when total budget changes
+                    </span>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </form>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button (click)="previousStep()">
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+            <button mat-raised-button color="primary" 
+                    [disabled]="!settingsForm.valid"
+                    (click)="nextStep()">
+              Next: Review & Create
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </mat-step>
+
+        <!-- Step 6: Review & Create -->
+        <mat-step [stepControl]="reviewForm" label="Review">
+          <div class="step-content">
+            <h3>Review Your Budget</h3>
+            <p class="step-description">
+              Review all your budget details before creating. You can always edit it later.
+            </p>
+
+            <form [formGroup]="reviewForm" class="step-form">
+              
+              <!-- Budget Summary -->
+              <mat-card class="review-section">
+                <mat-card-header>
+                  <mat-card-title>Budget Overview</mat-card-title>
+                </mat-card-header>
+                
+                <mat-card-content>
+                  <div class="budget-overview">
+                    <div class="overview-item">
+                      <span class="label">Name:</span>
+                      <span class="value">{{ basicInfoForm.get('name')?.value }}</span>
+                    </div>
+                    <div class="overview-item">
+                      <span class="label">Period:</span>
+                      <span class="value">{{ basicInfoForm.get('period')?.value | titlecase }}</span>
+                    </div>
+                    <div class="overview-item">
+                      <span class="label">Total Income:</span>
+                      <span class="value">{{ formatCurrency(incomeForm.get('totalIncome')?.value) }}</span>
+                    </div>
+                    <div class="overview-item">
+                      <span class="label">Date Range:</span>
+                      <span class="value">
+                        {{ basicInfoForm.get('startDate')?.value | date:'shortDate' }} - 
+                        {{ basicInfoForm.get('endDate')?.value | date:'shortDate' }}
+                      </span>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Category Allocations Review -->
+              <mat-card class="review-section">
+                <mat-card-header>
+                  <mat-card-title>Category Allocations</mat-card-title>
+                </mat-card-header>
+                
+                <mat-card-content>
+                  <div class="allocation-review">                    <div *ngFor="let category of getCategoriesControls()" 
+                         class="allocation-review-item">
+                      <div class="category-info">
+                        <mat-icon [style.color]="category.get('categoryColor')?.value">
+                          {{ category.get('categoryIcon')?.value }}
+                        </mat-icon>
+                        <span class="category-name">{{ category.get('categoryName')?.value }}</span>
+                      </div>
+                      <div class="allocation-amount">
+                        <span class="percentage">{{ formatPercentage(category.get('percentage')?.value) }}</span>
+                        <span class="amount">{{ formatCurrency(category.get('fixedAmount')?.value) }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Emergency Fund and Savings -->
+                    <div *ngIf="incomeForm.get('includeEmergencyFund')?.value" class="allocation-review-item special">
+                      <div class="category-info">
+                        <mat-icon color="warn">security</mat-icon>
+                        <span class="category-name">Emergency Fund</span>
+                      </div>
+                      <div class="allocation-amount">
+                        <span class="percentage">{{ formatPercentage(incomeForm.get('emergencyFundPercentage')?.value) }}</span>
+                        <span class="amount">
+                          {{ formatCurrency((incomeForm.get('totalIncome')?.value || 0) * (incomeForm.get('emergencyFundPercentage')?.value || 0) / 100) }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div *ngIf="incomeForm.get('includeSavings')?.value" class="allocation-review-item special">
+                      <div class="category-info">
+                        <mat-icon color="primary">savings</mat-icon>
+                        <span class="category-name">General Savings</span>
+                      </div>
+                      <div class="allocation-amount">
+                        <span class="percentage">{{ formatPercentage(incomeForm.get('savingsPercentage')?.value) }}</span>
+                        <span class="amount">
+                          {{ formatCurrency((incomeForm.get('totalIncome')?.value || 0) * (incomeForm.get('savingsPercentage')?.value || 0) / 100) }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="allocation-total">
+                    <div class="total-item">
+                      <span class="label">Total Allocated:</span>
+                      <span class="value">{{ formatPercentage(getTotalAllocatedPercentage()) }}</span>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Recommendations -->
+              <mat-card class="review-section" *ngIf="validationResults.recommendations.length > 0">
+                <mat-card-header>
+                  <mat-card-title>Recommendations</mat-card-title>
+                </mat-card-header>
+                
+                <mat-card-content>
+                  <div *ngFor="let recommendation of validationResults.recommendations" 
+                       class="recommendation-item">
+                    <mat-icon>lightbulb</mat-icon>
+                    <span>{{ recommendation }}</span>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Save as Template -->
+              <mat-card class="review-section">
+                <mat-card-header>
+                  <mat-card-title>Save as Template</mat-card-title>
+                  <mat-card-subtitle>Reuse this budget configuration in the future</mat-card-subtitle>
+                </mat-card-header>
+                
+                <mat-card-content>
+                  <div class="template-save-option">
+                    <mat-checkbox formControlName="saveAsTemplate">
+                      Save this budget as a template
+                    </mat-checkbox>
+                  </div>
+
+                  <mat-form-field appearance="outline" class="full-width"
+                                  *ngIf="reviewForm.get('saveAsTemplate')?.value">
+                    <mat-label>Template Name</mat-label>
+                    <input matInput formControlName="templateName" 
+                           [placeholder]="basicInfoForm.get('name')?.value + ' Template'">
+                  </mat-form-field>
+                </mat-card-content>
+              </mat-card>
+            </form>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button (click)="previousStep()">
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+            <button mat-raised-button color="primary" 
+                    [disabled]="loading || !validationResults.isValid"
+                    (click)="createBudget()">
+              <mat-icon *ngIf="!loading">check</mat-icon>
+              <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+              {{ loading ? 'Creating Budget...' : 'Create Budget' }}
+            </button>
+          </div>
+        </mat-step>
+
+      </mat-stepper>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="loading">
+    <mat-spinner></mat-spinner>
+    <p>Setting up your budget...</p>
+  </div>
+</div>

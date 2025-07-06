@@ -1,0 +1,95 @@
+<div class="settings-overview-container" [appFocusTrap]="true">
+  <!-- Skip Navigation Link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <!-- Page Header -->
+  <div class="settings-header">
+    <h1 #pageTitle class="page-title" tabindex="-1" id="settings-title">
+      Settings
+    </h1>
+    <p class="page-subtitle">
+      Manage your account settings and preferences
+    </p>
+  </div>
+
+  <!-- Main Content -->
+  <main id="main-content" role="main" aria-labelledby="settings-title">
+    <div class="settings-grid">
+      <mat-card 
+        *ngFor="let section of settingsSections; trackBy: trackBySection"
+        class="settings-card"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="section.ariaLabel"
+        [attr.aria-describedby]="'desc-' + section.id"
+        (click)="navigateToSection(section)"
+        (keydown)="onKeyDown($event, section)">
+        
+        <mat-card-header>
+          <div class="section-icon" [attr.aria-hidden]="true">
+            <mat-icon>{{ section.icon }}</mat-icon>
+          </div>
+          <mat-card-title>{{ section.title }}</mat-card-title>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <p [id]="'desc-' + section.id" class="section-description">
+            {{ section.description }}
+          </p>
+        </mat-card-content>
+        
+        <mat-card-actions align="end">
+          <button mat-button 
+                  color="primary"
+                  [attr.aria-label]="'Configure ' + section.title.toLowerCase()">
+            <mat-icon>arrow_forward</mat-icon>
+            Configure
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+    <!-- Quick Actions Section -->
+    <section class="quick-actions" aria-labelledby="quick-actions-title">
+      <h2 id="quick-actions-title" class="section-title">Quick Actions</h2>
+      <div class="quick-actions-grid">
+        <button mat-stroked-button 
+                class="quick-action-btn"
+                aria-label="Export all settings as backup file">
+          <mat-icon>download</mat-icon>
+          Export Settings
+        </button>
+        
+        <button mat-stroked-button 
+                class="quick-action-btn"
+                aria-label="Import settings from backup file">
+          <mat-icon>upload</mat-icon>
+          Import Settings
+        </button>
+        
+        <button mat-stroked-button 
+                class="quick-action-btn"
+                aria-label="Reset all settings to default values">
+          <mat-icon>restore</mat-icon>
+          Reset to Defaults
+        </button>
+      </div>
+    </section>
+
+    <!-- Accessibility Information -->
+    <section class="accessibility-info" aria-labelledby="accessibility-title">
+      <h2 id="accessibility-title" class="section-title">Accessibility Features</h2>
+      <mat-card>
+        <mat-card-content>
+          <ul class="accessibility-features">
+            <li>Keyboard navigation support throughout all settings</li>
+            <li>Screen reader announcements for setting changes</li>
+            <li>High contrast themes available</li>
+            <li>Font size adjustments in preferences</li>
+            <li>Focus indicators and skip navigation links</li>
+          </ul>
+        </mat-card-content>
+      </mat-card>
+    </section>
+  </main>
+</div>

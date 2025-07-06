@@ -1,0 +1,120 @@
+<div 
+  class="sidebar-container" 
+  [class.expanded]="isExpanded"
+  [appFocusTrap]="isExpanded && isMobile"
+  #sidebarContent
+  role="navigation"
+  aria-label="Main navigation"
+  [attr.aria-expanded]="isExpanded">
+  
+  <!-- Skip link for keyboard navigation -->
+  <a href="#main-content" class="skip-link" *ngIf="isExpanded">Skip to main content</a>
+  
+  <!-- Logo for collapsed sidebar -->
+  <div class="sidebar-logo">
+    <span class="logo-icon" aria-hidden="true">FD</span>
+    <span class="logo-text" *ngIf="isExpanded">Finance Dashboard</span>
+  </div>
+
+  <!-- Navigation menu -->
+  <nav class="sidebar-nav" id="main-navigation">
+    <ul role="menubar" [attr.aria-label]="'Main navigation menu ' + (isExpanded ? 'expanded' : 'collapsed')">
+      <li class="nav-item" role="none">
+        <a 
+          routerLink="/dashboard" 
+          routerLinkActive="active" 
+          role="menuitem"
+          [attr.aria-label]="'Dashboard' + (isExpanded ? '' : ' - Navigate to Dashboard')"
+          (click)="onNavItemClick()"
+          tabindex="0">
+          <span class="material-icons" aria-hidden="true">dashboard</span>
+          <span class="nav-text" *ngIf="isExpanded">Dashboard</span>
+        </a>
+      </li>
+      
+      <li class="nav-item" role="none">
+        <a 
+          routerLink="/transactions" 
+          routerLinkActive="active"
+          role="menuitem"
+          [attr.aria-label]="'Transactions' + (isExpanded ? '' : ' - Navigate to Transactions')"
+          (click)="onNavItemClick()"
+          tabindex="0">
+          <span class="material-icons" aria-hidden="true">swap_horiz</span>
+          <span class="nav-text" *ngIf="isExpanded">Transactions</span>
+        </a>
+      </li>
+      
+      <li class="nav-item" role="none">
+        <a 
+          routerLink="/budgets" 
+          routerLinkActive="active"
+          role="menuitem"
+          [attr.aria-label]="'Budgets' + (isExpanded ? '' : ' - Navigate to Budgets')"
+          (click)="onNavItemClick()"
+          tabindex="0">
+          <span class="material-icons" aria-hidden="true">account_balance_wallet</span>
+          <span class="nav-text" *ngIf="isExpanded">Budgets</span>
+        </a>
+      </li>
+      
+      <li class="nav-item" role="none">
+        <a 
+          routerLink="/goals" 
+          routerLinkActive="active"
+          role="menuitem"
+          [attr.aria-label]="'Goals' + (isExpanded ? '' : ' - Navigate to Goals')"
+          (click)="onNavItemClick()"
+          tabindex="0">
+          <span class="material-icons" aria-hidden="true">flag</span>
+          <span class="nav-text" *ngIf="isExpanded">Goals</span>
+        </a>
+      </li>
+      
+      <li class="nav-item" role="none">
+        <a 
+          routerLink="/reports" 
+          routerLinkActive="active"
+          role="menuitem"
+          [attr.aria-label]="'Reports' + (isExpanded ? '' : ' - Navigate to Reports')"
+          (click)="onNavItemClick()"
+          tabindex="0">
+          <span class="material-icons" aria-hidden="true">bar_chart</span>
+          <span class="nav-text" *ngIf="isExpanded">Reports</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  
+  <!-- Sidebar footer -->
+  <div class="sidebar-footer">
+    <button 
+      class="toggle-btn" 
+      (click)="onToggleSidebar()" 
+      [attr.aria-label]="isExpanded ? 'Collapse sidebar' : 'Expand sidebar'"
+      [attr.aria-expanded]="isExpanded"
+      aria-controls="main-navigation"
+      type="button">
+      <span class="material-icons" aria-hidden="true">{{ isExpanded ? 'chevron_left' : 'chevron_right' }}</span>
+    </button>
+    
+    <div class="footer-links" *ngIf="isExpanded" role="navigation" aria-label="Secondary navigation">
+      <a 
+        routerLink="/settings" 
+        (click)="onFooterLinkClick()"
+        aria-label="Settings - Configure application settings"
+        tabindex="0">
+        <span class="material-icons" aria-hidden="true">settings</span>
+        <span>Settings</span>
+      </a>
+      <a 
+        routerLink="/help" 
+        (click)="onFooterLinkClick()"
+        aria-label="Help - Get help and support"
+        tabindex="0">
+        <span class="material-icons" aria-hidden="true">help_outline</span>
+        <span>Help</span>
+      </a>
+    </div>
+  </div>
+</div>

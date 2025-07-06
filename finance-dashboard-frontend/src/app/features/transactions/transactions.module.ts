@@ -1,0 +1,54 @@
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { ScrollingModule } from '@angular/cdk/scrolling';
+
+import { TransactionsRoutingModule } from './transactions-routing.module';
+import { TransactionListComponent } from './transaction-list/transaction-list.component';
+import { TransactionFormComponent } from './transaction-form/transaction-form.component';
+import { TransactionCategoryManagerComponent } from './transaction-category-manager/transaction-category-manager.component';
+import { QuickAddTransactionComponent } from './quick-add-transaction/quick-add-transaction.component';
+import { CreateCategoryModalComponent } from './create-category-modal/create-category-modal.component';
+import { CategoryModalComponent } from './category-modal/category-modal.component';
+import { TransactionAnalyticsComponent } from './components/transaction-analytics.component';
+import { CategoryDetailsDialogComponent } from './components/category-details-dialog.component';
+import { CashFlowVisualizationComponent } from './components/cash-flow-visualization.component';
+
+// Shared Directives
+import { FocusTrapDirective } from '../../shared/directives/focus-trap.directive';
+import { ChartDirective } from '../../shared/directives/chart.directive';
+import { AccessibleChartDirective } from '../../shared/directives/accessible-chart.directive';
+
+// Chart.js
+import { NgChartsModule } from 'ng2-charts';
+
+// Material Imports
+import { MaterialModule } from '../../shared/modules';
+
+
+@NgModule({  declarations: [
+    TransactionListComponent,
+    TransactionFormComponent,    TransactionCategoryManagerComponent,    QuickAddTransactionComponent,
+    CreateCategoryModalComponent,
+    CategoryModalComponent,    TransactionAnalyticsComponent,
+    CategoryDetailsDialogComponent,
+    CashFlowVisualizationComponent,
+    ChartDirective,
+    AccessibleChartDirective
+  ],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TransactionsRoutingModule,
+    ReactiveFormsModule,
+    FormsModule,
+    ScrollingModule,
+    NgChartsModule,
+    FocusTrapDirective,
+    // Material Modules
+    MaterialModule,
+  ]
+})
+
+
+export class TransactionsModule { }

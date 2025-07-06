@@ -1,0 +1,725 @@
+// Account Deletion Dialog Component Styles
+.account-deletion-dialog {
+  .mat-mdc-dialog-surface {
+    max-width: 600px;
+    width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  
+  .header-icon {
+    margin-right: 16px;
+    color: #f44336;
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+  }
+  
+  .header-content {
+    flex: 1;
+    
+    .dialog-title {
+      margin: 0 0 4px 0;
+      font-size: 20px;
+      font-weight: 500;
+      line-height: 1.2;
+    }
+    
+    .dialog-subtitle {
+      margin: 0;
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.6);
+      line-height: 1.4;
+    }
+  }
+}
+
+.dialog-content {
+  padding: 24px;
+  min-height: 300px;
+  
+  .step-content {
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+// Step Indicator
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;
+  
+  .step {
+    display: flex;
+    align-items: center;
+    
+    &:not(:last-child) {
+      margin-right: 24px;
+    }
+    
+    .step-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      font-size: 14px;
+      margin-right: 8px;
+      transition: all 0.3s ease;
+      
+      &.active {
+        background-color: #f44336;
+        color: white;
+      }
+      
+      &.completed {
+        background-color: #4caf50;
+        color: white;
+      }
+      
+      &.pending {
+        background-color: rgba(0, 0, 0, 0.12);
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+    
+    .step-label {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.87);
+      
+      &.active {
+        font-weight: 500;
+      }
+      
+      &.pending {
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+    
+    &:not(:last-child)::after {
+      content: '';
+      width: 24px;
+      height: 2px;
+      background-color: rgba(0, 0, 0, 0.12);
+      margin: 0 12px;
+    }
+  }
+}
+
+// Step 1: Reason Selection
+.reason-selection {
+  .reason-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .reason-card {
+    border: 2px solid rgba(0, 0, 0, 0.12);
+    border-radius: 8px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      border-color: rgba(244, 67, 54, 0.5);
+      background-color: rgba(244, 67, 54, 0.02);
+    }
+    
+    &.selected {
+      border-color: #f44336;
+      background-color: rgba(244, 67, 54, 0.08);
+    }
+    
+    .reason-icon {
+      color: #f44336;
+      margin-bottom: 8px;
+      font-size: 24px;
+    }
+    
+    .reason-title {
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: rgba(0, 0, 0, 0.87);
+    }
+    
+    .reason-description {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.6);
+      line-height: 1.4;
+    }
+  }
+  
+  .feedback-section {
+    margin-top: 24px;
+    
+    .mat-mdc-form-field {
+      width: 100%;
+    }
+    
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+  }
+}
+
+// Step 2: Password Verification
+.password-verification {
+  text-align: center;
+  
+  .security-icon {
+    font-size: 64px;
+    color: #ff9800;
+    margin-bottom: 16px;
+  }
+  
+  .verification-message {
+    margin-bottom: 24px;
+    color: rgba(0, 0, 0, 0.6);
+    line-height: 1.5;
+  }
+  
+  .password-field {
+    max-width: 400px;
+    margin: 0 auto;
+    
+    .mat-mdc-form-field {
+      width: 100%;
+    }
+  }
+  
+  .security-tips {
+    margin-top: 24px;
+    padding: 16px;
+    background-color: rgba(255, 193, 7, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+    
+    .tip-title {
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: rgba(0, 0, 0, 0.87);
+    }
+    
+    .tip-content {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.6);
+      line-height: 1.4;
+    }
+  }
+}
+
+// Step 3: Data Export Options
+.data-export-options {
+  .export-info {
+    background-color: rgba(33, 150, 243, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+    border-left: 4px solid #2196f3;
+    
+    .info-icon {
+      color: #2196f3;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    
+    .info-text {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.6);
+      line-height: 1.4;
+      display: inline;
+    }
+  }
+  
+  .export-options {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+    
+    .export-option {
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 8px;
+      padding: 16px;
+      
+      .option-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        
+        .option-icon {
+          margin-right: 12px;
+          color: #2196f3;
+        }
+        
+        .option-title {
+          font-weight: 500;
+          color: rgba(0, 0, 0, 0.87);
+        }
+      }
+      
+      .option-description {
+        font-size: 14px;
+        color: rgba(0, 0, 0, 0.6);
+        margin-left: 36px;
+        line-height: 1.4;
+      }
+    }
+  }
+  
+  .deletion-schedule {
+    margin-top: 24px;
+    
+    .schedule-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+      
+      .schedule-option {
+        display: flex;
+        align-items: center;
+        
+        .mat-mdc-radio-button {
+          margin-right: 12px;
+        }
+        
+        .option-details {
+          .option-label {
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.87);
+          }
+          
+          .option-note {
+            font-size: 12px;
+            color: rgba(0, 0, 0, 0.6);
+            margin-top: 2px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Step 4: Final Confirmation
+.final-confirmation {
+  text-align: center;
+  
+  .warning-icon {
+    font-size: 64px;
+    color: #f44336;
+    margin-bottom: 16px;
+  }
+  
+  .confirmation-message {
+    margin-bottom: 24px;
+    
+    .primary-message {
+      font-size: 18px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.87);
+      margin-bottom: 8px;
+    }
+    
+    .secondary-message {
+      color: rgba(0, 0, 0, 0.6);
+      line-height: 1.5;
+    }
+  }
+  
+  .confirmation-input {
+    max-width: 400px;
+    margin: 0 auto 24px;
+    
+    .confirmation-field {
+      width: 100%;
+      
+      .mat-mdc-form-field {
+        width: 100%;
+      }
+    }
+    
+    .input-helper {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+      text-align: left;
+      margin-top: 8px;
+    }
+  }
+  
+  .impact-warning {
+    background-color: rgba(244, 67, 54, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+    border-left: 4px solid #f44336;
+    text-align: left;
+    
+    .warning-title {
+      font-weight: 500;
+      color: #f44336;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      
+      .warning-icon-small {
+        margin-right: 8px;
+        font-size: 18px;
+      }
+    }
+    
+    .warning-list {
+      margin: 0;
+      padding-left: 20px;
+      
+      li {
+        font-size: 14px;
+        color: rgba(0, 0, 0, 0.6);
+        margin-bottom: 4px;
+        line-height: 1.4;
+      }
+    }
+  }
+  
+  .alternatives-section {
+    margin-top: 24px;
+    padding: 16px;
+    background-color: rgba(76, 175, 80, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid #4caf50;
+    text-align: left;
+    
+    .alternatives-title {
+      font-weight: 500;
+      color: #4caf50;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      
+      .lightbulb-icon {
+        margin-right: 8px;
+        font-size: 18px;
+      }
+    }
+    
+    .alternative-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      
+      .alternative-button {
+        text-align: left;
+        justify-content: flex-start;
+        font-size: 14px;
+        
+        .alt-icon {
+          margin-right: 8px;
+          font-size: 18px;
+        }
+      }
+    }
+  }
+}
+
+// Dialog Actions
+.dialog-actions {
+  padding: 16px 24px 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  
+  .action-group {
+    display: flex;
+    gap: 12px;
+    
+    &.left {
+      .back-button {
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+    
+    &.right {
+      .cancel-button {
+        color: rgba(0, 0, 0, 0.6);
+      }
+      
+      .continue-button {
+        background-color: #f44336;
+        color: white;
+        
+        &:hover {
+          background-color: #d32f2f;
+        }
+        
+        &:disabled {
+          background-color: rgba(0, 0, 0, 0.12);
+          color: rgba(0, 0, 0, 0.26);
+        }
+      }
+      
+      .delete-button {
+        background-color: #f44336;
+        color: white;
+        font-weight: 500;
+        
+        &:hover {
+          background-color: #d32f2f;
+        }
+        
+        &:disabled {
+          background-color: rgba(0, 0, 0, 0.12);
+          color: rgba(0, 0, 0, 0.26);
+        }
+      }
+    }
+  }
+}
+
+// Loading States
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  
+  .loading-content {
+    text-align: center;
+    
+    .loading-spinner {
+      margin-bottom: 16px;
+    }
+    
+    .loading-text {
+      font-size: 16px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+}
+
+// Error States
+.error-message {
+  background-color: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  
+  .error-icon {
+    color: #f44336;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  
+  .error-text {
+    color: #f44336;
+    font-size: 14px;
+    display: inline;
+    line-height: 1.4;
+  }
+}
+
+// Success States
+.success-message {
+  background-color: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  
+  .success-icon {
+    color: #4caf50;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  
+  .success-text {
+    color: #4caf50;
+    font-size: 14px;
+    display: inline;
+    line-height: 1.4;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .account-deletion-dialog {
+    .mat-mdc-dialog-surface {
+      width: 95vw;
+      max-width: none;
+      margin: 16px;
+    }
+  }
+  
+  .dialog-header {
+    padding: 16px 16px 12px;
+    
+    .header-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      margin-right: 12px;
+    }
+    
+    .dialog-title {
+      font-size: 18px;
+    }
+  }
+  
+  .dialog-content {
+    padding: 16px;
+    
+    .step-content {
+      min-height: 200px;
+    }
+  }
+  
+  .step-indicator {
+    margin-bottom: 24px;
+    
+    .step {
+      &:not(:last-child) {
+        margin-right: 16px;
+      }
+      
+      .step-number {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+      }
+      
+      .step-label {
+        font-size: 12px;
+      }
+      
+      &:not(:last-child)::after {
+        width: 16px;
+        margin: 0 8px;
+      }
+    }
+  }
+  
+  .reason-selection {
+    .reason-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+  }
+  
+  .dialog-actions {
+    padding: 12px 16px 16px;
+    flex-direction: column-reverse;
+    
+    .action-group {
+      width: 100%;
+      
+      &.right {
+        order: 1;
+        
+        .mat-mdc-button {
+          flex: 1;
+        }
+      }
+      
+      &.left {
+        order: 2;
+        justify-content: center;
+        margin-top: 8px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .step-indicator {
+    .step-label {
+      display: none;
+    }
+    
+    .step {
+      &:not(:last-child)::after {
+        width: 12px;
+        margin: 0 6px;
+      }
+    }
+  }
+  
+  .password-verification,
+  .final-confirmation {
+    .security-icon,
+    .warning-icon {
+      font-size: 48px;
+    }
+  }
+}
+
+// Accessibility Enhancements
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Focus States
+.mat-mdc-button:focus,
+.mat-mdc-radio-button:focus,
+.mat-mdc-checkbox:focus {
+  outline: 2px solid #2196f3;
+  outline-offset: 2px;
+}
+
+// High Contrast Support
+@media (prefers-contrast: high) {
+  .reason-card {
+    border-width: 3px;
+    
+    &.selected {
+      border-color: #000;
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+  }
+  
+  .step-number {
+    border: 2px solid currentColor;
+    
+    &.active,
+    &.completed {
+      border-color: transparent;
+    }
+  }
+}
+
+// Reduced Motion Support
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

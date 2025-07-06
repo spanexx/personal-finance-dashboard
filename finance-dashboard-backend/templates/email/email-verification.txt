@@ -1,0 +1,24 @@
+Personal Finance Dashboard - Email Verification
+===========================================
+
+Hello {{firstName}},
+
+Welcome to Personal Finance Dashboard! We're excited to have you on board.
+
+To get started and secure your account, please verify your email address by visiting the link below:
+
+{{verificationUrl}}
+
+IMPORTANT: This verification link will expire in 24 hours for security reasons.
+
+Security Notice:
+- We will never ask for your password via email
+- If you didn't create this account, please ignore this email  
+- This verification link is unique and secure
+
+---
+Personal Finance Dashboard Team
+Email sent to: {{email}}
+
+This is an automated message. Please do not reply to this email.
+If you have any questions, please contact our support team.

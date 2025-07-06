@@ -1,0 +1,99 @@
+GOAL PROGRESS REMINDER - {{appName}}
+
+Hello {{firstName}},
+
+🎯 GOAL PROGRESS CHECK-IN 🎯
+
+It's time for your {{reminderFrequency}} goal progress check-in! Let's see how you're doing with your financial goals.
+
+GOAL DETAILS
+============
+Goal: {{goalName}}
+{{#if description}}
+Description: {{description}}
+{{/if}}
+
+PROGRESS OVERVIEW
+=================
+Current Progress: {{progressPercentage}}%
+Amount Saved: {{currency}}{{currentAmount}}
+Target Amount: {{currency}}{{targetAmount}}
+Remaining: {{currency}}{{remainingAmount}}
+
+PROGRESS: [{{progressPercentage}}%] {{#repeat (divide progressPercentage 5)}}▓{{/repeat}}{{#repeat (divide (subtract 100 progressPercentage) 5)}}░{{/repeat}}
+
+TIMELINE
+========
+Days Remaining: {{timeRemaining}} days
+{{#if targetDate}}
+Target Date: {{formatDate targetDate}}
+{{/if}}
+{{#if estimatedCompletionDate}}
+Estimated Completion: {{formatDate estimatedCompletionDate}}
+{{/if}}
+
+{{#if averageMonthlyContribution}}
+CONTRIBUTION STATS
+==================
+Average Monthly: {{currency}}{{averageMonthlyContribution}}
+{{#if requiredMonthlyContribution}}
+Required Monthly: {{currency}}{{requiredMonthlyContribution}}
+{{/if}}
+{{#if achievementProbability}}
+Success Probability: {{achievementProbability}}%
+{{/if}}
+{{/if}}
+
+{{#if motivationalMessage}}
+MOTIVATION
+==========
+💪 {{motivationalMessage}}
+{{/if}}
+
+{{#if insights}}
+INSIGHTS & RECOMMENDATIONS
+===========================
+{{#each insights}}
+• {{this}}
+{{/each}}
+{{/if}}
+
+{{#if milestones}}
+UPCOMING MILESTONES
+===================
+{{#each milestones}}
+{{this.percentage}}% Milestone - {{../currency}}{{this.amount}}{{#if this.isNext}} ← Next Goal!{{/if}}
+{{/each}}
+{{/if}}
+
+ACTIONS
+=======
+View Goal Details: {{dashboardUrl}}/goals/{{goalId}}
+Make Contribution: {{dashboardUrl}}/goals/{{goalId}}/contribute
+Manage Goals: {{dashboardUrl}}/goals
+
+PROGRESS TIPS
+=============
+{{#if (gte progressPercentage 75)}}
+🌟 Excellent progress! You're in the final stretch. Stay consistent!
+{{else if (gte progressPercentage 50)}}
+👍 Great work! You're over halfway there. Keep the momentum going!
+{{else if (gte progressPercentage 25)}}
+📈 Good start! Consider increasing your contribution frequency to accelerate progress.
+{{else}}
+💡 Every journey starts with a single step. Consider setting up automatic contributions to build momentum.
+{{/if}}
+
+{{#if (lt timeRemaining 30)}}
+⏰ URGENT: Less than 30 days remaining! You may need to increase contributions to meet your deadline.
+{{else if (lt timeRemaining 90)}}
+⚠️ Notice: Less than 3 months remaining. Consider reviewing your contribution strategy.
+{{/if}}
+
+This reminder is sent {{reminderFrequency}} to help you stay on track with your financial goals. You can adjust your notification preferences in your account settings.
+
+Best regards,
+The {{appName}} Team
+
+Manage Notifications: {{dashboardUrl}}/settings/notifications
+Contact Support: {{supportUrl}}

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Alert - Personal Finance Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #dc2626;
+            margin-bottom: 10px;
+        }
+        .title {
+            color: #dc2626;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .alert-box {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #dc2626;
+            margin-bottom: 10px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #f9fafb;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .details-table th,
+        .details-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .details-table th {
+            background: #f3f4f6;
+            font-weight: bold;
+            color: #374151;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .cta-button.secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 14px;
+            color: #6b7280;
+            text-align: center;
+        }
+        .security-tips {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🚨 Security Alert</div>
+            <h1 class="title">Suspicious Activity Detected</h1>
+        </div>
+        
+        <div class="alert-box">
+            <div class="alert-title">{{alertType}}</div>
+            <p>{{alertMessage}}</p>
+        </div>
+        
+        <p>Hello <strong>{{firstName}}</strong>,</p>
+        
+        <p>We detected {{alertType}} on your Personal Finance Dashboard account. If this was you, no action is needed. If you don't recognize this activity, please take immediate action to secure your account.</p>
+        
+        <table class="details-table">
+            <tr>
+                <th>Activity Type</th>
+                <td>{{activityType}}</td>
+            </tr>
+            <tr>
+                <th>Date & Time</th>
+                <td>{{timestamp}}</td>
+            </tr>
+            <tr>
+                <th>IP Address</th>
+                <td>{{ipAddress}}</td>
+            </tr>
+            <tr>
+                <th>Location</th>
+                <td>{{location}}</td>
+            </tr>
+            <tr>
+                <th>Device</th>
+                <td>{{userAgent}}</td>
+            </tr>
+        </table>
+        
+        {{#if isHighRisk}}
+        <div style="text-align: center;">
+            <a href="{{secureAccountUrl}}" class="cta-button">Secure My Account</a>
+            <a href="{{changePasswordUrl}}" class="cta-button secondary">Change Password</a>
+        </div>
+        {{/if}}
+        
+        <div class="security-tips">
+            <strong>🛡️ Security Recommendations:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Always log out from shared or public computers</li>
+                <li>Use a strong, unique password for your account</li>
+                <li>Enable two-factor authentication if available</li>
+                <li>Regularly review your account activity</li>
+                <li>Never share your login credentials with anyone</li>
+            </ul>
+        </div>
+        
+        <p>If you believe your account has been compromised, please contact our security team immediately.</p>
+        
+        <div class="footer">
+            <p><strong>Personal Finance Dashboard Security Team</strong></p>
+            <p>This alert was sent to <strong>{{email}}</strong></p>
+            <p>Account ID: {{accountId}}</p>
+            <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
+                This is an automated security alert. For your protection, please do not ignore this message.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

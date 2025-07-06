@@ -1,0 +1,86 @@
+<header class="header" role="banner">
+  <div class="header-left">
+    <button 
+      #menuToggleButton
+      class="menu-toggle" 
+      (click)="onToggleSidebar()" 
+      [attr.aria-label]="isSidebarExpanded ? 'Collapse navigation menu' : 'Expand navigation menu'"
+      [attr.aria-expanded]="isSidebarExpanded"
+      aria-controls="main-navigation">
+      <span class="material-icons" aria-hidden="true">{{ isSidebarExpanded ? 'menu_open' : 'menu' }}</span>
+    </button>
+    <div class="logo">
+      <h1>Finance Dashboard</h1>
+    </div>
+  </div>
+    <div class="header-right">
+    <!-- Search -->
+    <div class="search-box" role="search">
+      <span class="material-icons" aria-hidden="true">search</span>
+      <input 
+        type="text" 
+        placeholder="Search..." 
+        aria-label="Search the application"
+        autocomplete="off">
+    </div>
+    
+    <!-- User menu -->
+    <div 
+      class="user-menu" 
+      (click)="toggleUserMenu()" 
+      (keydown)="onUserMenuKeyDown($event)"
+      tabindex="0"
+      role="button"
+      [attr.aria-expanded]="isUserMenuOpen"
+      aria-haspopup="true"
+      aria-label="User account menu">
+      <div class="user-avatar">
+        <img [src]="userProfile?.profileImage || 'assets/images/default-avatar.png'" alt="User Avatar">
+      </div>
+      <span class="user-name">{{ userProfile?.firstName }} {{ userProfile?.lastName }}</span>
+      <span class="material-icons" aria-hidden="true">keyboard_arrow_down</span>
+      
+      <!-- Dropdown menu with focus trap -->
+      <div 
+        #userMenuDropdown
+        class="dropdown-menu" 
+        *ngIf="isUserMenuOpen"
+        [appFocusTrap]="isUserMenuOpen"
+        role="menu"
+        aria-label="User account options">
+        <ul role="none">
+          <li role="none">
+            <button type="button" role="menuitem" tabindex="0">
+              <span class="material-icons" aria-hidden="true">person</span>
+              <span>Profile</span>
+            </button>
+          </li>
+          <li role="none">
+            <button type="button" role="menuitem" tabindex="0">
+              <span class="material-icons" aria-hidden="true">settings</span>
+              <span>Settings</span>
+            </button>
+          </li>
+          <li class="divider" role="separator" aria-hidden="true"></li>
+          <li role="none">
+            <button type="button" role="menuitem" tabindex="0">
+              <span class="material-icons" aria-hidden="true">logout</span>
+              <span>Logout</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- Notifications -->
+    <div class="notifications">
+      <button 
+        class="notification-btn" 
+        [attr.aria-label]="'Notifications (' + notificationCount + ' unread)'"
+        aria-describedby="notification-count">
+        <span class="material-icons" aria-hidden="true">notifications</span>
+        <span class="badge" id="notification-count" [attr.aria-label]="notificationCount + ' unread notifications'">{{ notificationCount }}</span>
+      </button>
+    </div>
+  </div>
+</header>

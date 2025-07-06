@@ -1,0 +1,275 @@
+.optimization-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .optimization-header {
+    text-align: center;
+    margin-bottom: 32px;
+
+    h1 {
+      font-size: 32px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 16px;
+      color: #666;
+      margin: 0;
+    }
+  }
+}
+
+.optimization-tabs {
+  .tab-content {
+    padding: 24px 0;
+  }
+}
+
+// Recommendations Tab Styles
+.recommendations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 24px;
+
+  .recommendation-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .impact-metrics {
+      margin-top: 16px;
+      padding: 12px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+
+      .metric {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .label {
+          font-weight: 500;
+          color: #666;
+        }
+
+        .value {
+          font-weight: 600;
+          color: #333;
+        }
+      }
+    }
+  }
+}
+
+// Scenario Planning Styles
+.scenario-planning {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+
+  .scenario-input-card,
+  .scenario-results-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .scenario-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .category-adjustments {
+      .adjustment-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+
+        .category-name {
+          min-width: 120px;
+          font-weight: 500;
+        }
+
+        .adjustment-slider {
+          flex: 1;
+        }
+
+        .adjustment-value {
+          min-width: 40px;
+          text-align: right;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+
+    .result-metric {
+      text-align: center;
+      padding: 16px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+
+      .metric-label {
+        display: block;
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 8px;
+      }
+
+      .metric-value {
+        display: block;
+        font-size: 24px;
+        font-weight: 600;
+
+        &.positive {
+          color: #4caf50;
+        }
+
+        &.negative {
+          color: #f44336;
+        }
+
+        &.low {
+          color: #4caf50;
+        }
+
+        &.medium {
+          color: #ff9800;
+        }
+
+        &.high {
+          color: #f44336;
+        }
+      }
+    }
+  }
+}
+
+// Savings Opportunities Styles
+.savings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+
+  .savings-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+
+    .savings-metrics {
+      margin-top: 16px;
+      padding: 12px;
+      background-color: #e8f5e8;
+      border-radius: 8px;
+
+      .metric {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .label {
+          font-weight: 500;
+          color: #2e7d32;
+        }
+
+        .value {
+          font-weight: 600;
+          color: #1b5e20;
+
+          &.highlight {
+            font-size: 18px;
+            color: #4caf50;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Educational Content Styles
+.education-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 24px;
+
+  .education-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+
+    mat-chip-set {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+
+      mat-chip {
+        background-color: #e3f2fd;
+        color: #1976d2;
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .scenario-planning {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .optimization-container {
+    padding: 16px;
+
+    .optimization-header h1 {
+      font-size: 24px;
+    }
+  }
+
+  .recommendations-grid,
+  .savings-grid,
+  .education-content {
+    grid-template-columns: 1fr;
+  }
+
+  .scenario-planning .scenario-form .category-adjustments .adjustment-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+
+    .category-name {
+      min-width: auto;
+    }
+  }
+}

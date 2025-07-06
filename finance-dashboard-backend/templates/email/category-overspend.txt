@@ -1,0 +1,49 @@
+CATEGORY OVERSPEND ALERT - {{appName}}
+
+Hello {{firstName}},
+
+📊 CATEGORY OVERSPEND ALERT 📊
+
+You've exceeded your category budget! Your spending in the {{categoryName}} category has exceeded its allocated budget.
+
+CATEGORY DETAILS
+================
+Category: {{categoryName}}
+Budget Period: {{budgetPeriod}} ({{startDate}} - {{endDate}})
+Category Budget: {{currency}}{{categoryBudget}}
+Amount Spent: {{currency}}{{categorySpent}}
+Over Budget By: {{currency}}{{overAmount}}
+Utilization: {{utilizationPercentage}}%
+
+PROGRESS: [{{utilizationPercentage}}%] {{#repeat (min utilizationPercentage 100)}}▓{{/repeat}}{{#if (gt utilizationPercentage 100)}}{{#repeat (subtract utilizationPercentage 100)}}!{{/repeat}}{{else}}{{#repeat (subtract 100 utilizationPercentage)}}░{{/repeat}}{{/if}}
+
+{{#if recentTransactions}}
+RECENT {{categoryName}} TRANSACTIONS
+====================================
+{{#each recentTransactions}}
+{{this.date}} - {{this.description}}: {{../currency}}{{this.amount}}
+{{/each}}
+{{/if}}
+
+SUGGESTIONS FOR {{categoryName}} SPENDING
+==========================================
+• Review recent {{categoryName}} transactions to identify patterns
+• Consider setting a lower budget for this category next period
+• Look for alternative options that cost less in this category
+• Set up alerts at 80% to prevent future overspending
+{{#if subcategories}}
+• Consider breaking down {{categoryName}} into subcategories for better tracking
+{{/if}}
+
+ACTIONS
+=======
+Review Category: {{dashboardUrl}}/budgets/{{budgetId}}?category={{categoryId}}
+View Transactions: {{dashboardUrl}}/transactions?category={{categoryId}}
+
+This alert was triggered when your {{categoryName}} spending exceeded its allocated budget. You can adjust category budgets and alert settings in your budget management page.
+
+Best regards,
+The {{appName}} Team
+
+Manage Notifications: {{dashboardUrl}}/settings/notifications
+Contact Support: {{supportUrl}}

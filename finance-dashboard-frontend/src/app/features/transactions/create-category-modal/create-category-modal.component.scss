@@ -1,0 +1,467 @@
+// Create Category Modal Styles
+.category-modal {
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  
+  @media (max-width: 768px) {
+    max-width: 95vw;
+    margin: 8px;
+    max-height: 95vh;
+  }
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+  
+  .close-button {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    &:focus {
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+    
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    padding: 16px;
+    
+    h2 {
+      font-size: 1.25rem;
+    }
+  }
+}
+
+.modal-content {
+  flex: 1;
+  padding: 24px;
+  background: white;
+  overflow-y: auto;
+  
+  @media (max-width: 480px) {
+    padding: 16px;
+  }
+}
+
+.category-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// Category Preview
+.category-preview {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+  
+  .preview-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    min-width: 200px;
+    justify-content: center;
+    
+    .preview-icon {
+      font-size: 24px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+    }
+    
+    .preview-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: white;
+    }
+  }
+}
+
+// Form Sections
+.form-section {
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 8px;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  
+  @media (max-width: 600px) {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .form-field {
+    flex: 1;
+    
+    &.full-width {
+      width: 100%;
+    }
+    
+    .mat-mdc-form-field {
+      width: 100%;
+    }
+  }
+}
+
+// Icon Grid
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+  
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 8px;
+  }
+  
+  .icon-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 70px;
+    
+    &:hover {
+      border-color: #667eea;
+      background: #f8faff;
+      transform: translateY(-1px);
+    }
+    
+    &.selected {
+      border-color: #667eea;
+      background: #f0f4ff;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+    }
+    
+    &:focus {
+      outline: 2px solid #667eea;
+      outline-offset: 2px;
+    }
+    
+    .icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+    
+    .icon-name {
+      font-size: 0.75rem;
+      color: #6b7280;
+      text-align: center;
+      font-weight: 500;
+    }
+    
+    @media (max-width: 480px) {
+      padding: 8px 4px;
+      min-height: 60px;
+      
+      .icon {
+        font-size: 18px;
+      }
+      
+      .icon-name {
+        font-size: 0.7rem;
+      }
+    }
+  }
+}
+
+// Color Grid
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+  max-width: 400px;
+  
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));
+    gap: 8px;
+  }
+  
+  .color-option {
+    width: 40px;
+    height: 40px;
+    border: 3px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    
+    &:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    &.selected {
+      border-color: #374151;
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    &:focus {
+      outline: 2px solid #667eea;
+      outline-offset: 3px;
+    }
+    
+    .check-icon {
+      color: white;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+    
+    @media (max-width: 480px) {
+      width: 35px;
+      height: 35px;
+      
+      .check-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+}
+
+// Status Toggle
+.status-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  
+  .mat-mdc-checkbox {
+    margin-bottom: 4px;
+  }
+  
+  .mat-mdc-form-field-hint {
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+}
+
+// Modal Actions
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 20px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  
+  @media (max-width: 600px) {
+    flex-direction: column-reverse;
+    gap: 8px;
+    padding: 16px;
+  }
+  
+  .mat-mdc-button {
+    min-width: 120px;
+    border-radius: 8px;
+    font-weight: 500;
+    position: relative;
+    
+    @media (max-width: 600px) {
+      width: 100%;
+    }
+    
+    &.cancel-button {
+      color: #6b7280;
+      border-color: #d1d5db;
+      
+      &:hover {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+      }
+    }
+    
+    &.save-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+      }
+      
+      &:disabled {
+        background: #e5e7eb;
+        color: #9ca3af;
+        cursor: not-allowed;
+      }
+      
+      .button-spinner {
+        margin-right: 8px;
+        
+        ::ng-deep circle {
+          stroke: white;
+        }
+      }
+    }
+  }
+}
+
+// Loading Overlay
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  
+  .mat-mdc-progress-spinner {
+    margin: 0;
+  }
+}
+
+// Form Field Enhancements
+.mat-mdc-form-field {
+  &.mat-form-field-invalid {
+    .mat-mdc-text-field-wrapper {
+      border-color: #ef4444 !important;
+    }
+  }
+  
+  .mat-mdc-form-field-hint {
+    color: #6b7280;
+    font-size: 0.75rem;
+  }
+  
+  .mat-mdc-form-field-error {
+    color: #ef4444;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+  }
+}
+
+// Animation
+.category-modal {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Accessibility improvements
+.category-modal {
+  &:focus-within {
+    .modal-header {
+      outline: 2px solid #667eea;
+      outline-offset: -2px;
+    }
+  }
+}
+
+// Responsive improvements
+@media (max-width: 400px) {
+  .category-modal {
+    max-width: 100vw;
+    max-height: 100vh;
+    margin: 0;
+    border-radius: 0;
+  }
+  
+  .modal-content {
+    padding: 12px;
+  }
+  
+  .form-section {
+    h3 {
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+  }
+  
+  .icon-grid {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  }
+  
+  .color-grid {
+    grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+    
+    .color-option {
+      width: 30px;
+      height: 30px;
+    }
+  }
+}

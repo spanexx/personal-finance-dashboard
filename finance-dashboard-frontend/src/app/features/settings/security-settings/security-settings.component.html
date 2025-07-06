@@ -1,0 +1,357 @@
+<div class="security-settings-container" [appFocusTrap]="true" (keydown)="onKeyDown($event)">
+  <!-- Skip Link -->
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <!-- Screen Reader Instructions -->
+  <div class="sr-only" id="page-instructions">
+    Security settings page. Use Tab to navigate between sections, Enter to activate buttons, and Escape to go back.
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container" role="status" aria-live="polite">
+    <mat-spinner diameter="40" aria-label="Loading security settings"></mat-spinner>
+    <span class="loading-text">Loading security settings...</span>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading" id="main-content">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="back-button">
+        <button mat-button (click)="onBack()" 
+                aria-label="Go back to settings overview">
+          <mat-icon>arrow_back</mat-icon>
+          Back to Settings
+        </button>
+      </div>
+      
+      <h1 #pageTitle tabindex="-1" 
+          aria-describedby="page-instructions">
+        Security Settings
+      </h1>
+      <p class="subtitle">Manage your account security and privacy</p>
+    </div>
+
+    <!-- Security Tabs -->
+    <mat-tab-group animationDuration="300ms" 
+                   aria-label="Security settings sections">
+      
+      <!-- Password Tab -->
+      <mat-tab label="Password" aria-label="Password settings">
+        <div class="tab-content">
+          <mat-card class="settings-card">
+            <mat-card-header>
+              <mat-card-title>Change Password</mat-card-title>
+              <mat-card-subtitle>Update your account password</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" novalidate>
+                <!-- Current Password -->
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Current Password</mat-label>
+                  <input matInput 
+                         type="password"
+                         formControlName="currentPassword"
+                         autocomplete="current-password"
+                         [attr.aria-describedby]="isFieldInvalid('currentPassword') ? 'current-password-error' : null"
+                         aria-required="true">
+                  <mat-error id="current-password-error" 
+                             *ngIf="isFieldInvalid('currentPassword')">
+                    {{ getFieldError('currentPassword') }}
+                  </mat-error>
+                </mat-form-field>
+
+                <!-- New Password -->
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>New Password</mat-label>
+                  <input matInput 
+                         type="password"
+                         formControlName="newPassword"
+                         autocomplete="new-password"
+                         [attr.aria-describedby]="'password-strength ' + (isFieldInvalid('newPassword') ? 'new-password-error' : '')"
+                         aria-required="true">
+                  <mat-error id="new-password-error" 
+                             *ngIf="isFieldInvalid('newPassword')">
+                    {{ getFieldError('newPassword') }}
+                  </mat-error>
+                </mat-form-field>
+
+                <!-- Password Strength Indicator -->
+                <div *ngIf="passwordForm.get('newPassword')?.value" 
+                     class="password-strength" 
+                     id="password-strength"
+                     role="status"
+                     aria-live="polite">
+                  <div class="strength-bar">
+                    <div class="strength-fill" 
+                         [style.width.%]="passwordStrength"
+                         [style.background-color]="getPasswordStrengthColor()"
+                         [attr.aria-valuenow]="passwordStrength"
+                         [attr.aria-valuetext]="getPasswordStrengthText()"
+                         role="progressbar"
+                         aria-valuemin="0"
+                         aria-valuemax="100"></div>
+                  </div>
+                  <span class="strength-text" 
+                        [style.color]="getPasswordStrengthColor()">
+                    {{ getPasswordStrengthText() }}
+                  </span>
+                  <ul *ngIf="passwordFeedback.length > 0" 
+                      class="password-feedback"
+                      aria-label="Password requirements">
+                    <li *ngFor="let feedback of passwordFeedback">{{ feedback }}</li>
+                  </ul>
+                </div>
+
+                <!-- Confirm Password -->
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Confirm New Password</mat-label>
+                  <input matInput 
+                         type="password"
+                         formControlName="confirmPassword"
+                         autocomplete="new-password"
+                         [attr.aria-describedby]="isFieldInvalid('confirmPassword') ? 'confirm-password-error' : null"
+                         aria-required="true">
+                  <mat-error id="confirm-password-error" 
+                             *ngIf="isFieldInvalid('confirmPassword')">
+                    {{ getFieldError('confirmPassword') }}
+                  </mat-error>
+                </mat-form-field>
+
+                <!-- Submit Button -->
+                <div class="form-actions">
+                  <button mat-raised-button 
+                          color="primary"
+                          type="submit"
+                          [disabled]="passwordForm.invalid || isSaving"
+                          [attr.aria-describedby]="isSaving ? 'saving-status' : null">
+                    <mat-icon *ngIf="isSaving">hourglass_empty</mat-icon>
+                    {{ isSaving ? 'Changing Password...' : 'Change Password' }}
+                  </button>
+                  <span *ngIf="isSaving" 
+                        id="saving-status" 
+                        class="sr-only"
+                        aria-live="polite">
+                    Password change in progress
+                  </span>
+                </div>
+              </form>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Two-Factor Authentication Tab -->
+      <mat-tab label="Two-Factor Auth" aria-label="Two-factor authentication settings">
+        <div class="tab-content">
+          <mat-card class="settings-card">
+            <mat-card-header>
+              <mat-card-title>Two-Factor Authentication</mat-card-title>
+              <mat-card-subtitle>Add an extra layer of security to your account</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="two-factor-status">
+                <div class="status-info">
+                  <mat-icon [class.enabled]="twoFactorEnabled" 
+                            [class.disabled]="!twoFactorEnabled">
+                    {{ twoFactorEnabled ? 'verified_user' : 'security' }}
+                  </mat-icon>
+                  <div class="status-text">
+                    <h3>Two-Factor Authentication</h3>
+                    <p>{{ twoFactorEnabled ? 'Enabled' : 'Disabled' }}</p>
+                  </div>
+                </div>
+                
+                <mat-slide-toggle [checked]="twoFactorEnabled"
+                                  (change)="onToggleTwoFactor()"
+                                  [attr.aria-label]="'Two-factor authentication is currently ' + (twoFactorEnabled ? 'enabled' : 'disabled') + '. Toggle to ' + (twoFactorEnabled ? 'disable' : 'enable')">
+                </mat-slide-toggle>
+              </div>
+
+              <mat-divider></mat-divider>
+
+              <form [formGroup]="twoFactorForm" *ngIf="twoFactorEnabled">
+                <h4>Backup Options</h4>
+                
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Phone Number</mat-label>
+                  <input matInput 
+                         type="tel"
+                         formControlName="phoneNumber"
+                         placeholder="+1 (555) 123-4567"
+                         [attr.aria-describedby]="isFieldInvalid('phoneNumber', twoFactorForm) ? 'phone-error' : null">
+                  <mat-error id="phone-error" 
+                             *ngIf="isFieldInvalid('phoneNumber', twoFactorForm)">
+                    {{ getFieldError('phoneNumber', twoFactorForm) }}
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Backup Email</mat-label>
+                  <input matInput 
+                         type="email"
+                         formControlName="backupEmail"
+                         [attr.aria-describedby]="isFieldInvalid('backupEmail', twoFactorForm) ? 'backup-email-error' : null">
+                  <mat-error id="backup-email-error" 
+                             *ngIf="isFieldInvalid('backupEmail', twoFactorForm)">
+                    {{ getFieldError('backupEmail', twoFactorForm) }}
+                  </mat-error>
+                </mat-form-field>
+              </form>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Active Sessions Tab -->
+      <mat-tab label="Active Sessions" aria-label="Active login sessions">
+        <div class="tab-content">
+          <mat-card class="settings-card">
+            <mat-card-header>
+              <mat-card-title>Active Sessions</mat-card-title>
+              <mat-card-subtitle>Manage devices that are currently logged in</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>              <div class="sessions-actions">
+                <button mat-stroked-button 
+                        (click)="onRevokeAllOtherSessions()"
+                        [disabled]="!hasOtherActiveSessions"
+                        aria-label="Revoke all other active sessions">
+                  <mat-icon>logout</mat-icon>
+                  Revoke All Other Sessions
+                </button>
+              </div>
+
+              <mat-list class="sessions-list" role="list">
+                <mat-list-item *ngFor="let session of activeSessions; trackBy: trackBySessionId"
+                               class="session-item"
+                               [class.current-session]="session.current"
+                               role="listitem">
+                  <mat-icon matListItemIcon>
+                    {{ session.current ? 'computer' : 'devices' }}
+                  </mat-icon>
+                  
+                  <div matListItemTitle class="session-info">
+                    <h4>{{ session.device }}</h4>
+                    <p class="session-details">
+                      {{ session.location }} • {{ session.ipAddress }}
+                    </p>
+                    <p class="session-time">
+                      {{ session.current ? 'Current session' : 'Last active: ' + session.lastActive.toLocaleString() }}
+                    </p>
+                  </div>
+
+                  <button *ngIf="!session.current"
+                          mat-icon-button
+                          (click)="onRevokeSession(session.id)"
+                          [attr.aria-label]="'Revoke session from ' + session.device"
+                          matListItemMeta>
+                    <mat-icon>close</mat-icon>
+                  </button>
+
+                  <span *ngIf="session.current" 
+                        class="current-badge"
+                        matListItemMeta
+                        aria-label="Current session">
+                    Current
+                  </span>
+                </mat-list-item>
+              </mat-list>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Security Alerts Tab -->
+      <mat-tab label="Security Alerts" aria-label="Security alert preferences">
+        <div class="tab-content">
+          <mat-card class="settings-card">
+            <mat-card-header>
+              <mat-card-title>Security Alerts</mat-card-title>
+              <mat-card-subtitle>Configure when to receive security notifications</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="alert-setting">
+                <div class="setting-info">
+                  <h4>Login Alerts</h4>
+                  <p>Get notified when someone logs into your account</p>
+                </div>
+                <mat-slide-toggle [checked]="loginAlertsEnabled"
+                                  (change)="onToggleLoginAlerts()"
+                                  [attr.aria-label]="'Login alerts are currently ' + (loginAlertsEnabled ? 'enabled' : 'disabled') + '. Toggle to ' + (loginAlertsEnabled ? 'disable' : 'enable')">
+                </mat-slide-toggle>
+              </div>
+
+              <mat-divider></mat-divider>
+
+              <div class="alert-setting">
+                <div class="setting-info">
+                  <h4>Suspicious Activity Alerts</h4>
+                  <p>Get notified when we detect unusual account activity</p>
+                </div>
+                <mat-slide-toggle [checked]="suspiciousActivityAlertsEnabled"
+                                  (change)="onToggleSuspiciousActivityAlerts()"
+                                  [attr.aria-label]="'Suspicious activity alerts are currently ' + (suspiciousActivityAlertsEnabled ? 'enabled' : 'disabled') + '. Toggle to ' + (suspiciousActivityAlertsEnabled ? 'disable' : 'enable')">
+                </mat-slide-toggle>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Recent Activity Tab -->
+      <mat-tab label="Recent Activity" aria-label="Recent security activity">
+        <div class="tab-content">
+          <mat-card class="settings-card">
+            <mat-card-header>
+              <mat-card-title>Recent Security Activity</mat-card-title>
+              <mat-card-subtitle>Review recent security events on your account</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <mat-list class="activity-list" role="list">
+                <mat-list-item *ngFor="let event of recentActivity; trackBy: trackByEventId"
+                               class="activity-item"
+                               role="listitem">
+                  <mat-icon matListItemIcon 
+                            [class]="'activity-icon ' + event.type">
+                    {{ getSecurityEventIcon(event.type) }}
+                  </mat-icon>
+                  
+                  <div matListItemTitle class="activity-info">
+                    <h4>{{ event.description }}</h4>
+                    <p class="activity-details">
+                      {{ event.location }} • {{ event.ipAddress }}
+                    </p>
+                    <p class="activity-time">
+                      {{ event.timestamp.toLocaleString() }}
+                    </p>
+                  </div>
+                </mat-list-item>
+              </mat-list>
+
+              <div *ngIf="recentActivity.length === 0" 
+                   class="empty-state"
+                   role="status">
+                <mat-icon>security</mat-icon>
+                <p>No recent security activity</p>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+
+  <!-- Unsaved Changes Indicator -->
+  <div *ngIf="hasUnsavedChanges" 
+       class="unsaved-indicator"
+       role="status"
+       aria-live="polite">
+    <mat-icon>edit</mat-icon>
+    <span class="indicator-text">You have unsaved changes</span>
+  </div>
+</div>

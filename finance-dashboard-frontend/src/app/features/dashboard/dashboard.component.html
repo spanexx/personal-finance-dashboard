@@ -1,0 +1,191 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1 class="dashboard-title" id="dashboard-heading">Financial Dashboard</h1>
+    <div class="time-filter" cdkTrapFocus>
+      <mat-form-field appearance="outline">
+        <mat-label>Time Period</mat-label>
+        <mat-select [(value)]="selectedTimePeriod" #periodSelect
+                  aria-label="Select time period for data display" 
+                  (selectionChange)="loadDashboardData()"
+                  cdkFocusInitial>
+          <mat-option *ngFor="let period of timePeriods" [value]="period.value">
+            {{ period.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="dashboard-grid" role="region" aria-labelledby="dashboard-heading">
+    <!-- Financial Summary Widget -->
+    <mat-card class="dashboard-card summary-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar aria-hidden="true">account_balance</mat-icon>
+        <mat-card-title id="financial-summary-title">Financial Summary</mat-card-title>
+        <mat-card-subtitle>{{ currentDateDisplay }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content aria-labelledby="financial-summary-title">
+        <div class="summary-data" role="list">
+          <div class="summary-item income" role="listitem">
+            <span class="label" id="income-label">Income</span>
+            <span class="amount" aria-labelledby="income-label">{{ totalIncome | currency }}</span>
+          </div>
+          <div class="summary-item expenses" role="listitem">
+            <span class="label" id="expenses-label">Expenses</span>
+            <span class="amount" aria-labelledby="expenses-label">{{ totalExpenses | currency }}</span>
+          </div>
+          <div class="summary-item balance" [ngClass]="{'positive': netBalance >= 0, 'negative': netBalance < 0}" role="listitem">
+            <span class="label" id="balance-label">Net Balance</span>
+            <span class="amount" aria-labelledby="balance-label">{{ netBalance | currency }}</span>
+          </div>
+          <div class="summary-item savings-rate" role="listitem">
+            <span class="label" id="savings-rate-label">Savings Rate</span>
+            <span class="amount" aria-labelledby="savings-rate-label">{{ savingsRate | number:'1.0-2' }}%</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>    <!-- Recent Transactions Widget -->
+    <mat-card class="dashboard-card transactions-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar aria-hidden="true">receipt_long</mat-icon>
+        <mat-card-title id="recent-transactions-title">Recent Transactions</mat-card-title>
+        <a mat-button color="primary" [routerLink]="['/transactions']" aria-label="View all transactions">View All</a>
+      </mat-card-header>
+      <mat-card-content aria-labelledby="recent-transactions-title">
+        <div *ngIf="recentTransactions.length === 0" class="no-data">
+          <p>No recent transactions found.</p>
+        </div>
+        <mat-list *ngIf="recentTransactions.length > 0">
+          <mat-list-item *ngFor="let transaction of recentTransactions">
+            <div matListItemIcon>
+              <div class="transaction-icon" [style.background-color]="transaction.categoryDetails?.color || '#cccccc'">
+                <mat-icon>{{ transaction.categoryDetails?.icon || 'category' }}</mat-icon>
+              </div>
+            </div>
+            <div matListItemTitle>{{ transaction.description }}</div>
+            <div matListItemLine>{{ transaction.date | date:'MMM d, y' }} - {{ transaction.payee }}</div>
+            <div matListItemMeta [ngClass]="{'income': transaction.type === 'income', 'expense': transaction.type === 'expense'}">
+              {{ transaction.type === 'income' ? '+' : '-' }}{{ transaction.amount | currency }}
+            </div>
+          </mat-list-item>
+        </mat-list>
+      </mat-card-content>
+    </mat-card>    <!-- Expense Breakdown Chart Widget -->
+    <mat-card class="dashboard-card chart-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>pie_chart</mat-icon>
+        <mat-card-title>Expense Breakdown</mat-card-title>
+      </mat-card-header>      <mat-card-content>
+        <div *ngIf="!expenseChartData.labels || expenseChartData.labels.length === 0" 
+             class="chart-placeholder"
+             aria-live="polite">
+          <div class="chart-message">
+            <mat-icon>insert_chart</mat-icon>
+            <p>No expense data available</p>
+          </div>
+        </div>
+        <div *ngIf="expenseChartData.labels && expenseChartData.labels.length > 0" 
+             class="chart-container"
+             role="region"
+             aria-live="polite">
+          <div class="sr-only" aria-live="polite">
+            {{ getChartSummaryText() }}
+          </div>
+          <canvas baseChart
+            [type]="'pie'"
+            [data]="expenseChartData"
+            [options]="expenseChartOptions"
+            aria-label="Expense breakdown by category. Use arrow keys to navigate chart data."
+            (keydown.arrowRight)="navigateChartData('next')"
+            (keydown.arrowLeft)="navigateChartData('previous')"
+            tabindex="0">
+          </canvas>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Budget Progress Widget -->
+    <mat-card class="dashboard-card budget-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>account_balance_wallet</mat-icon>
+        <mat-card-title>Budget Progress</mat-card-title>
+        <a mat-button color="primary" [routerLink]="['/budgets']">Manage Budgets</a>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="budgetItems.length === 0" class="no-data">
+          <p>No budget categories set up.</p>
+          <button mat-stroked-button color="primary" [routerLink]="['/budgets/setup']">
+            <mat-icon>add</mat-icon> Create Budget
+          </button>
+        </div>
+        <div *ngIf="budgetItems.length > 0" class="budget-progress-list">
+          <div class="budget-item" *ngFor="let item of budgetItems">
+            <div class="budget-item-header">
+              <span class="category">{{ item.category }}</span>
+              <span class="amount">{{ item.spent | currency }} / {{ item.limit | currency }}</span>
+            </div>
+            <mat-progress-bar 
+              [color]="getBudgetColor(item)" 
+              [value]="(item.spent / item.limit) * 100">
+            </mat-progress-bar>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Savings Goals Widget -->
+    <mat-card class="dashboard-card goals-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>emoji_events</mat-icon>
+        <mat-card-title>Savings Goals</mat-card-title>
+        <a mat-button color="primary" [routerLink]="['/goals']">View Goals</a>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="savingsGoals.length === 0" class="no-data">
+          <p>No savings goals found.</p>
+          <button mat-stroked-button color="primary" [routerLink]="['/goals/create']">
+            <mat-icon>add</mat-icon> Create Goal
+          </button>
+        </div>
+        <div *ngIf="savingsGoals.length > 0" class="goals-list">
+          <div class="goal-item" *ngFor="let goal of savingsGoals">
+            <div class="goal-title">{{ goal.name }}</div>
+            <div class="goal-progress">
+              <mat-progress-bar 
+                color="accent" 
+                [value]="(goal.currentAmount / goal.targetAmount) * 100">
+              </mat-progress-bar>
+              <div class="goal-amount">
+                {{ goal.currentAmount | currency }} / {{ goal.targetAmount | currency }}
+              </div>
+            </div>
+            <div class="goal-date">
+              Target date: {{ goal.targetDate | date:'MMM d, y' }}
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>    <!-- Income vs. Expenses Widget -->
+    <mat-card class="dashboard-card chart-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>bar_chart</mat-icon>
+        <mat-card-title>Income vs. Expenses</mat-card-title>
+      </mat-card-header>      <mat-card-content>
+        <div *ngIf="!incomeExpenseChartData.labels || incomeExpenseChartData.labels.length === 0" class="chart-placeholder">
+          <div class="chart-message">
+            <mat-icon>insert_chart</mat-icon>
+            <p>No income/expense data available</p>
+          </div>
+        </div>
+        <div *ngIf="incomeExpenseChartData.labels && incomeExpenseChartData.labels.length > 0" class="chart-container">
+          <canvas baseChart
+            [type]="'bar'"
+            [data]="incomeExpenseChartData"
+            [options]="incomeExpenseChartOptions"
+            aria-label="Income versus expenses comparison by period">
+          </canvas>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

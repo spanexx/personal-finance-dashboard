@@ -1,0 +1,289 @@
+@use 'sass:math';
+@import '../../../assets/styles/variables';
+@import '../../../assets/styles/mixins';
+
+.dashboard-container {
+  padding: $spacing-4;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-4;
+
+  .dashboard-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 500;
+    color: $neutral-800;
+  }
+
+  .time-filter {
+    min-width: 200px;
+    
+    mat-form-field {
+      width: 100%;
+    }
+  }
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+  gap: $spacing-4;
+  
+  @media (max-width: 1199px) {
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  }
+  
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-card {
+  height: 100%;
+  margin-bottom: $spacing-4;
+  border-radius: 8px;
+  
+  &.summary-card {
+    .summary-data {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: $spacing-3;
+      margin-top: $spacing-3;
+      
+      @media (max-width: 767px) {
+        grid-template-columns: 1fr;
+      }
+      
+      .summary-item {
+        display: flex;
+        flex-direction: column;
+        padding: $spacing-3;
+        border-radius: 8px;
+        background-color: rgba($primary-500, 0.05);
+        
+        &.income {
+          background-color: rgba($success, 0.05);
+          .amount {
+            color: $success;
+          }
+        }
+        
+        &.expenses {
+          background-color: rgba($error, 0.05);
+          .amount {
+            color: $error;
+          }
+        }
+        
+        &.balance {
+          &.positive {
+            background-color: rgba($success, 0.05);
+            .amount {
+              color: $success;
+            }
+          }
+          
+          &.negative {
+            background-color: rgba($error, 0.05);
+            .amount {
+              color: $error;
+            }
+          }
+        }
+        
+        .label {
+          font-size: 14px;
+          color: $neutral-600;
+          margin-bottom: $spacing-2;
+        }
+        
+        .amount {
+          font-size: 24px;
+          font-weight: 500;
+          color: $neutral-800;
+        }
+      }
+    }
+  }
+  
+  &.transactions-card {
+    mat-list {
+      padding: 0;
+      
+      mat-list-item {
+        margin-bottom: $spacing-2;
+        height: auto;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+        
+        &:hover {
+          background-color: rgba($primary-500, 0.05);
+        }
+        
+        .transaction-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          color: white;
+          
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+        }
+        
+        .income {
+          color: $success;
+        }
+        
+        .expense {
+          color: $error;
+        }
+      }
+    }
+  }
+  
+  &.budget-card {
+    .budget-progress-list {
+      .budget-item {
+        margin-bottom: $spacing-3;
+        
+        .budget-item-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: $spacing-2;
+          
+          .category {
+            font-weight: 500;
+          }
+          
+          .amount {
+            color: $neutral-600;
+          }
+        }
+      }
+    }
+  }
+  
+  &.goals-card {
+    .goals-list {
+      .goal-item {
+        margin-bottom: $spacing-4;
+        padding-bottom: $spacing-3;
+        border-bottom: 1px solid $neutral-200;
+        
+        &:last-child {
+          border-bottom: none;
+        }
+        
+        .goal-title {
+          font-weight: 500;
+          margin-bottom: $spacing-2;
+        }
+        
+        .goal-progress {
+          margin-bottom: $spacing-2;
+          
+          mat-progress-bar {
+            margin-bottom: $spacing-1;
+          }
+          
+          .goal-amount {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: $neutral-600;
+          }
+        }
+        
+        .goal-date {
+          font-size: 12px;
+          color: $neutral-600;
+        }
+      }
+    }
+  }
+  
+  &.chart-card {
+    .chart-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 300px;
+      background-color: rgba($neutral-200, 0.3);
+      border-radius: 8px;
+      
+      .chart-message {
+        text-align: center;
+        color: $neutral-400;
+        
+        mat-icon {
+          font-size: 48px;
+          width: 48px;
+          height: 48px;
+          margin-bottom: $spacing-2;
+          opacity: 0.5;
+        }
+        
+        p {
+          margin: 0;
+          font-size: 16px;
+        }
+      }
+    }
+    
+    .chart-container {
+      height: 300px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: $spacing-2;
+      
+      canvas {
+        max-width: 100%;
+      }
+    }
+  }
+}
+
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-4;
+  text-align: center;
+  color: $neutral-600;
+  
+  p {
+    margin-bottom: $spacing-3;
+  }
+  
+  button {
+    margin-top: $spacing-2;
+  }
+}
+
+mat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  .mat-mdc-card-header-text {
+    flex: 1;
+  }
+  
+  a {
+    margin-left: $spacing-2;
+  }
+}

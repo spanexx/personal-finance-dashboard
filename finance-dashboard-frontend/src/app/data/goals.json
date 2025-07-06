@@ -1,0 +1,138 @@
+{
+  "data": [
+    {
+      "id": "goal1",
+      "user": "user1",
+      "name": "Emergency Fund",
+      "targetAmount": 10000.00,
+      "currentAmount": 5000.00,
+      "progress": 50,
+      "startDate": "2025-01-01T00:00:00.000Z",
+      "targetDate": "2025-12-31T23:59:59.999Z",
+      "description": "Build a six-month emergency fund",
+      "category": "Savings",
+      "priority": "high",
+      "status": "active",
+      "monthlyContributionNeeded": 500.00,
+      "projectedCompletionDate": "2025-12-15T00:00:00.000Z",
+      "contributions": [
+        {
+          "amount": 1000.00,
+          "date": "2025-01-15T00:00:00.000Z",
+          "notes": "Initial deposit"
+        },
+        {
+          "amount": 500.00,
+          "date": "2025-02-15T00:00:00.000Z",
+          "notes": "Monthly contribution"
+        },
+        {
+          "amount": 500.00,
+          "date": "2025-03-15T00:00:00.000Z",
+          "notes": "Monthly contribution"
+        },
+        {
+          "amount": 500.00,
+          "date": "2025-04-15T00:00:00.000Z",
+          "notes": "Monthly contribution"
+        },
+        {
+          "amount": 2500.00,
+          "date": "2025-05-15T00:00:00.000Z",
+          "notes": "Bonus contribution from tax refund"
+        }
+      ],
+      "reminderFrequency": "monthly",
+      "icon": "savings",
+      "color": "#1976d2",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "updatedAt": "2025-05-15T00:00:00.000Z"
+    },
+    {
+      "id": "goal2",
+      "user": "user1",
+      "name": "New Car",
+      "targetAmount": 25000.00,
+      "currentAmount": 15000.00,
+      "progress": 60,
+      "startDate": "2025-01-01T00:00:00.000Z",
+      "targetDate": "2026-06-30T23:59:59.999Z",
+      "description": "Save for a new car",
+      "category": "Transportation",
+      "priority": "medium",
+      "status": "active",
+      "monthlyContributionNeeded": 833.33,
+      "projectedCompletionDate": "2026-05-10T00:00:00.000Z",
+      "contributions": [
+        {
+          "amount": 10000.00,
+          "date": "2025-01-01T00:00:00.000Z",
+          "notes": "Initial savings"
+        },
+        {
+          "amount": 1000.00,
+          "date": "2025-02-01T00:00:00.000Z",
+          "notes": "Monthly contribution"
+        },
+        {
+          "amount": 1000.00,
+          "date": "2025-03-01T00:00:00.000Z",
+          "notes": "Monthly contribution"
+        },
+        {
+          "amount": 1000.00,
+          "date": "2025-04-01T00:00:00.000Z",
+          "notes": "Monthly contribution"
+        },
+        {
+          "amount": 2000.00,
+          "date": "2025-05-01T00:00:00.000Z",
+          "notes": "Increased monthly contribution"
+        }
+      ],
+      "reminderFrequency": "monthly",
+      "icon": "directions_car",
+      "color": "#ff9800",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "updatedAt": "2025-05-01T00:00:00.000Z"
+    },
+    {
+      "id": "goal3",
+      "user": "user1",
+      "name": "Vacation Fund",
+      "targetAmount": 3000.00,
+      "currentAmount": 1500.00,
+      "progress": 50,
+      "startDate": "2025-03-01T00:00:00.000Z",
+      "targetDate": "2025-08-31T23:59:59.999Z",
+      "description": "Save for summer vacation",
+      "category": "Travel",
+      "priority": "low",
+      "status": "active",
+      "monthlyContributionNeeded": 300.00,
+      "projectedCompletionDate": "2025-08-15T00:00:00.000Z",
+      "contributions": [
+        {
+          "amount": 500.00,
+          "date": "2025-03-15T00:00:00.000Z",
+          "notes": "Initial deposit"
+        },
+        {
+          "amount": 300.00,
+          "date": "2025-04-15T00:00:00.000Z",
+          "notes": "Monthly contribution"
+        },
+        {
+          "amount": 700.00,
+          "date": "2025-05-15T00:00:00.000Z",
+          "notes": "Extra contribution"
+        }
+      ],
+      "reminderFrequency": "monthly",
+      "icon": "beach_access",
+      "color": "#9c27b0",
+      "createdAt": "2025-03-01T00:00:00.000Z",
+      "updatedAt": "2025-05-15T00:00:00.000Z"
+    }
+  ]
+}

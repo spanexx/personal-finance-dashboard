@@ -1,0 +1,19 @@
+/* You can add global styles to this file, and also import other style files */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+/* Include the common styles for Angular material. We include this here so that you only
+   have to load a single css file for Angular Material in your app. */
+
+/* Define a custom theme */
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+/* Import Material Icons */
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+/* Import our custom styles */
+@import './assets/styles/main.scss';
+@import './assets/styles/_accessibility.scss';

@@ -1,0 +1,331 @@
+<div class="analytics-dashboard-container" focusTrap>
+  <mat-card class="dashboard-header">
+    <mat-card-header>
+      <mat-card-title>Transaction Analytics Dashboard</mat-card-title>
+      <mat-card-subtitle>Gain insights into your spending patterns and financial trends</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="dashboard-controls">
+        <!-- Time Period Selection -->
+        <mat-button-toggle-group [(ngModel)]="selectedTimeframe" (change)="changeTimeframe(selectedTimeframe)" class="time-period-toggle">
+          <mat-button-toggle value="week">Week</mat-button-toggle>
+          <mat-button-toggle value="month">Month</mat-button-toggle>
+          <mat-button-toggle value="quarter">Quarter</mat-button-toggle>
+          <mat-button-toggle value="year">Year</mat-button-toggle>
+          <mat-button-toggle value="custom">Custom</mat-button-toggle>
+        </mat-button-toggle-group>
+        
+        <!-- Custom Date Range -->
+        <div *ngIf="isCustomDateRange" class="custom-date-range">
+          <form [formGroup]="dateRangeForm" (ngSubmit)="applyCustomDateRange()">
+            <mat-form-field appearance="outline">
+              <mat-label>Start Date</mat-label>
+              <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+              <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+              <mat-datepicker #startPicker></mat-datepicker>
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline">
+              <mat-label>End Date</mat-label>
+              <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+              <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+              <mat-datepicker #endPicker></mat-datepicker>
+            </mat-form-field>
+            
+            <button mat-raised-button color="primary" type="submit" [disabled]="!dateRangeForm.valid">Apply</button>
+          </form>
+        </div>
+        
+        <!-- Chart Type Selection -->
+        <mat-button-toggle-group [(ngModel)]="selectedChartType" (change)="changeChartType(selectedChartType)" class="chart-type-toggle">
+          <mat-button-toggle value="line">
+            <mat-icon>show_chart</mat-icon> Line
+          </mat-button-toggle>
+          <mat-button-toggle value="bar">
+            <mat-icon>bar_chart</mat-icon> Bar
+          </mat-button-toggle>
+          <mat-button-toggle value="pie">
+            <mat-icon>pie_chart</mat-icon> Pie
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+        
+        <!-- Comparison Toggle -->
+        <mat-slide-toggle [(ngModel)]="showComparison" (change)="toggleComparison()" class="comparison-toggle">
+          Compare with
+        </mat-slide-toggle>
+        
+        <mat-button-toggle-group *ngIf="showComparison" [(ngModel)]="comparisonPeriod" (change)="changeComparisonPeriod(comparisonPeriod)" class="comparison-period-toggle">
+          <mat-button-toggle value="previous">Previous Period</mat-button-toggle>
+          <mat-button-toggle value="lastYear">Last Year</mat-button-toggle>
+        </mat-button-toggle-group>
+        
+        <!-- Export Options -->
+        <div class="export-options">
+          <button mat-icon-button [matMenuTriggerFor]="exportMenu" aria-label="Export options">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #exportMenu="matMenu">
+            <button mat-menu-item (click)="exportAnalyticsData()">
+              <mat-icon>cloud_download</mat-icon>
+              <span>Export Data (CSV)</span>
+            </button>
+            <button mat-menu-item (click)="printDashboard()">
+              <mat-icon>print</mat-icon>
+              <span>Print Dashboard</span>
+            </button>
+          </mat-menu>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading analytics data...</p>
+  </div>
+  
+  <!-- Error State -->
+  <div *ngIf="error" class="error-container">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-raised-button color="primary" (click)="loadAnalyticsData()">Retry</button>
+  </div>
+  
+  <!-- Analytics Dashboard -->
+  <div *ngIf="!loading && !error && transactionAnalytics" class="analytics-content">    <!-- Financial Summary -->
+    <mat-card class="summary-card" tabindex="0" #summarySection>
+      <mat-card-header>
+        <mat-card-title>Financial Summary</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="summary-content" aria-label="Financial summary showing income, expenses, and net income">>
+        <div class="summary-item income">
+          <div class="summary-label">Income</div>
+          <div class="summary-value">{{ transactionAnalytics.totalIncome | currency }}</div>
+        </div>
+        <div class="summary-item expenses">
+          <div class="summary-label">Expenses</div>
+          <div class="summary-value">{{ transactionAnalytics.totalExpenses | currency }}</div>
+        </div>
+        <div class="summary-item net">
+          <div class="summary-label">Net Income</div>
+          <div class="summary-value" [ngClass]="transactionAnalytics.netIncome >= 0 ? 'positive' : 'negative'">
+            {{ transactionAnalytics.netIncome | currency }}
+          </div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Transactions</div>
+          <div class="summary-value">{{ transactionAnalytics.transactionCount }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Average Transaction</div>
+          <div class="summary-value">{{ transactionAnalytics.averageTransaction | currency }}</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    
+    <!-- Monthly Trends Chart -->
+    <mat-card class="chart-card">
+      <mat-card-header>        <mat-card-title>Monthly Trends</mat-card-title>
+        <div class="chart-actions">
+          <button mat-icon-button (click)="exportChartAsImage('monthlyTrendsChart')" aria-label="Export chart">
+            <mat-icon>download</mat-icon>
+          </button>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <canvas id="monthlyTrendsChart" 
+                [chart]="monthlyTrendsChart" 
+                accessibleChart 
+                [chartTitle]="'Monthly Financial Trends'" 
+                [chartData]="monthlyTrendsChart?.data" 
+                [chartType]="selectedChartType"
+                tabindex="0"
+                aria-label="Monthly financial trends chart showing income, expenses, and net income over time">
+        </canvas>
+      </mat-card-content>
+    </mat-card>
+    
+    <!-- Category Breakdown Chart -->
+    <mat-card class="chart-card">
+      <mat-card-header>        <mat-card-title>Category Breakdown</mat-card-title>
+        <div class="chart-actions">
+          <button mat-icon-button (click)="exportChartAsImage('categoryBreakdownChart')" aria-label="Export chart">
+            <mat-icon>download</mat-icon>
+          </button>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <canvas id="categoryBreakdownChart" 
+                [chart]="categoryBreakdownChart" 
+                accessibleChart 
+                [chartTitle]="'Category Breakdown'" 
+                [chartData]="categoryBreakdownChart?.data" 
+                [chartType]="'pie'"
+                tabindex="0"
+                aria-label="Pie chart showing spending breakdown by category">
+        </canvas>
+      </mat-card-content>
+    </mat-card>
+    
+    <!-- Spending Patterns Chart -->
+    <mat-card class="chart-card">
+      <mat-card-header>        <mat-card-title>Spending Patterns by Day of Week</mat-card-title>
+        <div class="chart-actions">
+          <button mat-icon-button (click)="exportChartAsImage('spendingPatternsChart')" aria-label="Export chart">
+            <mat-icon>download</mat-icon>
+          </button>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <canvas id="spendingPatternsChart" 
+                [chart]="spendingPatternsChart" 
+                accessibleChart 
+                [chartTitle]="'Spending Patterns by Day of Week'" 
+                [chartData]="spendingPatternsChart?.data" 
+                [chartType]="selectedChartType === 'pie' ? 'bar' : selectedChartType"
+                tabindex="0"
+                aria-label="Chart showing average spending amount by day of the week">
+        </canvas>
+      </mat-card-content>
+    </mat-card>
+    
+    <!-- Cash Flow Visualization -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Cash Flow Analysis</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <app-cash-flow-visualization [cashFlowData]="transactionAnalytics.monthlyTrends"></app-cash-flow-visualization>
+      </mat-card-content>
+    </mat-card>
+    
+    <!-- Top Merchants -->
+    <mat-card class="data-card">
+      <mat-card-header>
+        <mat-card-title>Top Merchants</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <table mat-table [dataSource]="transactionAnalytics.topMerchants" class="mat-elevation-z0">
+          <!-- Merchant Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Merchant</th>
+            <td mat-cell *matCellDef="let merchant">{{ merchant.name }}</td>
+          </ng-container>
+          
+          <!-- Amount Column -->
+          <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef>Amount</th>
+            <td mat-cell *matCellDef="let merchant">{{ merchant.amount | currency }}</td>
+          </ng-container>
+          
+          <!-- Transaction Count Column -->
+          <ng-container matColumnDef="count">
+            <th mat-header-cell *matHeaderCellDef>Transactions</th>
+            <td mat-cell *matCellDef="let merchant">{{ merchant.count }}</td>
+          </ng-container>
+          
+          <tr mat-header-row *matHeaderRowDef="['name', 'amount', 'count']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['name', 'amount', 'count'];"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+    
+    <!-- Category Breakdown Table -->
+    <mat-card class="data-card">
+      <mat-card-header>
+        <mat-card-title>Category Breakdown</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <table mat-table [dataSource]="transactionAnalytics.categoryBreakdown" class="mat-elevation-z0">
+          <!-- Category Column -->
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef>Category</th>
+            <td mat-cell *matCellDef="let category">{{ category.category }}</td>
+          </ng-container>
+          
+          <!-- Amount Column -->
+          <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef>Amount</th>
+            <td mat-cell *matCellDef="let category">{{ category.amount | currency }}</td>
+          </ng-container>
+          
+          <!-- Percentage Column -->
+          <ng-container matColumnDef="percentage">
+            <th mat-header-cell *matHeaderCellDef>Percentage</th>
+            <td mat-cell *matCellDef="let category">{{ category.percentage | number:'1.1-1' }}%</td>
+          </ng-container>
+          
+          <!-- Count Column -->
+          <ng-container matColumnDef="count">
+            <th mat-header-cell *matHeaderCellDef>Transactions</th>
+            <td mat-cell *matCellDef="let category">{{ category.count }}</td>
+          </ng-container>
+          
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let category">
+              <button mat-icon-button color="primary" (click)="showCategoryDetails(category)" aria-label="View category details">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+            <tr mat-header-row *matHeaderRowDef="['category', 'amount', 'percentage', 'count', 'actions']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['category', 'amount', 'percentage', 'count', 'actions'];"
+              (click)="showCategoryDetails(row)" 
+              class="clickable-row"
+              tabindex="0"
+              (keyup.enter)="showCategoryDetails(row)"
+              role="button"
+              [attr.aria-label]="'View details for category ' + row.category + ' with amount ' + (row.amount | currency)"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+    
+    <!-- Insights Widget -->
+    <mat-card class="insights-card" *ngIf="spendingAnalysis && spendingAnalysis.insights">
+      <mat-card-header>
+        <mat-card-title>Financial Insights</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="insights-list">
+          <div *ngFor="let insight of spendingAnalysis.insights.unusualSpending" class="insight-item">
+            <mat-icon color="warn">priority_high</mat-icon>
+            <div class="insight-content">
+              <div class="insight-title">Unusual Spending: {{ insight.category }}</div>
+              <div class="insight-description">{{ insight.amount | currency }} on {{ insight.date | date }}</div>
+              <div class="insight-reason">{{ insight.reason }}</div>
+            </div>
+          </div>
+          
+          <div class="insight-item" *ngIf="spendingAnalysis.insights.largestTransaction">
+            <mat-icon color="primary">trending_up</mat-icon>
+            <div class="insight-content">
+              <div class="insight-title">Largest Transaction</div>
+              <div class="insight-description">
+                {{ spendingAnalysis.insights.largestTransaction.amount | currency }} - 
+                {{ spendingAnalysis.insights.largestTransaction.description }}
+              </div>
+              <div class="insight-date">
+                {{ spendingAnalysis.insights.largestTransaction.date | date }}
+              </div>
+            </div>
+          </div>
+          
+          <div class="insight-item" *ngIf="spendingAnalysis.insights.mostFrequentCategory">
+            <mat-icon color="accent">repeat</mat-icon>
+            <div class="insight-content">
+              <div class="insight-title">Most Frequent Category</div>
+              <div class="insight-description">
+                {{ spendingAnalysis.insights.mostFrequentCategory.name }} -
+                {{ spendingAnalysis.insights.mostFrequentCategory.count }} transactions
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

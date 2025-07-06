@@ -1,0 +1,329 @@
+/* Main Styles for Personal Finance Dashboard */
+@use "sass:math";
+@import './variables';
+@import './mixins';
+
+/* Base styles */
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: $text-primary;
+  background-color: $neutral-100;
+}
+
+body {
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: $primary-500;
+  text-decoration: none;
+  
+  &:hover {
+    color: $primary-700;
+    text-decoration: underline;
+  }
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Typography */
+h1 {
+  @include heading-1;
+  margin: $spacing-6 0 $spacing-4;
+  color: $text-primary;
+}
+
+h2 {
+  @include heading-2;
+  margin: $spacing-5 0 $spacing-3;
+  color: $text-primary;
+}
+
+h3 {
+  @include heading-3;
+  margin: $spacing-4 0 $spacing-3;
+  color: $text-primary;
+}
+
+h4 {
+  @include heading-4;
+  margin: $spacing-3 0 $spacing-2;
+  color: $text-primary;
+}
+
+p {
+  @include body-text;
+  margin: 0 0 $spacing-4;
+}
+
+.text-small {
+  @include small-text;
+}
+
+.text-primary {
+  color: $primary-500;
+}
+
+.text-secondary {
+  color: $secondary-500;
+}
+
+.text-accent {
+  color: $accent-500;
+}
+
+.text-success {
+  color: $success;
+}
+
+.text-error {
+  color: $error;
+}
+
+.text-warning {
+  color: $warning;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Layout */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 $spacing-4;
+  
+  @include respond-up(md) {
+    padding: 0 $spacing-5;
+  }
+  
+  @include respond-up(lg) {
+    padding: 0 $spacing-6;
+  }
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -#{$spacing-2};
+}
+
+.col {
+  flex: 1 0 0%;
+  padding: 0 $spacing-2;
+}
+
+@for $i from 1 through 12 {
+  .col-#{$i} {
+    flex: 0 0 percentage(math.div($i, 12));
+    max-width: percentage(math.div($i, 12));
+    padding: 0 $spacing-2;
+  }
+}
+
+/* Cards */
+.card {
+  @include card;
+  padding: $spacing-4;
+  margin-bottom: $spacing-4;
+}
+
+.card-header {
+  @include flex-between;
+  margin-bottom: $spacing-3;
+  
+  h3, h4 {
+    margin: 0;
+  }
+}
+
+.card-body {
+  margin-bottom: $spacing-3;
+}
+
+.card-footer {
+  @include flex-between;
+  border-top: 1px solid $neutral-200;
+  padding-top: $spacing-3;
+}
+
+/* Buttons */
+.btn {
+  @include button-base;
+  padding: $spacing-2 $spacing-4;
+  font-size: $font-size-base;
+}
+
+.btn-sm {
+  padding: $spacing-1 $spacing-3;
+  font-size: $font-size-sm;
+}
+
+.btn-lg {
+  padding: $spacing-3 $spacing-5;
+  font-size: $font-size-md;
+}
+
+.btn-primary {
+  @include primary-button;
+}
+
+.btn-secondary {
+  @include secondary-button;
+}
+
+.btn-outline {
+  @include outline-button;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: $border-radius-full;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: $spacing-4;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: $spacing-2;
+  font-weight: $font-weight-medium;
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  padding: $spacing-2 $spacing-3;
+  font-size: $font-size-base;
+  line-height: 1.5;
+  color: $text-primary;
+  background-color: $background-light;
+  border: 1px solid $neutral-300;
+  border-radius: $border-radius-md;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  
+  &:focus {
+    border-color: $primary-400;
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba($primary-500, 0.25);
+  }
+  
+  &:disabled {
+    background-color: $neutral-200;
+    opacity: 0.7;
+  }
+}
+
+.form-error {
+  color: $error;
+  font-size: $font-size-sm;
+  margin-top: $spacing-1;
+}
+
+/* Utilities */
+.mt-1 { margin-top: $spacing-1; }
+.mt-2 { margin-top: $spacing-2; }
+.mt-3 { margin-top: $spacing-3; }
+.mt-4 { margin-top: $spacing-4; }
+.mt-5 { margin-top: $spacing-5; }
+
+.mb-1 { margin-bottom: $spacing-1; }
+.mb-2 { margin-bottom: $spacing-2; }
+.mb-3 { margin-bottom: $spacing-3; }
+.mb-4 { margin-bottom: $spacing-4; }
+.mb-5 { margin-bottom: $spacing-5; }
+
+.ml-1 { margin-left: $spacing-1; }
+.ml-2 { margin-left: $spacing-2; }
+.ml-3 { margin-left: $spacing-3; }
+.ml-4 { margin-left: $spacing-4; }
+.ml-5 { margin-left: $spacing-5; }
+
+.mr-1 { margin-right: $spacing-1; }
+.mr-2 { margin-right: $spacing-2; }
+.mr-3 { margin-right: $spacing-3; }
+.mr-4 { margin-right: $spacing-4; }
+.mr-5 { margin-right: $spacing-5; }
+
+.p-1 { padding: $spacing-1; }
+.p-2 { padding: $spacing-2; }
+.p-3 { padding: $spacing-3; }
+.p-4 { padding: $spacing-4; }
+.p-5 { padding: $spacing-5; }
+
+.pt-1 { padding-top: $spacing-1; }
+.pt-2 { padding-top: $spacing-2; }
+.pt-3 { padding-top: $spacing-3; }
+.pt-4 { padding-top: $spacing-4; }
+.pt-5 { padding-top: $spacing-5; }
+
+.pb-1 { padding-bottom: $spacing-1; }
+.pb-2 { padding-bottom: $spacing-2; }
+.pb-3 { padding-bottom: $spacing-3; }
+.pb-4 { padding-bottom: $spacing-4; }
+.pb-5 { padding-bottom: $spacing-5; }
+
+.pl-1 { padding-left: $spacing-1; }
+.pl-2 { padding-left: $spacing-2; }
+.pl-3 { padding-left: $spacing-3; }
+.pl-4 { padding-left: $spacing-4; }
+.pl-5 { padding-left: $spacing-5; }
+
+.pr-1 { padding-right: $spacing-1; }
+.pr-2 { padding-right: $spacing-2; }
+.pr-3 { padding-right: $spacing-3; }
+.pr-4 { padding-right: $spacing-4; }
+.pr-5 { padding-right: $spacing-5; }
+
+.flex { display: flex; }
+.flex-column { @include flex-column; }
+.flex-center { @include flex-center; }
+.flex-between { @include flex-between; }
+.flex-start { display: flex; justify-content: flex-start; }
+.flex-end { display: flex; justify-content: flex-end; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-nowrap { flex-wrap: nowrap; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+
+.hidden { display: none; }
+.invisible { visibility: hidden; }
+
+.rounded { border-radius: $border-radius-md; }
+.rounded-lg { border-radius: $border-radius-lg; }
+.rounded-full { border-radius: $border-radius-full; }
+
+.shadow { box-shadow: $shadow-md; }
+.shadow-sm { box-shadow: $shadow-sm; }
+.shadow-lg { box-shadow: $shadow-lg; }
+
+.bg-primary { background-color: $primary-500; }
+.bg-secondary { background-color: $secondary-500; }
+.bg-accent { background-color: $accent-500; }
+.bg-light { background-color: $background-light; }
+.bg-dark { background-color: $background-dark; }
+.bg-neutral { background-color: $neutral-200; }

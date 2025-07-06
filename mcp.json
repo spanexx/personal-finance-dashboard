@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "c:\\Users\\shuga\\OneDrive\\Desktop\\Projects\\MyportFolio\\FINANCE\\personal-finance-dashboard"
+      ]
+    },
+    "git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git",
+        "--repository",
+        "c:\\Users\\shuga\\OneDrive\\Desktop\\Projects\\MyportFolio\\FINANCE\\personal-finance-dashboard"
+      ]
+    },
+    "MongoDB": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mongodb-mcp-server",
+        "--connectionString",
+        "mongodb://localhost:27017/finance_dashboard_dev"
+      ]
+    }
+  }
+}

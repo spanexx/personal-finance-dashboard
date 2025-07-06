@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goal Reminder - {{appName}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .emoji {
+            font-size: 32px;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .content {
+            padding: 30px 20px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .goal-info {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .goal-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .progress-section {
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            background-color: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            position: relative;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #28a745, #20c997);
+            height: 100%;
+            border-radius: 10px;
+            width: {{progressPercentage}}%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-weight: 600;
+            font-size: 12px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-item {
+            background-color: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .motivational {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .motivational h3 {
+            color: #2d3436;
+            margin-bottom: 10px;
+        }
+        
+        .motivational p {
+            color: #636e72;
+            font-style: italic;
+        }
+        
+        .insights {
+            background-color: #e3f2fd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .insights h3 {
+            color: #1565c0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .insights ul {
+            margin-left: 20px;
+        }
+        
+        .insights li {
+            margin-bottom: 8px;
+            color: #424242;
+        }
+        
+        .actions {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 0 10px 10px 0;
+            transition: transform 0.2s ease;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .button.secondary {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+        }
+        
+        .footer {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media only screen and (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .button {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="emoji">🎯</span>
+            <h1>Goal Progress Reminder</h1>
+            <p>Keep pushing towards your financial dreams!</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Hello {{firstName}},
+            </div>
+            
+            <p>It's time for your {{reminderFrequency}} goal progress check-in! Let's see how you're doing with your financial goals.</p>
+            
+            <div class="goal-info">
+                <div class="goal-name">{{goalName}}</div>
+                {{#if description}}
+                <p style="color: #6c757d; margin-bottom: 15px;">{{description}}</p>
+                {{/if}}
+                
+                <div class="progress-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="font-weight: 600;">Progress: {{progressPercentage}}%</span>
+                        <span style="color: #6c757d;">{{currency}}{{currentAmount}} / {{currency}}{{targetAmount}}</span>
+                    </div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                        <div class="progress-text">{{progressPercentage}}%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">{{currency}}{{remainingAmount}}</div>
+                    <div class="stat-label">Remaining</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{timeRemaining}}</div>
+                    <div class="stat-label">Days Left</div>
+                </div>
+                {{#if averageMonthlyContribution}}
+                <div class="stat-item">
+                    <div class="stat-value">{{currency}}{{averageMonthlyContribution}}</div>
+                    <div class="stat-label">Avg Monthly</div>
+                </div>
+                {{/if}}
+                {{#if achievementProbability}}
+                <div class="stat-item">
+                    <div class="stat-value">{{achievementProbability}}%</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+                {{/if}}
+            </div>
+            
+            {{#if motivationalMessage}}
+            <div class="motivational">
+                <h3>💪 Stay Motivated!</h3>
+                <p>{{motivationalMessage}}</p>
+            </div>
+            {{/if}}
+            
+            {{#if insights}}
+            <div class="insights">
+                <h3>💡 Insights & Recommendations</h3>
+                <ul>
+                    {{#each insights}}
+                    <li>{{this}}</li>
+                    {{/each}}
+                </ul>
+            </div>
+            {{/if}}
+            
+            {{#if milestones}}
+            <div style="background-color: #f0f8ff; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <h3 style="color: #1565c0; margin-bottom: 15px;">🏆 Upcoming Milestones</h3>
+                {{#each milestones}}
+                <div style="margin-bottom: 10px; padding: 10px; background-color: white; border-radius: 4px; border-left: 3px solid #667eea;">
+                    <strong>{{this.percentage}}% Milestone</strong> - {{../currency}}{{this.amount}}
+                    {{#if this.isNext}}
+                    <span style="color: #28a745; font-weight: 600; margin-left: 10px;">← Next Goal!</span>
+                    {{/if}}
+                </div>
+                {{/each}}
+            </div>
+            {{/if}}
+            
+            <div class="actions">
+                <a href="{{dashboardUrl}}/goals/{{goalId}}" class="button">View Goal Details</a>
+                <a href="{{dashboardUrl}}/goals/{{goalId}}/contribute" class="button secondary">Make Contribution</a>
+            </div>
+            
+            <p style="margin-top: 30px; font-size: 14px; color: #6c757d;">
+                This reminder is sent {{reminderFrequency}} to help you stay on track with your financial goals. 
+                You can adjust your notification preferences in your account settings.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>Best regards,<br>The {{appName}} Team</p>
+            <p style="margin-top: 15px;">
+                <a href="{{dashboardUrl}}/settings/notifications">Manage Notifications</a> | 
+                <a href="{{supportUrl}}">Contact Support</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

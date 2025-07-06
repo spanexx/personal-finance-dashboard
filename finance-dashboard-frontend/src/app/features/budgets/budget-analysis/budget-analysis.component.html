@@ -1,0 +1,231 @@
+<div class="budget-analysis-container">  <!-- Header Section removed - using the enhanced header below -->
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading$ | async" class="loading-container">
+    <mat-card class="loading-card">
+      <mat-card-content>
+        <div class="loading-content">
+          <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+          <p>Loading budget analysis...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="(error$ | async) && !(isLoading$ | async)" class="error-container">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon class="error-icon">error_outline</mat-icon>
+          <h3>Error Loading Analysis</h3>
+          <p>{{ error$ | async }}</p>
+          <button mat-raised-button color="primary" (click)="store.dispatch({ type: '[Budget] Load Current Budget' })">
+            <mat-icon>refresh</mat-icon>
+            Try Again
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>  </div>
+
+  <!-- Main Content -->
+  <!-- Use selectedBudget$ | async as currentBudget for checks -->
+  <ng-container *ngIf="{ budget: (selectedBudget$ | async), loading: (isLoading$ | async), error: (error$ | async) } as state">
+    <div *ngIf="!state.loading && !state.error" class="analysis-content">
+      <div *ngIf="state.budget" class="analysis-header"> <!-- Check if budget is available -->
+        <div class="header-content">
+          <div class="header-actions">
+          <button mat-stroked-button routerLink="/budgets/overview" class="action-button">
+            <mat-icon>dashboard</mat-icon>
+            Overview
+          </button>
+          <button mat-stroked-button routerLink="/budgets/setup" class="action-button">
+            <mat-icon>settings</mat-icon>
+            Edit Budget
+          </button>        <button mat-raised-button color="primary" [matMenuTriggerFor]="exportMenu" class="action-button">
+          <mat-icon>download</mat-icon>
+          Export
+        </button>
+        <mat-menu #exportMenu="matMenu">
+          <button mat-menu-item (click)="exportToExcel()">
+            <mat-icon>table_view</mat-icon>
+            <span>Export to Excel</span>
+          </button>
+          <button mat-menu-item (click)="exportToPDF()">
+            <mat-icon>picture_as_pdf</mat-icon>
+            <span>Export to PDF</span>
+          </button>
+        </mat-menu>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State (repeated, consider removing one or making it more generic if it's for the whole page) -->
+  <!-- This specific one might be for when analysisData is being generated vs initial budget load -->
+  <!-- <div *ngIf="isLoading$ | async" class="loading-container"> ... </div> -->
+
+  <!-- Error State (repeated) -->
+  <!-- <div *ngIf="(error$ | async) && !(isLoading$ | async)" class="error-container"> ... </div> -->
+
+  <!-- No Budget State -->
+  <div *ngIf="!state.budget && !state.loading && !state.error" class="no-budget-container">
+    <mat-card class="no-budget-card">
+      <mat-card-content>
+        <div class="no-budget-content">
+          <mat-icon class="no-budget-icon">assessment</mat-icon>
+          <h3>No Budget to Analyze</h3>
+          <p>Create a budget first to view detailed analysis and insights.</p>
+          <button mat-raised-button color="primary" routerLink="/budgets/setup">
+            <mat-icon>add</mat-icon>
+            Create Budget
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Analysis Content -->
+  <div *ngIf="!state.loading && !state.error && state.budget && analysisData" class="analysis-content-actual"> <!-- Renamed class to avoid conflict if outer one remains -->
+    <!-- Performance Overview Card -->
+    <mat-card class="performance-card">
+      <mat-card-header>
+        <mat-card-title>Performance Overview</mat-card-title>
+        <mat-card-subtitle>Key budget performance indicators</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="metrics-grid">
+          <!-- Budget Utilization -->
+          <div class="metric-item">
+            <div class="metric-label">Budget Utilization</div>
+            <div class="metric-value">{{ formatPercentage(analysisData.performanceMetrics.budgetUtilization) }}</div>
+          </div>
+
+          <!-- Category Status Distribution -->
+          <div class="metric-item">
+            <div class="metric-label">Categories On Track</div>
+            <div class="metric-value success">
+              {{ analysisData.performanceMetrics.onTrackCategories }}/{{ analysisData.performanceMetrics.totalCategories }}
+            </div>
+          </div>
+
+          <!-- Savings Rate -->
+          <div class="metric-item">
+            <div class="metric-label">Savings Rate</div>
+            <div class="metric-value">{{ formatPercentage(analysisData.trendAnalysis.savingsRate) }}</div>
+          </div>
+
+          <!-- Days Remaining -->
+          <div class="metric-item">
+            <div class="metric-label">Days Remaining</div>
+            <div class="metric-value">{{ analysisData.trendAnalysis.daysRemaining }}</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Spending Analysis Card -->
+    <mat-card class="spending-card">
+      <mat-card-header>
+        <mat-card-title>Spending Analysis</mat-card-title>
+        <mat-card-subtitle>Current spending trends and projections</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="trend-analysis">
+          <div class="trend-metrics">
+            <div class="trend-item">
+              <div class="trend-label">Total Budget</div>
+              <div class="trend-value">{{ formatCurrency(analysisData.trendAnalysis.totalBudget) }}</div>
+            </div>
+
+            <div class="trend-item">
+              <div class="trend-label">Total Spent</div>
+              <div class="trend-value">{{ formatCurrency(analysisData.trendAnalysis.totalSpent) }}</div>
+            </div>
+
+            <div class="trend-item">
+              <div class="trend-label">Daily Average</div>
+              <div class="trend-value">{{ formatCurrency(analysisData.trendAnalysis.averageDailySpending) }}</div>
+            </div>
+
+            <div class="trend-item">
+              <div class="trend-label">Projected Total</div>
+              <div class="trend-value" [class.warning]="analysisData.trendAnalysis.projectedSpending > analysisData.trendAnalysis.totalBudget">
+                {{ formatCurrency(analysisData.trendAnalysis.projectedSpending) }}
+              </div>
+            </div>          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Category Analysis Card -->
+    <mat-card class="categories-card">
+      <mat-card-header>
+        <mat-card-title>Category Analysis</mat-card-title>
+        <mat-card-subtitle>Detailed breakdown by category</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="category-analysis">
+          <!-- Category List -->
+          <div class="category-list">
+            <div *ngFor="let category of analysisData.categoryAnalysis" 
+                 class="category-item"
+                 [class.status-good]="category.status === 'good'"
+                 [class.status-warning]="category.status === 'warning'"
+                 [class.status-over]="category.status === 'over'">
+              
+              <div class="category-header">
+                <div class="category-name">{{ category.categoryName }}</div>
+                <div class="category-amount">{{ formatCurrency(category.spent) }}</div>
+              </div>
+
+              <div class="category-progress">
+                <mat-progress-bar 
+                  mode="determinate" 
+                  [value]="category.percentage"
+                  [color]="category.status === 'over' ? 'warn' : 
+                          category.status === 'warning' ? 'accent' : 'primary'">
+                </mat-progress-bar>
+                <div class="progress-percentage">{{ formatPercentage(category.percentage) }}</div>
+              </div>
+
+              <div class="category-details">
+                <div class="detail-item">
+                  <span class="detail-label">Budgeted:</span>
+                  <span class="detail-value">{{ formatCurrency(category.budgeted) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Remaining:</span>
+                  <span class="detail-value" [class.negative]="category.remaining < 0">
+                    {{ formatCurrency(category.remaining) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Budget vs Spent Chart -->
+          <div class="chart-container budget-vs-spent-chart">
+            <h3>Budget vs Spent by Category</h3>
+            <canvas #budgetVsSpentCanvas *ngIf="budgetVsSpentChart"></canvas>
+          </div>
+
+          <!-- Category Charts -->
+          <div class="category-charts">
+            <div class="chart-container category-breakdown-chart">
+              <h3>Spending Distribution</h3>
+              <canvas #categoryBreakdownCanvas *ngIf="categoryBreakdownChart"></canvas>
+            </div>
+
+            <div class="chart-container category-status-chart">
+              <h3>Category Status</h3>
+              <canvas #progressCanvas *ngIf="progressChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

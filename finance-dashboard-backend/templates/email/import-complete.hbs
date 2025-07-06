@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Import Complete - Personal Finance Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    .container {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 300;
+    }
+    .content {
+      padding: 30px;
+    }
+    .import-summary {
+      background: #f8f9fa;
+      border-left: 4px solid #28a745;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .stat-card {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid #e9ecef;
+    }
+    .stat-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: #28a745;
+      margin-bottom: 5px;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .import-details {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 6px;
+      margin: 20px 0;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    .detail-label {
+      font-weight: 600;
+      color: #495057;
+    }
+    .detail-value {
+      color: #333;
+    }
+    .errors-section {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+    }
+    .warnings-section {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      color: #856404;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+    }
+    .success-rate {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .success-rate-bar {
+      background: #e9ecef;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    .success-rate-fill {
+      background: linear-gradient(90deg, #28a745, #20c997);
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+    .footer {
+      background: #f8f9fa;
+      padding: 20px 30px;
+      text-align: center;
+      color: #6c757d;
+      font-size: 14px;
+      border-top: 1px solid #e9ecef;
+    }
+    @media (max-width: 600px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 Data Import Complete!</h1>
+    </div>
+    
+    <div class="content">
+      <p>Your data import has been completed! Here's a summary of what was processed:</p>
+      
+      <div class="import-summary">
+        <h3 style="margin-top: 0; color: #28a745;">✅ Import Summary</h3>
+        <p style="margin-bottom: 0;">File "{{fileName}}" has been successfully processed.</p>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">{{recordsProcessed}}</div>
+          <div class="stat-label">Processed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{recordsImported}}</div>
+          <div class="stat-label">Imported</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{recordsSkipped}}</div>
+          <div class="stat-label">Skipped</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{errorCount}}</div>
+          <div class="stat-label">Errors</div>
+        </div>
+      </div>
+      
+      <div class="success-rate">
+        <h4>Success Rate: {{successRate}}%</h4>
+        <div class="success-rate-bar">
+          <div class="success-rate-fill" style="width: {{successRate}}%"></div>
+        </div>
+      </div>
+      
+      <div class="import-details">
+        <h4 style="margin-top: 0;">Import Details</h4>
+        <div class="detail-row">
+          <span class="detail-label">Import Type:</span>
+          <span class="detail-value">{{importType}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">File Name:</span>
+          <span class="detail-value">{{fileName}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Processing Time:</span>
+          <span class="detail-value">{{processingTime}}</span>
+        </div>
+      </div>
+      
+      {{#if errors}}
+      <div class="errors-section">
+        <h4 style="margin-top: 0;">⚠️ Errors Encountered</h4>
+        <p>{{errors.length}} error(s) were found during import:</p>
+        <ul style="margin-bottom: 0;">
+          {{#each errors}}
+          <li>Row {{this.row}}: {{this.message}}</li>
+          {{/each}}
+        </ul>
+      </div>
+      {{/if}}
+      
+      {{#if warnings}}
+      <div class="warnings-section">
+        <h4 style="margin-top: 0;">💡 Warnings</h4>
+        <p>{{warnings.length}} warning(s) were noted:</p>
+        <ul style="margin-bottom: 0;">
+          {{#each warnings}}
+          <li>Row {{this.row}}: {{this.message}}</li>
+          {{/each}}
+        </ul>
+      </div>
+      {{/if}}
+      
+      <p>Your imported data is now available in your dashboard. If you have any questions about the import process, please contact our support team.</p>
+    </div>
+    
+    <div class="footer">
+      <p>
+        Best regards,<br>
+        <strong>Personal Finance Dashboard Team</strong>
+      </p>
+      <p style="margin-top: 15px;">
+        This is an automated message. Please do not reply to this email.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

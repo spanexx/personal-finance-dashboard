@@ -1,0 +1,182 @@
+<div class="category-modal">
+  <div class="modal-header">
+    <h2>{{ isEdit ? 'Edit Category' : 'Create New Category' }}</h2>
+    <button
+      type="button"
+      class="close-button"
+      (click)="onCancel()"
+      aria-label="Close dialog">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="modal-content">
+    <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="category-form">
+      
+      <!-- Category Preview -->
+      <div class="category-preview">
+        <div class="preview-card" [ngStyle]="getPreviewStyle()">
+          <mat-icon class="preview-icon">{{ getSelectedIcon() }}</mat-icon>
+          <span class="preview-name">{{ categoryForm.get('name')?.value || 'Category Name' }}</span>
+        </div>
+      </div>
+
+      <!-- Basic Information -->
+      <div class="form-section">
+        <h3>Basic Information</h3>
+        
+        <div class="form-row">
+          <div class="form-field full-width">
+            <mat-form-field appearance="outline">
+              <mat-label>Category Name</mat-label>
+              <input
+                matInput
+                formControlName="name"
+                placeholder="Enter category name"
+                maxlength="50">
+              <mat-hint align="end">{{ categoryForm.get('name')?.value?.length || 0 }}/50</mat-hint>
+              <mat-error *ngIf="isFieldInvalid('name')">
+                {{ getFieldError('name') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <mat-form-field appearance="outline">
+              <mat-label>Category Type</mat-label>
+              <mat-select formControlName="type">
+                <mat-option *ngFor="let type of categoryTypes" [value]="type.value">
+                  {{ type.label }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="isFieldInvalid('type')">
+                {{ getFieldError('type') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field full-width">
+            <mat-form-field appearance="outline">
+              <mat-label>Description (Optional)</mat-label>
+              <textarea
+                matInput
+                formControlName="description"
+                placeholder="Enter category description"
+                maxlength="200"
+                rows="3">
+              </textarea>
+              <mat-hint align="end">{{ categoryForm.get('description')?.value?.length || 0 }}/200</mat-hint>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Parent Category (Optional) -->
+      <div class="form-section">
+        <h3>Parent Category (Optional)</h3>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Parent Category</mat-label>
+          <input matInput formControlName="parent" placeholder="Parent Category ID (or leave blank)" />
+        </mat-form-field>
+      </div>
+
+      <!-- Sort Order -->
+      <div class="form-section">
+        <h3>Sort Order</h3>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Sort Order</mat-label>
+          <input matInput type="number" formControlName="sortOrder" min="0" />
+        </mat-form-field>
+      </div>
+
+      <!-- Budget Allocation -->
+      <div class="form-section">
+        <h3>Budget Allocation</h3>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Budget Allocation</mat-label>
+          <input matInput type="number" formControlName="budgetAllocation" min="0" />
+        </mat-form-field>
+      </div>
+
+      <!-- Icon Selection -->
+      <div class="form-section">
+        <h3>Choose Icon</h3>
+        <div class="icon-grid">
+          <button
+            type="button"
+            *ngFor="let iconOption of categoryIcons"
+            class="icon-option"
+            [class.selected]="getSelectedIcon() === iconOption.icon"
+            (click)="onIconSelect(iconOption.icon)"
+            [attr.aria-label]="'Select ' + iconOption.name + ' icon'">
+            <mat-icon class="icon">{{ iconOption.icon }}</mat-icon>
+            <span class="icon-name">{{ iconOption.name }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Color Selection -->
+      <div class="form-section">
+        <h3>Choose Color</h3>
+        <div class="color-grid">
+          <button
+            type="button"
+            *ngFor="let color of categoryColors"
+            class="color-option"
+            [class.selected]="getSelectedColor() === color"
+            [style.background-color]="color"
+            (click)="onColorSelect(color)"
+            [attr.aria-label]="'Select color ' + color">
+            <mat-icon *ngIf="getSelectedColor() === color" class="check-icon">
+              check
+            </mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Status Toggle -->
+      <div class="form-section" *ngIf="isEdit">
+        <h3>Status</h3>
+        <div class="status-toggle">
+          <mat-checkbox formControlName="isActive">
+            Active Category
+          </mat-checkbox>
+          <mat-hint>Inactive categories won't appear in transaction forms</mat-hint>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Modal Actions -->
+  <div class="modal-actions">
+    <button
+      type="button"
+      mat-stroked-button
+      class="cancel-button"
+      (click)="onCancel()"
+      [disabled]="isLoading">
+      Cancel
+    </button>
+    
+    <button
+      type="submit"
+      mat-raised-button
+      class="save-button"
+      (click)="onSubmit()"
+      [disabled]="categoryForm.invalid || isLoading">
+      <mat-spinner *ngIf="isLoading" diameter="16" class="button-spinner"></mat-spinner>
+      <span *ngIf="!isLoading">{{ isEdit ? 'Update Category' : 'Create Category' }}</span>
+      <span *ngIf="isLoading">{{ isEdit ? 'Updating...' : 'Creating...' }}</span>
+    </button>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+</div>

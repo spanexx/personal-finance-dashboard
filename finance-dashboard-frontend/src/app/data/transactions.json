@@ -1,0 +1,219 @@
+{
+  "data": [
+    {
+      "id": "tx1",
+      "user": "user1",
+      "amount": 120.50,
+      "type": "expense",
+      "category": "cat1",
+      "categoryDetails": {
+        "name": "Groceries",
+        "color": "#43a047",
+        "icon": "shopping_cart"
+      },
+      "date": "2025-05-15T00:00:00.000Z",
+      "description": "Weekly grocery shopping",
+      "notes": "Bought extra for guests",
+      "payee": "Whole Foods",
+      "isRecurring": false,
+      "tags": ["food", "weekly"],
+      "createdAt": "2025-05-15T14:30:00.000Z",
+      "updatedAt": "2025-05-15T14:30:00.000Z"
+    },
+    {
+      "id": "tx2",
+      "user": "user1",
+      "amount": 45.75,
+      "type": "expense",
+      "category": "cat2",
+      "categoryDetails": {
+        "name": "Dining Out",
+        "color": "#e91e63",
+        "icon": "restaurant"
+      },
+      "date": "2025-05-14T00:00:00.000Z",
+      "description": "Dinner with friends",
+      "notes": "",
+      "payee": "Italian Restaurant",
+      "isRecurring": false,
+      "tags": ["social", "dinner"],
+      "createdAt": "2025-05-14T21:45:00.000Z",
+      "updatedAt": "2025-05-14T21:45:00.000Z"
+    },
+    {
+      "id": "tx3",
+      "user": "user1",
+      "amount": 3500.00,
+      "type": "income",
+      "category": "cat9",
+      "categoryDetails": {
+        "name": "Salary",
+        "color": "#4caf50",
+        "icon": "payments"
+      },
+      "date": "2025-05-01T00:00:00.000Z",
+      "description": "Monthly salary",
+      "notes": "",
+      "payee": "ABC Company",
+      "isRecurring": true,
+      "recurringDetails": {
+        "frequency": "monthly",
+        "interval": 1,
+        "endDate": null
+      },
+      "tags": ["salary", "primary-income"],
+      "createdAt": "2025-05-01T09:00:00.000Z",
+      "updatedAt": "2025-05-01T09:00:00.000Z"
+    },
+    {
+      "id": "tx4",
+      "user": "user1",
+      "amount": 1200.00,
+      "type": "expense",
+      "category": "cat4",
+      "categoryDetails": {
+        "name": "Housing",
+        "color": "#2196f3",
+        "icon": "home"
+      },
+      "date": "2025-05-05T00:00:00.000Z",
+      "description": "Monthly rent",
+      "notes": "",
+      "payee": "Property Management Co",
+      "isRecurring": true,
+      "recurringDetails": {
+        "frequency": "monthly",
+        "interval": 1,
+        "endDate": null
+      },
+      "tags": ["housing", "fixed-expense"],
+      "createdAt": "2025-05-05T10:15:00.000Z",
+      "updatedAt": "2025-05-05T10:15:00.000Z"
+    },
+    {
+      "id": "tx5",
+      "user": "user1",
+      "amount": 65.99,
+      "type": "expense",
+      "category": "cat7",
+      "categoryDetails": {
+        "name": "Utilities",
+        "color": "#607d8b",
+        "icon": "power"
+      },
+      "date": "2025-05-08T00:00:00.000Z",
+      "description": "Electricity bill",
+      "notes": "Higher than usual due to AC usage",
+      "payee": "Power Company",
+      "isRecurring": true,
+      "recurringDetails": {
+        "frequency": "monthly",
+        "interval": 1,
+        "endDate": null
+      },
+      "tags": ["utilities", "monthly"],
+      "createdAt": "2025-05-08T16:20:00.000Z",
+      "updatedAt": "2025-05-08T16:20:00.000Z"
+    },
+    {
+      "id": "tx6",
+      "user": "user1",
+      "amount": 35.00,
+      "type": "expense",
+      "category": "cat3",
+      "categoryDetails": {
+        "name": "Transportation",
+        "color": "#ff9800",
+        "icon": "directions_car"
+      },
+      "date": "2025-05-10T00:00:00.000Z",
+      "description": "Gas refill",
+      "notes": "",
+      "payee": "Shell Gas Station",
+      "isRecurring": false,
+      "tags": ["car", "gas"],
+      "createdAt": "2025-05-10T11:30:00.000Z",
+      "updatedAt": "2025-05-10T11:30:00.000Z"
+    },
+    {
+      "id": "tx7",
+      "user": "user1",
+      "amount": 500.00,
+      "type": "expense",
+      "category": "cat6",
+      "categoryDetails": {
+        "name": "Healthcare",
+        "color": "#f44336",
+        "icon": "local_hospital"
+      },
+      "date": "2025-05-12T00:00:00.000Z",
+      "description": "Annual health checkup",
+      "notes": "Insurance covered part of it",
+      "payee": "Medical Center",
+      "isRecurring": false,
+      "tags": ["health", "annual"],
+      "createdAt": "2025-05-12T14:45:00.000Z",
+      "updatedAt": "2025-05-12T14:45:00.000Z"
+    },
+    {
+      "id": "tx8",
+      "user": "user1",
+      "amount": 25.99,
+      "type": "expense",
+      "category": "cat5",
+      "categoryDetails": {
+        "name": "Entertainment",
+        "color": "#9c27b0",
+        "icon": "movie"
+      },
+      "date": "2025-05-18T00:00:00.000Z",
+      "description": "Movie tickets",
+      "notes": "",
+      "payee": "Cinema Complex",
+      "isRecurring": false,
+      "tags": ["movie", "weekend"],
+      "createdAt": "2025-05-18T19:00:00.000Z",
+      "updatedAt": "2025-05-18T19:00:00.000Z"
+    },
+    {
+      "id": "tx9",
+      "user": "user1",
+      "amount": 750.00,
+      "type": "income",
+      "category": "cat10",
+      "categoryDetails": {
+        "name": "Freelance",
+        "color": "#00bcd4",
+        "icon": "work"
+      },
+      "date": "2025-05-20T00:00:00.000Z",
+      "description": "Website development project",
+      "notes": "Final payment",
+      "payee": "XYZ Client",
+      "isRecurring": false,
+      "tags": ["freelance", "web-dev"],
+      "createdAt": "2025-05-20T15:30:00.000Z",
+      "updatedAt": "2025-05-20T15:30:00.000Z"
+    },
+    {
+      "id": "tx10",
+      "user": "user1",
+      "amount": 89.50,
+      "type": "expense",
+      "category": "cat8",
+      "categoryDetails": {
+        "name": "Clothing",
+        "color": "#795548",
+        "icon": "shopping_bag"
+      },
+      "date": "2025-05-22T00:00:00.000Z",
+      "description": "New shoes",
+      "notes": "",
+      "payee": "Department Store",
+      "isRecurring": false,
+      "tags": ["clothing", "personal"],
+      "createdAt": "2025-05-22T13:15:00.000Z",
+      "updatedAt": "2025-05-22T13:15:00.000Z"
+    }
+  ]
+}

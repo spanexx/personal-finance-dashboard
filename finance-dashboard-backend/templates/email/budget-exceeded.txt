@@ -1,0 +1,43 @@
+BUDGET EXCEEDED ALERT - {{appName}}
+
+Hello {{firstName}},
+
+⚠️ BUDGET EXCEEDED ALERT ⚠️
+
+Your budget has been exceeded! You've spent {{currency}}{{spentAmount}} against your budget of {{currency}}{{budgetAmount}} for {{budgetName}}.
+
+BUDGET OVERVIEW
+===============
+Budget Period: {{budgetPeriod}} ({{startDate}} - {{endDate}})
+Total Budget: {{currency}}{{budgetAmount}}
+Amount Spent: {{currency}}{{spentAmount}}
+Over Budget By: {{currency}}{{overAmount}}
+Budget Utilization: {{utilizationPercentage}}%
+
+{{#if categoryBreakdown}}
+CATEGORY BREAKDOWN
+==================
+{{#each categoryBreakdown}}
+{{this.name}}: {{../currency}}{{this.spent}} / {{../currency}}{{this.allocated}}{{#if this.isOverBudget}} (OVER BY {{../currency}}{{this.overAmount}}){{/if}}
+{{/each}}
+{{/if}}
+
+QUICK TIPS TO GET BACK ON TRACK
+================================
+• Review your recent transactions to identify unnecessary expenses
+• Consider adjusting your budget allocations for next period
+• Set up spending alerts to prevent future overspending
+• Look for opportunities to reduce spending in overspent categories
+
+ACTIONS
+=======
+Review Budget: {{dashboardUrl}}/budgets/{{budgetId}}
+View Transactions: {{dashboardUrl}}/transactions
+
+You can adjust your notification preferences or modify your budget settings anytime in your dashboard.
+
+Best regards,
+The {{appName}} Team
+
+Manage Notifications: {{dashboardUrl}}/settings/notifications
+Contact Support: {{supportUrl}}

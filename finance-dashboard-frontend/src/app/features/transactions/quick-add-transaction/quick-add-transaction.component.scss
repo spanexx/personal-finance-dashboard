@@ -1,0 +1,378 @@
+// Quick Add Transaction Modal Styles
+.quick-add-modal {
+  width: 100%;
+  max-width: 500px;
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  
+  @media (max-width: 600px) {
+    max-width: 95vw;
+    margin: 16px;
+  }
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px;
+  text-align: center;
+  position: relative;
+  
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+  
+  .close-button {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    &:focus {
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+  }
+}
+
+.modal-content {
+  padding: 24px;
+  background: white;
+}
+
+.quick-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  &.full-width {
+    .form-field {
+      flex: 1;
+    }
+  }
+  
+  &.split {
+    .form-field {
+      flex: 1;
+      
+      &:first-child {
+        flex: 0 0 120px;
+        
+        @media (max-width: 480px) {
+          flex: 1;
+        }
+      }
+    }
+  }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  
+  label {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 6px;
+    font-size: 0.875rem;
+  }
+  
+  .mat-mdc-form-field {
+    width: 100%;
+    
+    .mat-mdc-text-field-wrapper {
+      border-radius: 8px;
+    }
+  }
+  
+  .mat-mdc-select {
+    width: 100%;
+  }
+}
+
+.amount-input {
+  .mat-mdc-form-field {
+    .mdc-text-field {
+      &:before {
+        content: '$';
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+        font-weight: 500;
+      }
+      
+      input {
+        padding-left: 24px;
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+.type-selector {
+  .type-options {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    
+    .type-option {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      
+      &:hover {
+        border-color: #d1d5db;
+        background: #f9fafb;
+      }
+      
+      &.selected {
+        border-color: #667eea;
+        background: #f0f4ff;
+        color: #667eea;
+      }
+      
+      &:focus {
+        outline: 2px solid #667eea;
+        outline-offset: 2px;
+      }
+    }
+  }
+}
+
+.category-select {
+  .mat-mdc-select-panel {
+    max-height: 200px;
+  }
+  
+  .category-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    
+    .category-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: white;
+    }
+    
+    .category-info {
+      flex: 1;
+      
+      .category-name {
+        font-weight: 500;
+        color: #374151;
+      }
+    }
+  }
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+  
+  @media (max-width: 480px) {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  
+  .mat-mdc-button {
+    min-width: 100px;
+    border-radius: 8px;
+    font-weight: 500;
+    
+    @media (max-width: 480px) {
+      width: 100%;
+    }
+    
+    &.cancel-button {
+      color: #6b7280;
+      border-color: #d1d5db;
+      
+      &:hover {
+        background: #f9fafb;
+        border-color: #9ca3af;
+      }
+    }
+    
+    &.save-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      
+      &:hover {
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+      }
+      
+      &:disabled {
+        background: #e5e7eb;
+        color: #9ca3af;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// Loading state
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  
+  .mat-mdc-progress-spinner {
+    margin: 0;
+  }
+}
+
+// Form validation styles
+.form-field {
+  .mat-mdc-form-field {
+    &.mat-form-field-invalid {
+      .mat-mdc-text-field-wrapper {
+        border-color: #ef4444 !important;
+      }
+    }
+  }
+  
+  .field-error {
+    color: #ef4444;
+    font-size: 0.75rem;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+// Accessibility improvements
+.quick-add-modal {
+  &:focus-within {
+    .modal-header {
+      outline: 2px solid #667eea;
+      outline-offset: -2px;
+    }
+  }
+}
+
+// Animation for smooth modal appearance
+.quick-add-modal {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Success state indicator
+.success-indicator {
+  background: #10b981;
+  color: white;
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+  
+  .success-text {
+    flex: 1;
+    font-weight: 500;
+  }
+}
+
+// Compact mode for smaller screens
+@media (max-width: 400px) {
+  .modal-header {
+    padding: 16px;
+    
+    h2 {
+      font-size: 1.25rem;
+    }
+  }
+  
+  .modal-content {
+    padding: 16px;
+  }
+  
+  .form-row {
+    gap: 8px;
+  }
+  
+  .form-field {
+    label {
+      font-size: 0.8rem;
+    }
+  }
+}

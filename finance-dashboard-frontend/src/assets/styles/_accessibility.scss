@@ -1,0 +1,60 @@
+// Accessibility utility classes
+
+// Screen reader only content - visually hidden but available to screen readers
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Skip link styles (already implemented in app.component.scss)
+
+// Focus outline styles for keyboard navigation
+:focus-visible {
+  outline: 3px solid #4caf50 !important;
+  outline-offset: 2px !important;
+  z-index: 1;
+}
+
+// High contrast mode adjustments
+@media (forced-colors: active) {
+  // Ensure buttons and interactive elements maintain visibility
+  .mat-button,
+  .mat-raised-button,
+  .mat-icon-button,
+  .mat-stroked-button,
+  .mat-flat-button,
+  .mat-fab,
+  .mat-mini-fab {
+    border: 1px solid transparent;
+  }
+
+  // Ensure focus states are visible
+  *:focus-visible {
+    outline: 3px solid ButtonText !important;
+  }
+}
+
+// Increased color contrast for text
+.high-contrast-text {
+  color: #000000 !important;
+  background-color: transparent !important;
+}
+
+// Animation reduction for users with vestibular disorders
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

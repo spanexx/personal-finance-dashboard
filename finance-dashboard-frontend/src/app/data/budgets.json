@@ -1,0 +1,214 @@
+{
+  "data": [
+    {
+      "id": "budget1",
+      "user": "user1",
+      "name": "May 2025 Budget",
+      "amount": 3000.00,
+      "period": "monthly",
+      "startDate": "2025-05-01T00:00:00.000Z",
+      "endDate": "2025-05-31T23:59:59.999Z",
+      "categories": [
+        {
+          "category": "cat1",
+          "categoryDetails": {
+            "name": "Groceries",
+            "color": "#43a047",
+            "icon": "shopping_cart"
+          },
+          "amount": 500.00,
+          "spent": 120.50,
+          "remaining": 379.50
+        },
+        {
+          "category": "cat2",
+          "categoryDetails": {
+            "name": "Dining Out",
+            "color": "#e91e63",
+            "icon": "restaurant"
+          },
+          "amount": 200.00,
+          "spent": 45.75,
+          "remaining": 154.25
+        },
+        {
+          "category": "cat3",
+          "categoryDetails": {
+            "name": "Transportation",
+            "color": "#ff9800",
+            "icon": "directions_car"
+          },
+          "amount": 150.00,
+          "spent": 35.00,
+          "remaining": 115.00
+        },
+        {
+          "category": "cat4",
+          "categoryDetails": {
+            "name": "Housing",
+            "color": "#2196f3",
+            "icon": "home"
+          },
+          "amount": 1200.00,
+          "spent": 1200.00,
+          "remaining": 0.00
+        },
+        {
+          "category": "cat5",
+          "categoryDetails": {
+            "name": "Entertainment",
+            "color": "#9c27b0",
+            "icon": "movie"
+          },
+          "amount": 100.00,
+          "spent": 25.99,
+          "remaining": 74.01
+        },
+        {
+          "category": "cat6",
+          "categoryDetails": {
+            "name": "Healthcare",
+            "color": "#f44336",
+            "icon": "local_hospital"
+          },
+          "amount": 200.00,
+          "spent": 500.00,
+          "remaining": -300.00
+        },
+        {
+          "category": "cat7",
+          "categoryDetails": {
+            "name": "Utilities",
+            "color": "#607d8b",
+            "icon": "power"
+          },
+          "amount": 150.00,
+          "spent": 65.99,
+          "remaining": 84.01
+        },
+        {
+          "category": "cat8",
+          "categoryDetails": {
+            "name": "Clothing",
+            "color": "#795548",
+            "icon": "shopping_bag"
+          },
+          "amount": 100.00,
+          "spent": 89.50,
+          "remaining": 10.50
+        }
+      ],
+      "totalSpent": 2082.73,
+      "totalRemaining": 917.27,
+      "rollover": false,
+      "isActive": true,
+      "createdAt": "2025-04-25T00:00:00.000Z",
+      "updatedAt": "2025-05-25T00:00:00.000Z"
+    },
+    {
+      "id": "budget2",
+      "user": "user1",
+      "name": "April 2025 Budget",
+      "amount": 2800.00,
+      "period": "monthly",
+      "startDate": "2025-04-01T00:00:00.000Z",
+      "endDate": "2025-04-30T23:59:59.999Z",
+      "categories": [
+        {
+          "category": "cat1",
+          "categoryDetails": {
+            "name": "Groceries",
+            "color": "#43a047",
+            "icon": "shopping_cart"
+          },
+          "amount": 450.00,
+          "spent": 485.25,
+          "remaining": -35.25
+        },
+        {
+          "category": "cat2",
+          "categoryDetails": {
+            "name": "Dining Out",
+            "color": "#e91e63",
+            "icon": "restaurant"
+          },
+          "amount": 150.00,
+          "spent": 175.50,
+          "remaining": -25.50
+        },
+        {
+          "category": "cat3",
+          "categoryDetails": {
+            "name": "Transportation",
+            "color": "#ff9800",
+            "icon": "directions_car"
+          },
+          "amount": 150.00,
+          "spent": 120.75,
+          "remaining": 29.25
+        },
+        {
+          "category": "cat4",
+          "categoryDetails": {
+            "name": "Housing",
+            "color": "#2196f3",
+            "icon": "home"
+          },
+          "amount": 1200.00,
+          "spent": 1200.00,
+          "remaining": 0.00
+        },
+        {
+          "category": "cat5",
+          "categoryDetails": {
+            "name": "Entertainment",
+            "color": "#9c27b0",
+            "icon": "movie"
+          },
+          "amount": 100.00,
+          "spent": 85.00,
+          "remaining": 15.00
+        },
+        {
+          "category": "cat6",
+          "categoryDetails": {
+            "name": "Healthcare",
+            "color": "#f44336",
+            "icon": "local_hospital"
+          },
+          "amount": 150.00,
+          "spent": 75.00,
+          "remaining": 75.00
+        },
+        {
+          "category": "cat7",
+          "categoryDetails": {
+            "name": "Utilities",
+            "color": "#607d8b",
+            "icon": "power"
+          },
+          "amount": 150.00,
+          "spent": 162.35,
+          "remaining": -12.35
+        },
+        {
+          "category": "cat8",
+          "categoryDetails": {
+            "name": "Clothing",
+            "color": "#795548",
+            "icon": "shopping_bag"
+          },
+          "amount": 50.00,
+          "spent": 0.00,
+          "remaining": 50.00
+        }
+      ],
+      "totalSpent": 2303.85,
+      "totalRemaining": 496.15,
+      "rollover": false,
+      "isActive": false,
+      "createdAt": "2025-03-25T00:00:00.000Z",
+      "updatedAt": "2025-05-01T00:00:00.000Z"
+    }
+  ]
+}

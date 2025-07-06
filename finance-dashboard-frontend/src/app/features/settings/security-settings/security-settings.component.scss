@@ -1,0 +1,176 @@
+@import '../../../../assets/styles/material-overrides';
+
+.security-settings-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: #007cba;
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 1000;
+
+    &:focus {
+      top: 6px;
+    }
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .page-header {
+    margin-bottom: 24px;
+
+    .back-button .mat-mdc-button {
+      @extend %button-focus;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 2rem;
+      font-weight: 500;
+      outline: none;
+
+      &:focus {
+        box-shadow: 0 0 0 2px #007cba;
+        border-radius: 4px;
+      }
+    }
+
+    .description {
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 1rem;
+      margin: 0;
+    }
+  }
+
+  .mat-mdc-tab-group {
+    .tab-content {
+      padding: 24px 0;
+
+      .settings-card {
+        @extend %settings-card;
+
+        .password-strength {
+          margin: 16px 0;
+          padding: 12px;
+          background-color: rgba(0, 0, 0, 0.02);
+          border-radius: 8px;
+          border: 1px solid rgba(0, 0, 0, 0.12);
+
+          .strength-bar {
+            width: 100%;
+            height: 8px;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+
+            .strength-fill {
+              height: 100%;
+              transition: all 0.3s ease;
+              border-radius: 4px;
+            }
+          }
+
+          .strength-text {
+            font-weight: 500;
+            font-size: 0.875rem;
+            margin-bottom: 8px;
+          }
+
+          .password-feedback {
+            margin: 8px 0 0 0;
+            padding-left: 16px;
+            color: rgba(0, 0, 0, 0.6);
+            font-size: 0.875rem;
+
+            li {
+              margin-bottom: 4px;
+            }
+          }
+        }
+
+        .two-factor-status,
+        .alert-setting {
+          @extend %status-container;
+        }
+
+        .sessions-list {
+          .session-item {
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            border-radius: 8px;
+            margin-bottom: 12px;
+
+            .session-info {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 16px;
+
+              .device-info {
+                .device-name {
+                  font-weight: 500;
+                  margin-bottom: 4px;
+                }
+
+                .session-details {
+                  color: rgba(0, 0, 0, 0.6);
+                  font-size: 0.875rem;
+                }
+              }
+
+              .current-session {
+                background: #e8f5e8;
+                color: #2e7d32;
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 0.75rem;
+                font-weight: 500;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .unsaved-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #ff9800;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .indicator-text {
+      font-weight: 500;
+    }
+  }
+
+  @include mobile-responsive;
+  @include high-contrast;
+  @include reduced-motion;
+}

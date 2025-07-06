@@ -1,0 +1,77 @@
+// Form Controls Shared Styles
+// Reusable form control styles to reduce duplication
+
+// Input Fields
+.form-input {
+  width: 100%;
+  
+  .mat-mdc-form-field {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .mat-mdc-form-field-error {
+    font-size: 0.75rem;
+  }
+}
+
+// Select Dropdowns
+.form-select {
+  width: 100%;
+
+  .mat-mdc-select {
+    width: 100%;
+  }
+
+  .mat-mdc-select-panel {
+    max-height: 280px;
+  }
+}
+
+// Button Groups
+.button-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  .mat-mdc-button {
+    min-width: 80px;
+  }
+
+  &.vertical {
+    flex-direction: column;
+    
+    .mat-mdc-button {
+      width: 100%;
+    }
+  }
+}
+
+// Form Validation
+.form-field-error {
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      .mat-mdc-form-field-flex {
+        .mat-mdc-form-field-infix {
+          border-color: var(--mat-error-color);
+        }
+      }
+    }
+  }
+}
+
+// Required Field Indicator
+.required-field {
+  .mat-mdc-form-field-label {
+    &::after {
+      content: ' *';
+      color: var(--mat-error-color);
+    }
+  }
+}
+
+// Disabled States
+.form-field-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}

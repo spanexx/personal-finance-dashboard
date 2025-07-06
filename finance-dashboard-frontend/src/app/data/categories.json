@@ -1,0 +1,136 @@
+{
+  "data": [
+    {
+      "id": "cat1",
+      "name": "Groceries",
+      "type": "expense",
+      "color": "#43a047",
+      "icon": "shopping_cart",
+      "isDefault": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat2",
+      "name": "Dining Out",
+      "type": "expense",
+      "color": "#e91e63",
+      "icon": "restaurant",
+      "isDefault": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat3",
+      "name": "Transportation",
+      "type": "expense",
+      "color": "#ff9800",
+      "icon": "directions_car",
+      "isDefault": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat4",
+      "name": "Housing",
+      "type": "expense",
+      "color": "#2196f3",
+      "icon": "home",
+      "isDefault": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat5",
+      "name": "Entertainment",
+      "type": "expense",
+      "color": "#9c27b0",
+      "icon": "movie",
+      "isDefault": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat6",
+      "name": "Healthcare",
+      "type": "expense",
+      "color": "#f44336",
+      "icon": "local_hospital",
+      "isDefault": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat7",
+      "name": "Utilities",
+      "type": "expense",
+      "color": "#607d8b",
+      "icon": "power",
+      "isDefault": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat8",
+      "name": "Clothing",
+      "type": "expense",
+      "color": "#795548",
+      "icon": "shopping_bag",
+      "isDefault": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat9",
+      "name": "Salary",
+      "type": "income",
+      "color": "#4caf50",
+      "icon": "payments",
+      "isDefault": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat10",
+      "name": "Freelance",
+      "type": "income",
+      "color": "#00bcd4",
+      "icon": "work",
+      "isDefault": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat11",
+      "name": "Investments",
+      "type": "income",
+      "color": "#3f51b5",
+      "icon": "trending_up",
+      "isDefault": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat12",
+      "name": "Gifts",
+      "type": "income",
+      "color": "#ff5722",
+      "icon": "card_giftcard",
+      "isDefault": true,
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}

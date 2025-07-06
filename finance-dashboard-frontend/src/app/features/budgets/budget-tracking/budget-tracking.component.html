@@ -1,0 +1,616 @@
+<div class="budget-tracking-container">
+  <!-- Header Section -->
+  <div class="tracking-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <mat-icon>analytics</mat-icon>
+        Budget Tracking & Monitoring
+      </h1>
+        <div class="header-actions">
+        <!-- Real-time connection status -->
+        <div class="realtime-status" [ngClass]="{ 'connected': (isRealtimeConnected$ | async), 'disconnected': !(isRealtimeConnected$ | async) }">
+          <mat-icon [matTooltip]="(isRealtimeConnected$ | async) ? 'Real-time updates active' : 'Real-time updates disconnected'" 
+                    (click)="reconnectWebSocket()" 
+                    class="connection-icon">
+            {{ (isRealtimeConnected$ | async) ? 'wifi' : 'wifi_off' }}
+          </mat-icon>
+          <span class="connection-text">{{ (isRealtimeConnected$ | async) ? 'Live' : 'Offline' }}</span>
+        </div>
+        
+        <mat-form-field appearance="outline" class="budget-selector">
+          <mat-label>Select Budget</mat-label>
+          <mat-select [value]="selectedBudgetId$ | async" 
+                     (selectionChange)="onBudgetChange($event.value)">
+            <mat-option *ngFor="let budget of budgets" [value]="budget._id">
+              {{ budget.name }} ({{ formatDate(budget.startDate) }} - {{ formatDate(budget.endDate) }})
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+          <button mat-stroked-button (click)="exportBudgetReport()" [disabled]="!trackingData">
+          <mat-icon>download</mat-icon>
+          Export Report
+        </button>
+        
+        <button mat-icon-button [matMenuTriggerFor]="settingsMenu" [matTooltip]="'Settings'">
+          <mat-icon>settings</mat-icon>
+        </button>
+        
+        <button mat-icon-button 
+                [matTooltip]="(isRealtimeConnected$ | async) ? 'Real-time updates active' : 'Click to reconnect'" 
+                [color]="(isRealtimeConnected$ | async) ? 'primary' : 'warn'"
+                (click)="reconnectWebSocket()"
+                [disabled]="(isRealtimeConnected$ | async)">
+          <mat-icon>{{ (isRealtimeConnected$ | async) ? 'sync' : 'sync_disabled' }}</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="60"></mat-spinner>
+    <p>Loading budget tracking data...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon class="error-icon">error_outline</mat-icon>
+          <h3>Error Loading Budget Tracking</h3>
+          <p>{{ error }}</p>
+          <button mat-raised-button color="primary" (click)="loadInitialData()">
+            <mat-icon>refresh</mat-icon>
+            Try Again
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- No Budget State -->
+  <div *ngIf="!trackingData && !loading && !error" class="no-budget-container">
+    <mat-card class="no-budget-card">
+      <mat-card-content>
+        <div class="no-budget-content">
+          <mat-icon class="no-budget-icon">account_balance_wallet</mat-icon>
+          <h3>No Active Budget</h3>
+          <p>Create a budget to start tracking your spending and monitoring your financial goals.</p>
+          <button mat-raised-button color="primary" routerLink="/budgets/setup">
+            <mat-icon>add</mat-icon>
+            Create Budget
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Main Tracking Content -->
+  <div *ngIf="trackingData && !loading" class="tracking-content">
+    
+    <!-- Key Metrics Overview -->
+    <div class="metrics-grid">      <!-- Budget Health Score Component -->
+      <app-budget-health-score 
+        [healthScore]="trackingData.healthScore" 
+        [compact]="true">
+      </app-budget-health-score>
+
+      <mat-card class="metric-card budget-summary">
+        <mat-card-header>
+          <mat-card-title>Budget vs Actual</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="summary-stats">
+            <div class="stat-item">
+              <span class="stat-label">Total Budget:</span>
+              <span class="stat-value">{{ formatCurrency(trackingData.budget.totalAmount) }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Total Spent:</span>
+              <span class="stat-value">{{ formatCurrency(trackingData.budget.totalSpent) }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Remaining:</span>
+              <span class="stat-value" [ngClass]="trackingData.budget.totalRemaining >= 0 ? 'positive' : 'negative'">
+                {{ formatCurrency(trackingData.budget.totalRemaining) }}
+              </span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Utilization:</span>
+              <span class="stat-value">{{ formatPercentage(trackingData.budget.utilizationPercentage) }}</span>
+            </div>
+          </div>
+          
+          <mat-progress-bar 
+            mode="determinate" 
+            [value]="Math.min(trackingData.budget.utilizationPercentage, 100)"
+            [color]="trackingData.budget.utilizationPercentage > 100 ? 'warn' : 
+                    trackingData.budget.utilizationPercentage > 80 ? 'accent' : 'primary'">
+          </mat-progress-bar>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- NEW: Spending Velocity Indicator -->
+      <mat-card class="metric-card spending-velocity">
+        <mat-card-header>
+          <mat-card-title>
+            Spending Velocity
+            <mat-chip [color]="getSpendingVelocityStatus() === 'good' ? 'primary' : 
+                             getSpendingVelocityStatus() === 'warning' ? 'accent' : 'warn'" selected>
+              {{ getSpendingVelocityStatus() | titlecase }}
+            </mat-chip>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="velocity-metrics">
+            <div class="velocity-item">
+              <span class="metric-label">Daily Average:</span>
+              <span class="metric-value">{{ formatCurrency(trackingData.spendingVelocity.daily) }}</span>
+            </div>
+            <div class="velocity-item">
+              <span class="metric-label">Weekly Pace:</span>
+              <span class="metric-value">{{ formatCurrency(trackingData.spendingVelocity.weekly) }}</span>
+            </div>
+            <div class="velocity-item">
+              <span class="metric-label">Projected End:</span>
+              <span class="metric-value" [ngClass]="getProjectedOverage() > 0 ? 'over-budget' : 'on-track'">
+                {{ formatCurrency(trackingData.spendingVelocity.projectedMonthEnd) }}
+              </span>
+            </div>
+            <div class="velocity-item">
+              <span class="metric-label">Days Remaining:</span>
+              <span class="metric-value">{{ trackingData.spendingVelocity.daysRemaining }}</span>
+            </div>
+          </div>
+          
+          <div *ngIf="getProjectedOverage() > 0" class="overage-warning">
+            <mat-icon>warning</mat-icon>
+            <span>Projected overage: {{ formatCurrency(getProjectedOverage()) }}</span>
+          </div>
+          
+          <mat-progress-bar 
+            mode="determinate" 
+            [value]="Math.min((trackingData.spendingVelocity.projectedMonthEnd / trackingData.budget.totalAmount) * 100, 100)"
+            [color]="getSpendingVelocityStatus() === 'good' ? 'primary' : 
+                    getSpendingVelocityStatus() === 'warning' ? 'accent' : 'warn'">
+          </mat-progress-bar>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="metric-card alerts-summary">
+        <mat-card-header>
+          <mat-card-title>            Active Alerts
+            <mat-chip-set>
+              <mat-chip [color]="alerts.length > 0 ? 'warn' : 'primary'" selected>
+                {{ alerts.length }}
+              </mat-chip>
+            </mat-chip-set>
+            <div class="realtime-indicator" *ngIf="(isRealtimeConnected$ | async)">
+              <mat-icon class="live-icon">fiber_manual_record</mat-icon>
+              <span>Live</span>
+            </div>
+          </mat-card-title>
+          <div class="alert-actions">
+            <button mat-icon-button (click)="markAllAlertsAsRead()" [disabled]="alerts.length === 0" matTooltip="Mark all as read">
+              <mat-icon>done_all</mat-icon>
+            </button>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="alerts.length === 0" class="no-alerts">
+            <mat-icon>check_circle</mat-icon>
+            <span>All good! No active alerts.</span>
+          </div>
+          
+          <div *ngIf="alerts.length > 0" class="alerts-list">
+            <div *ngFor="let alert of alerts.slice(0, 3)" 
+                 class="alert-item" 
+                 [ngClass]="{ 'unread': !alert.isRead }"
+                 (click)="markAlertAsRead(alert)">
+              <mat-icon [color]="getAlertSeverityColor(alert.severity)">
+                {{ getAlertIcon(alert.type) }}
+              </mat-icon>
+              <div class="alert-content">
+                <span class="alert-title">{{ alert.title }}</span>
+                <span class="alert-message">{{ alert.message }}</span>
+              </div>
+            </div>
+            
+            <button *ngIf="alerts.length > 3" mat-button class="view-all-alerts">
+              View {{ alerts.length - 3 }} more alerts
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>    <!-- NEW: Mobile Quick Actions (visible on mobile) -->
+    <div class="mobile-widgets" [class.mobile-only]="true">
+      <mat-card class="quick-actions-card">
+        <mat-card-header>
+          <mat-card-title>Quick Actions</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="quick-actions-grid">
+            <button mat-fab color="primary" (click)="openQuickExpenseEntry()" matTooltip="Add Expense">
+              <mat-icon>add</mat-icon>
+            </button>
+            <button mat-fab color="accent" (click)="openBudgetAdjustment()" matTooltip="Adjust Budget">
+              <mat-icon>tune</mat-icon>
+            </button>
+            <button mat-fab (click)="viewDailySummary()" matTooltip="Daily Summary">
+              <mat-icon>today</mat-icon>
+            </button>
+            <button mat-fab (click)="viewWeeklySummary()" matTooltip="Weekly Summary">
+              <mat-icon>view_week</mat-icon>
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Daily/Weekly Summary Widget -->
+      <mat-card class="summary-widget">
+        <mat-card-header>
+          <mat-card-title>
+            {{ summaryPeriod === 'daily' ? 'Today' : 'This Week' }}
+            <button mat-icon-button (click)="toggleSummaryPeriod()">
+              <mat-icon>swap_horiz</mat-icon>
+            </button>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="summary-stats">
+            <div class="summary-item">
+              <span class="label">Spent:</span>
+              <span class="value">{{ formatCurrency(summaryData.spent) }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Budget:</span>
+              <span class="value">{{ formatCurrency(summaryData.budget) }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Remaining:</span>
+              <span class="value" [ngClass]="summaryData.remaining >= 0 ? 'positive' : 'negative'">
+                {{ formatCurrency(summaryData.remaining) }}
+              </span>
+            </div>
+          </div>
+          <mat-progress-bar 
+            [value]="Math.min((summaryData.spent / summaryData.budget) * 100, 100)"
+            [color]="summaryData.spent > summaryData.budget ? 'warn' : 'primary'">
+          </mat-progress-bar>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- NEW: Smart Recommendations Section -->
+    <mat-card class="smart-recommendations">
+      <mat-card-header>
+        <mat-card-title>
+          <div class="header-with-icon">
+            <mat-icon>lightbulb</mat-icon>
+            Smart Recommendations
+          </div>
+        </mat-card-title>
+        <mat-card-subtitle>AI-powered insights to optimize your budget</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="recommendations.length === 0" class="no-recommendations">
+          <mat-icon>check_circle</mat-icon>
+          <p>Great job! No recommendations at this time.</p>
+        </div>
+        
+        <div class="recommendations-list" *ngIf="recommendations.length > 0">
+          <div *ngFor="let recommendation of recommendations" 
+               class="recommendation-item" 
+               [ngClass]="'priority-' + recommendation.priority">
+            
+            <div class="recommendation-header">
+              <div class="priority-badge" [ngClass]="'priority-' + recommendation.priority">
+                <mat-icon>{{ getPriorityIcon(recommendation.priority) }}</mat-icon>
+                <span>{{ recommendation.priority | titlecase }}</span>
+              </div>
+              <div class="potential-impact">                <span class="impact-label">Potential Impact:</span>
+                <span class="impact-value" [ngClass]="getImpactClass(recommendation.impact)">
+                  {{ formatCurrency(recommendation.impact?.savings || 0) }}
+                </span>
+              </div>
+            </div>
+            
+            <div class="recommendation-content">
+              <h4>{{ recommendation.title }}</h4>
+              <p>{{ recommendation.description }}</p>
+              
+              <div class="recommendation-details" *ngIf="recommendation.details">
+                <div class="detail-item" *ngFor="let detail of recommendation.details">
+                  <mat-icon>{{ detail.icon }}</mat-icon>
+                  <span>{{ detail.text }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="recommendation-actions">
+              <button mat-button 
+                      *ngIf="recommendation.actionable" 
+                      color="primary"
+                      (click)="executeRecommendation(recommendation)">
+                <mat-icon>{{ recommendation.actionIcon }}</mat-icon>
+                {{ recommendation.actionText }}
+              </button>
+              
+              <button mat-button 
+                      (click)="dismissRecommendation(recommendation.id)">
+                <mat-icon>close</mat-icon>
+                Dismiss
+              </button>
+              
+              <button mat-icon-button 
+                      (click)="toggleRecommendationDetails(recommendation)"
+                      [matTooltip]="'More details'">
+                <mat-icon>info_outline</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- NEW: Budget Adjustment Tool -->
+    <mat-card class="budget-adjustment-tool">
+      <mat-card-header>
+        <mat-card-title>
+          <div class="header-with-icon">
+            <mat-icon>tune</mat-icon>
+            Budget Adjustment Tool
+          </div>
+        </mat-card-title>
+        <mat-card-subtitle>Make real-time adjustments to your budget</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="budgetAdjustmentForm" class="adjustment-form">
+          
+          <!-- Adjustment Type Selection -->
+          <div class="adjustment-type-section">
+            <h4>Adjustment Type</h4>
+            <mat-radio-group formControlName="adjustmentType" class="adjustment-type-group">
+              <mat-radio-button value="increase">
+                <div class="radio-option">
+                  <mat-icon>trending_up</mat-icon>
+                  <span>Increase Budget</span>
+                </div>
+              </mat-radio-button>
+              <mat-radio-button value="decrease">
+                <div class="radio-option">
+                  <mat-icon>trending_down</mat-icon>
+                  <span>Decrease Budget</span>
+                </div>
+              </mat-radio-button>
+              <mat-radio-button value="reallocate">
+                <div class="radio-option">
+                  <mat-icon>swap_horiz</mat-icon>
+                  <span>Reallocate Between Categories</span>
+                </div>
+              </mat-radio-button>
+            </mat-radio-group>
+          </div>
+
+          <!-- Category Selection -->
+          <div class="category-selection" *ngIf="budgetAdjustmentForm.get('adjustmentType')?.value">
+            <mat-form-field appearance="outline">
+              <mat-label>Select Category</mat-label>
+              <mat-select formControlName="selectedCategory">
+                <mat-option *ngFor="let category of trackingData.categories" [value]="category.id">
+                  {{ category.name }} ({{ formatCurrency(category.allocated) }})
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <!-- Amount Input -->
+          <div class="amount-input" *ngIf="budgetAdjustmentForm.get('selectedCategory')?.value">
+            <mat-form-field appearance="outline">
+              <mat-label>Amount</mat-label>
+              <input matInput 
+                     type="number" 
+                     formControlName="amount"
+                     [placeholder]="getAmountPlaceholder()"
+                     min="0">
+              <span matSuffix>USD</span>
+            </mat-form-field>
+          </div>
+
+          <!-- Reallocation Target (only for reallocate type) -->
+          <div class="reallocation-target" 
+               *ngIf="budgetAdjustmentForm.get('adjustmentType')?.value === 'reallocate' && 
+                      budgetAdjustmentForm.get('selectedCategory')?.value">
+            <mat-form-field appearance="outline">
+              <mat-label>Move To Category</mat-label>
+              <mat-select formControlName="targetCategory">
+                <mat-option *ngFor="let category of getAvailableTargetCategories()" [value]="category.id">
+                  {{ category.name }} ({{ formatCurrency(category.allocated) }})
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <!-- Adjustment Preview -->
+          <div class="adjustment-preview" *ngIf="showAdjustmentPreview">
+            <div class="preview-header">
+              <mat-icon>preview</mat-icon>
+              <h4>Preview Changes</h4>
+            </div>
+            
+            <div class="preview-content">
+              <div class="current-vs-new">
+                <div class="current-state">
+                  <h5>Current</h5>                  <div class="preview-item" *ngFor="let item of adjustmentPreview?.current || []">
+                    <span class="category-name">{{ item.categoryName }}</span>
+                    <span class="amount">{{ formatCurrency(item.amount) }}</span>
+                  </div>
+                </div>
+                
+                <mat-icon class="arrow">arrow_forward</mat-icon>
+                
+                <div class="new-state">
+                  <h5>After Adjustment</h5>                  <div class="preview-item" *ngFor="let item of adjustmentPreview?.new || []">
+                    <span class="category-name">{{ item.categoryName }}</span>
+                    <span class="amount" [ngClass]="item.changeType">{{ formatCurrency(item.amount) }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="impact-summary">
+                <div class="impact-item">
+                  <mat-icon>account_balance</mat-icon>
+                  <span>Total Budget: {{ formatCurrency(adjustmentPreview?.totalBudget || 0) }}</span>
+                </div>                <div class="impact-item" *ngIf="adjustmentPreview?.remainingBudget">
+                  <mat-icon>savings</mat-icon>
+                  <span>Remaining: {{ formatCurrency(adjustmentPreview?.remainingBudget || 0) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="form-actions">
+            <button mat-raised-button 
+                    type="button"
+                    color="accent"
+                    (click)="previewAdjustment()"
+                    [disabled]="!canPreviewAdjustment()">
+              <mat-icon>preview</mat-icon>
+              Preview Changes
+            </button>
+            
+            <button mat-raised-button 
+                    color="primary"
+                    (click)="applyBudgetAdjustment()"
+                    [disabled]="!canApplyAdjustment()">
+              <mat-icon>check</mat-icon>
+              Apply Changes
+            </button>
+            
+            <button mat-button 
+                    type="button"
+                    (click)="resetAdjustmentForm()">
+              <mat-icon>refresh</mat-icon>
+              Reset
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Mobile Quick Actions Widget -->
+    <mat-card class="mobile-quick-actions" *ngIf="isMobileView">
+      <mat-card-header>
+        <mat-card-title>Quick Actions</mat-card-title>
+        <div class="mobile-header-actions">
+          <button mat-icon-button (click)="toggleMobileActionsExpanded()">
+            <mat-icon>{{ mobileActionsExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+        </div>
+      </mat-card-header>
+      <mat-card-content [class.expanded]="mobileActionsExpanded">
+        <div class="mobile-actions-grid">
+          <button mat-mini-fab color="primary" (click)="quickAddTransaction()" [matTooltip]="'Add Transaction'">
+            <mat-icon>add</mat-icon>
+          </button>
+          
+          <button mat-mini-fab color="accent" (click)="quickBudgetAdjust()" [matTooltip]="'Quick Adjust'">
+            <mat-icon>tune</mat-icon>
+          </button>
+          
+          <button mat-mini-fab (click)="viewRecommendations()" [matTooltip]="'View Recommendations'">
+            <mat-icon>lightbulb</mat-icon>
+          </button>
+          
+          <button mat-mini-fab (click)="exportMobileReport()" [matTooltip]="'Export Report'">
+            <mat-icon>download</mat-icon>
+          </button>
+        </div>
+        
+        <!-- Mobile Summary Toggle -->
+        <div class="mobile-summary-toggle" *ngIf="mobileActionsExpanded">
+          <mat-slide-toggle [(ngModel)]="showMobileSummary">
+            Show Detailed Summary
+          </mat-slide-toggle>
+        </div>
+        
+        <!-- Mobile Period Toggle -->
+        <div class="mobile-period-toggle" *ngIf="mobileActionsExpanded">
+          <mat-button-toggle-group [(ngModel)]="mobileSummaryPeriod" class="period-toggle">
+            <mat-button-toggle value="daily">Daily</mat-button-toggle>
+            <mat-button-toggle value="weekly">Weekly</mat-button-toggle>
+            <mat-button-toggle value="monthly">Monthly</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+<!-- Settings Menu -->
+<mat-menu #settingsMenu="matMenu">
+  <button mat-menu-item [matMenuTriggerFor]="alertSettingsMenu">
+    <mat-icon>notifications</mat-icon>
+    <span>Alert Settings</span>
+  </button>
+  <button mat-menu-item (click)="exportBudgetReport()">
+    <mat-icon>download</mat-icon>
+    <span>Export Report</span>
+  </button>
+  <mat-divider></mat-divider>  <button mat-menu-item routerLink="/budgets/setup" [queryParams]="{ edit: trackingData?.budget?._id }">
+    <mat-icon>edit</mat-icon>
+    <span>Edit Budget</span>
+  </button>
+</mat-menu>
+
+<!-- Alert Settings Menu -->
+<mat-menu #alertSettingsMenu="matMenu" class="alert-settings-menu">
+  <div class="menu-content" (click)="$event.stopPropagation()">
+    <h3>Alert Settings</h3>
+    <form [formGroup]="alertSettingsForm" (ngSubmit)="onAlertSettingsSubmit()">
+      
+      <div class="form-section">
+        <h4>Notification Methods</h4>
+        <mat-slide-toggle formControlName="emailNotifications">
+          Email Notifications
+        </mat-slide-toggle>
+        <mat-slide-toggle formControlName="pushNotifications">
+          Push Notifications
+        </mat-slide-toggle>
+      </div>
+      
+      <div class="form-section">
+        <h4>Alert Thresholds</h4>
+        <mat-form-field appearance="outline">
+          <mat-label>Warning Threshold (%)</mat-label>
+          <input matInput type="number" formControlName="warningThreshold" min="0" max="100">
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Critical Threshold (%)</mat-label>
+          <input matInput type="number" formControlName="criticalThreshold" min="0" max="100">
+        </mat-form-field>
+      </div>
+      
+      <div class="form-section">
+        <h4>Reports</h4>
+        <mat-slide-toggle formControlName="weeklyReports">
+          Weekly Reports
+        </mat-slide-toggle>
+        <mat-slide-toggle formControlName="monthlyReports">
+          Monthly Reports
+        </mat-slide-toggle>
+      </div>
+      
+      <div class="form-actions">
+        <button mat-raised-button color="primary" type="submit">
+          Save Settings
+        </button>
+      </div>
+    </form>
+  </div>
+</mat-menu>
+
+<!-- Budget Adjustment Dialog would be implemented as a separate component -->

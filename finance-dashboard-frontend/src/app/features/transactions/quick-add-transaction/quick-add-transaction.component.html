@@ -1,0 +1,108 @@
+<div class="quick-add-container">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>Quick Add Transaction</h2>
+    <button mat-icon-button mat-dialog-close aria-label="Close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <form [formGroup]="quickAddForm" (ngSubmit)="onSubmit()">
+    <div mat-dialog-content class="dialog-content">
+      <!-- Transaction Type Toggle -->
+      <div class="form-row">
+        <mat-button-toggle-group formControlName="type" class="transaction-type-toggle" aria-label="Transaction type">
+          <mat-button-toggle value="expense">Expense</mat-button-toggle>
+          <mat-button-toggle value="income">Income</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+
+      <!-- Amount and Date -->
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="amount-field">
+          <mat-label>Amount</mat-label>
+          <span matPrefix>{{ currencySymbol }}&nbsp;</span>
+          <input matInput type="text" formControlName="amount" 
+                 placeholder="0.00" aria-required="true"
+                 (input)="onAmountInput($event)">
+          <mat-error *ngIf="quickAddForm.get('amount')?.invalid">{{ getErrorMessage('amount') }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="date-field">
+          <mat-label>Date</mat-label>
+          <input matInput [matDatepicker]="picker" formControlName="date">
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-error *ngIf="quickAddForm.get('date')?.invalid">{{ getErrorMessage('date') }}</mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Description -->
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description</mat-label>
+          <input matInput formControlName="description" placeholder="What was this for?">
+          <mat-error *ngIf="quickAddForm.get('description')?.invalid">{{ getErrorMessage('description') }}</mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Payee -->
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Payee</mat-label>
+          <input matInput formControlName="payee" placeholder="Who was paid?">
+          <mat-error *ngIf="quickAddForm.get('payee')?.invalid">{{ getErrorMessage('payee') }}</mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Category and Payment Method -->
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="category-field">
+          <mat-label>Category</mat-label>
+          <mat-select formControlName="category" aria-label="Select category">
+            <ng-container *ngIf="quickAddForm.get('type')?.value === 'expense'">
+              <mat-option *ngFor="let category of expenseCategories" [value]="category.id">
+                <div class="category-option">
+                  <span class="category-color" [style.background-color]="category.color"></span>
+                  <mat-icon *ngIf="category.icon">{{ category.icon }}</mat-icon>
+                  <span>{{ category.name }}</span>
+                </div>
+              </mat-option>
+            </ng-container>
+            
+            <ng-container *ngIf="quickAddForm.get('type')?.value === 'income'">
+              <mat-option *ngFor="let category of incomeCategories" [value]="category.id">
+                <div class="category-option">
+                  <span class="category-color" [style.background-color]="category.color"></span>
+                  <mat-icon *ngIf="category.icon">{{ category.icon }}</mat-icon>
+                  <span>{{ category.name }}</span>
+                </div>
+              </mat-option>
+            </ng-container>
+          </mat-select>
+          <mat-error *ngIf="quickAddForm.get('category')?.invalid">{{ getErrorMessage('category') }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="payment-method-field">
+          <mat-label>Payment Method</mat-label>
+          <mat-select formControlName="paymentMethod" aria-label="Select payment method">
+            <mat-option *ngFor="let method of paymentMethods" [value]="method.id">
+              <div class="payment-method-option">
+                <mat-icon *ngIf="method.icon">{{ method.icon }}</mat-icon>
+                <span>{{ method.name }}</span>
+              </div>
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="quickAddForm.get('paymentMethod')?.invalid">{{ getErrorMessage('paymentMethod') }}</mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div mat-dialog-actions class="dialog-actions">
+      <button mat-button type="button" (click)="cancel()" [disabled]="isLoading$ | async">Cancel</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="(isLoading$ | async) || quickAddForm.invalid">
+        <mat-spinner diameter="16" *ngIf="isLoading$ | async"></mat-spinner>
+        <span *ngIf="!(isLoading$ | async)">Add Transaction</span>
+      </button>
+    </div>
+  </form>
+</div>

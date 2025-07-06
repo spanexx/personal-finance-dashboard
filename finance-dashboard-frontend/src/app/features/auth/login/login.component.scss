@@ -1,0 +1,399 @@
+// Login Component Styles
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
+  
+  .login-card {
+    width: 100%;
+    max-width: 450px;
+    padding: 0;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    
+    .login-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+      margin-bottom: 0;
+      
+      .login-logo {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 15px;
+        
+        .logo-icon {
+          font-size: 48px;
+          width: 48px;
+          height: 48px;
+          margin-bottom: 10px;
+          color: white;
+        }
+        
+        .app-title {
+          margin: 0;
+          font-size: 24px;
+          font-weight: 600;
+          color: white;
+        }
+      }
+      
+      mat-card-subtitle {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 16px;
+        margin: 0;
+      }
+    }
+    
+    .login-content {
+      padding: 40px 30px 30px;
+      
+      .login-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        
+        .full-width {
+          width: 100%;
+        }
+        
+        mat-form-field {
+          &.mat-form-field-appearance-outline {
+            .mat-form-field-outline {
+              border-radius: 12px;
+            }
+            
+            &.mat-focused .mat-form-field-outline-thick {
+              border-color: #667eea;
+            }
+          }
+          
+          input {
+            font-size: 16px;
+            
+            &.error {
+              border-color: #f44336;
+            }
+            
+            &.success {
+              border-color: #4caf50;
+            }
+          }
+          
+          mat-icon[matSuffix] {
+            color: #666;
+          }
+          
+          mat-error {
+            font-size: 12px;
+            margin-top: 5px;
+          }
+        }
+        
+        .login-options {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin: 10px 0;
+          
+          .remember-me {
+            .mat-checkbox-label {
+              font-size: 14px;
+              color: #666;
+            }
+          }
+          
+          .forgot-password-link {
+            font-size: 14px;
+            padding: 0;
+            min-width: auto;
+            color: #667eea;
+            
+            &:hover {
+              background: transparent;
+              text-decoration: underline;
+            }
+          }
+        }
+        
+        .error-messages {
+          margin: 20px 0;
+          
+          .error-banner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: #ffebee;
+            border: 1px solid #ffcdd2;
+            border-radius: 8px;
+            color: #c62828;
+            font-size: 14px;
+            margin-bottom: 10px;
+            
+            &:last-child {
+              margin-bottom: 0;
+            }
+            
+            mat-icon {
+              font-size: 20px;
+              width: 20px;
+              height: 20px;
+            }
+            
+            button {
+              margin-left: auto;
+              padding: 5px 15px;
+              font-size: 12px;
+            }
+          }
+        }
+        
+        .login-button {
+          height: 50px;
+          font-size: 16px;
+          font-weight: 600;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          margin-top: 10px;
+          
+          &:disabled {
+            background: #ccc;
+            color: #666;
+          }
+          
+          .loading-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            
+            .loading-text {
+              font-size: 14px;
+            }
+          }
+        }
+        
+        .login-attempts {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 15px;
+          padding: 10px 15px;
+          background: #fff3cd;
+          border: 1px solid #ffeaa7;
+          border-radius: 8px;
+          color: #856404;
+          font-size: 14px;
+          
+          .warning-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+        }
+      }
+    }
+    
+    mat-divider {
+      margin: 0;
+    }
+    
+    .login-footer {
+      padding: 20px 30px;
+      background: #fafafa;
+      
+      .register-section {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        
+        .register-text {
+          font-size: 14px;
+          color: #666;
+        }
+        
+        .register-button {
+          font-size: 14px;
+          font-weight: 600;
+          color: #667eea;
+          padding: 5px 15px;
+          
+          &:hover {
+            background: rgba(102, 126, 234, 0.1);
+          }
+        }
+      }
+    }
+  }
+  
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    
+    mat-spinner {
+      margin-bottom: 20px;
+    }
+    
+    .loading-message {
+      color: white;
+      font-size: 16px;
+      font-weight: 500;
+      margin: 0;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .login-container {
+    padding: 10px;
+    
+    .login-card {
+      max-width: 100%;
+      border-radius: 12px;
+      
+      .login-header {
+        padding: 25px 20px;
+        
+        .login-logo {
+          .logo-icon {
+            font-size: 40px;
+            width: 40px;
+            height: 40px;
+          }
+          
+          .app-title {
+            font-size: 20px;
+          }
+        }
+      }
+      
+      .login-content {
+        padding: 30px 20px 20px;
+        
+        .login-form {
+          gap: 15px;
+          
+          .login-options {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+          }
+        }
+      }
+      
+      .login-footer {
+        padding: 15px 20px;
+        
+        .register-section {
+          flex-direction: column;
+          gap: 5px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    .login-card {
+      .login-header {
+        padding: 20px 15px;
+        
+        .login-logo {
+          .app-title {
+            font-size: 18px;
+          }
+        }
+      }
+      
+      .login-content {
+        padding: 25px 15px 15px;
+      }
+      
+      .login-footer {
+        padding: 12px 15px;
+      }
+    }
+  }
+}
+
+// Animation Styles
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-card {
+  animation: fadeIn 0.5s ease-out;
+}
+
+// Focus States
+.login-form {
+  mat-form-field {
+    &.mat-focused {
+      .mat-form-field-label {
+        color: #667eea;
+      }
+    }
+  }
+}
+
+// Button Hover Effects
+.login-button {
+  transition: all 0.3s ease;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  }
+}
+
+// Error Animations
+.error-banner {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Loading Spinner Custom Styles
+.loading-overlay mat-spinner circle {
+  stroke: #667eea;
+}
+
+.login-button mat-spinner circle {
+  stroke: white;
+}

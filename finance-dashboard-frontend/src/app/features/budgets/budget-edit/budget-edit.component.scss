@@ -1,0 +1,285 @@
+@import '../../../../assets/styles/variables';
+@import '../../../../assets/styles/mixins';
+
+.budget-setup-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  @include respond-to(xs) {
+    padding: 16px;
+  }
+}
+
+// Header Section
+.budget-header {
+  margin-bottom: 24px;
+
+  .page-title {    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 300;
+    color: $primary-500;
+
+    @include mobile {
+      font-size: 2rem;
+      text-align: center;
+    }
+  }
+
+  .page-subtitle {
+    margin: 8px 0 0;
+    color: $text-secondary;
+    font-size: 1rem;
+  }
+}
+
+// Form Layout
+.budget-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  mat-card {
+    border-radius: 12px;
+  }
+}
+
+// Basic Info Card
+.basic-info-card {
+  .form-row {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+
+    @include respond-to(xs) {
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .form-field {
+    flex: 1;
+  }
+
+  .full-width {
+    width: 100%;
+  }
+}
+
+// Categories Card
+.categories-card {
+  .categories-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .category-item {
+    border: 1px solid rgba($primary-500, 0.12);
+    border-radius: 8px;
+    padding: 16px;
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+    @include respond-to(xs) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 16px;
+      }
+    }
+  }
+
+  .category-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .category-icon-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    .category-icon {
+      color: white;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .category-name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: $text-primary;
+  }
+
+  .amount-field {
+    width: 200px;
+
+    @include respond-to(xs) {
+      width: 100%;
+    }
+  }
+}
+
+// Total Allocated
+.total-allocated {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba($primary-500, 0.12);
+
+  .total-label {
+    font-weight: 500;
+    color: $text-primary;
+  }
+  .total-amount {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: $success;
+
+    &.over-budget {
+      color: $error;
+    }
+  }
+}
+
+// Form Actions
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 16px;
+
+  button {
+    min-width: 120px;
+  }
+}
+
+// Loading & Error States
+.loading-container,
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.loading-card,
+.error-card {
+  max-width: 400px;
+  width: 100%;
+}
+
+.loading-content,
+.error-content {
+  text-align: center;
+  padding: 24px;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    
+    &.loading-icon {
+      color: $primary-500;
+      animation: spin 2s linear infinite;
+    }
+      &.error-icon {
+      color: $error;
+    }
+  }
+
+  h3 {
+    margin: 16px 0 8px 0;
+    color: $text-primary;
+  }
+
+  p {
+    margin-bottom: 24px;
+    color: $text-secondary;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// Form field customizations
+mat-form-field {
+  &.mat-form-field-appearance-outline {
+    .mat-form-field-outline {
+      color: rgba($primary-500, 0.3);
+    }
+
+    &.mat-focused .mat-form-field-outline-thick {
+      color: $primary-500;
+    }    &.mat-form-field-invalid .mat-form-field-outline-thick {
+      color: $error;
+    }
+  }
+}
+
+// Budget Summary Card
+.budget-summary-card {
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px;
+    margin-top: 16px;
+
+    @include respond-to(xs) {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  }
+
+  .summary-item {
+    text-align: center;
+    padding: 16px;
+    border-radius: 8px;
+    background: rgba($primary-500, 0.05);
+
+    .summary-label {
+      font-size: 0.875rem;
+      color: $text-secondary;
+      margin-bottom: 8px;
+    }
+
+    .summary-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+
+      &.primary {
+        color: $primary-500;
+      }
+
+      &.allocated {
+        color: $info;
+      }
+
+      &.unallocated-positive {
+        color: $success;
+      }
+
+      &.unallocated-negative {
+        color: $error;
+      }
+    }
+  }
+}

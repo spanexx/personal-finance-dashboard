@@ -1,0 +1,107 @@
+{
+  "exportedAt": "2025-06-02T11:22:47.949Z",
+  "exportVersion": "1.0",
+  "userData": {
+    "profile": {
+      "address": {
+        "street": "123 Test Street",
+        "city": "Test City",
+        "state": "Test State",
+        "postalCode": "12345",
+        "country": "Test Country"
+      },
+      "profileSettings": {
+        "currency": "USD",
+        "language": "en",
+        "theme": "light",
+        "dateFormat": "MM/DD/YYYY",
+        "timezone": "UTC"
+      },
+      "notificationPreferences": {
+        "email": {
+          "types": {
+            "security": true,
+            "marketing": true,
+            "transactional": true,
+            "reminders": true,
+            "reports": true
+          },
+          "enabled": true,
+          "frequency": "weekly"
+        },
+        "push": {
+          "enabled": true,
+          "deviceTokens": []
+        },
+        "budgetAlerts": {
+          "enabled": true,
+          "threshold": 80
+        },
+        "goalReminders": {
+          "enabled": true,
+          "frequency": "weekly"
+        }
+      },
+      "_id": "683d8987545532f21f6649ed",
+      "email": "random.user1748863366897@example.com",
+      "firstName": "Updated",
+      "lastName": "User",
+      "isEmailVerified": false,
+      "emailVerificationAttempts": 0,
+      "isVerified": false,
+      "isActive": true,
+      "loginAttempts": 0,
+      "changeHistory": [
+        {
+          "field": "phone",
+          "newValue": "5551234567",
+          "changedAt": "2025-06-02T11:22:47.877Z",
+          "_id": "683d8987545532f21f664a05",
+          "id": "683d8987545532f21f664a05"
+        },
+        {
+          "field": "dateOfBirth",
+          "newValue": "1990-01-01",
+          "changedAt": "2025-06-02T11:22:47.877Z",
+          "_id": "683d8987545532f21f664a06",
+          "id": "683d8987545532f21f664a06"
+        },
+        {
+          "field": "address",
+          "newValue": {
+            "street": "123 Test Street",
+            "city": "Test City",
+            "state": "Test State",
+            "postalCode": "12345",
+            "country": "Test Country"
+          },
+          "changedAt": "2025-06-02T11:22:47.877Z",
+          "_id": "683d8987545532f21f664a07",
+          "id": "683d8987545532f21f664a07"
+        },
+        {
+          "field": "preferences",
+          "newValue": {
+            "currency": "USD",
+            "theme": "light",
+            "notifications": true
+          },
+          "changedAt": "2025-06-02T11:22:47.877Z",
+          "_id": "683d8987545532f21f664a08",
+          "id": "683d8987545532f21f664a08"
+        }
+      ],
+      "lastUpdated": "2025-06-02T11:22:47.877Z",
+      "createdAt": "2025-06-02T11:22:47.324Z",
+      "updatedAt": "2025-06-02T11:22:47.931Z",
+      "emailVerificationExpires": "2025-06-03T11:22:47.337Z",
+      "emailVerificationToken": "507cd77d0ef84f8c9d883695b43b888b89c31b346b904cf4f7ece15b4e14bf6c",
+      "lastEmailVerificationSent": "2025-06-02T11:22:47.337Z",
+      "dateOfBirth": "1990-01-01T00:00:00.000Z",
+      "phone": "5551234567",
+      "fullName": "Updated User",
+      "isLocked": false,
+      "id": "683d8987545532f21f6649ed"
+    }
+  }
+}

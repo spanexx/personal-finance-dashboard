@@ -1,0 +1,345 @@
+<div class="scenario-planning-container">
+  <div class="scenario-header">
+    <h2>What-If Budget Analysis</h2>
+    <p>Test different budget scenarios to see how changes would impact your financial health</p>
+  </div>
+
+  <mat-tab-group class="scenario-tabs">
+    <!-- Create Scenario Tab -->
+    <mat-tab label="Create Scenario">
+      <div class="tab-content">
+        <form [formGroup]="scenarioForm" class="scenario-form">
+          <!-- Scenario Basic Info -->
+          <mat-card class="scenario-info-card">
+            <mat-card-header>
+              <mat-card-title>Scenario Details</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Scenario Name</mat-label>
+                  <input matInput formControlName="name" placeholder="e.g., Increase Savings by 10%">
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Description</mat-label>
+                  <textarea matInput formControlName="description" rows="3" 
+                           placeholder="Describe what you want to test..."></textarea>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Time Frame</mat-label>
+                  <mat-select formControlName="timeframe">
+                    <mat-option value="current">Current Month</mat-option>
+                    <mat-option value="next_month">Next Month</mat-option>
+                    <mat-option value="next_quarter">Next Quarter</mat-option>
+                    <mat-option value="next_year">Next Year</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Category Adjustments -->
+          <mat-card class="adjustments-card">
+            <mat-card-header>
+              <mat-card-title>Budget Adjustments</mat-card-title>
+              <mat-card-subtitle>Adjust your budget categories to test different scenarios</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>              <div class="adjustments-grid">
+                <div *ngFor="let adjustment of categoryAdjustments; let i = index" 
+                     class="adjustment-item">
+                  
+                  <div class="category-info">
+                    <div class="category-header">
+                      <span class="category-name">{{ adjustment.categoryName }}</span>
+                      <mat-chip class="current-amount">
+                        ${{ adjustment.currentAmount | number:'1.0-0' }}
+                      </mat-chip>
+                    </div>
+                    
+                    <div class="adjustment-controls">
+                      <mat-form-field appearance="outline" class="change-type">
+                        <mat-label>Change Type</mat-label>
+                        <mat-select [(ngModel)]="adjustment.changeType" (selectionChange)="onAdjustmentChange(i, adjustment.adjustmentPercentage)">
+                          <mat-option value="percentage">Percentage</mat-option>
+                          <mat-option value="amount">Fixed Amount</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      
+                      <div class="slider-container">
+                        <mat-slider
+                          [min]="adjustment.changeType === 'percentage' ? -50 : -500"
+                          [max]="adjustment.changeType === 'percentage' ? 100 : 1000"
+                          [step]="adjustment.changeType === 'percentage' ? 5 : 25"
+                          [discrete]="true"                          [showTickMarks]="true"
+                          [(ngModel)]="adjustment.adjustmentPercentage"
+                          (input)="onAdjustmentChange(i, adjustment.adjustmentPercentage)"
+                          class="adjustment-slider">
+                        </mat-slider>
+                        <div class="slider-labels">
+                          <span class="change-value">
+                            {{ adjustment.adjustmentPercentage }}{{ adjustment.changeType === 'percentage' ? '%' : '' }}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div class="new-amount">
+                        <span class="label">New Amount:</span>
+                        <span class="amount" [ngClass]="getAmountChangeClass(adjustment.currentAmount, adjustment.newAmount)">
+                          ${{ adjustment.newAmount | number:'1.0-0' }}
+                        </span>
+                        <mat-icon class="change-indicator">
+                          {{ getChangeIcon(adjustment.currentAmount, adjustment.newAmount) }}
+                        </mat-icon>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+            
+            <mat-card-actions>              <button mat-raised-button 
+                      color="primary" 
+                      (click)="runAnalysis()"
+                      [disabled]="scenarioForm.invalid || isAnalyzing">
+                <mat-icon>analytics</mat-icon>
+                Run Analysis
+              </button>
+              
+              <button mat-stroked-button (click)="resetScenario()">
+                <mat-icon>refresh</mat-icon>
+                Reset
+              </button>
+              
+              <button mat-stroked-button (click)="saveScenario()" *ngIf="analysisResult">
+                <mat-icon>save</mat-icon>
+                Save Template
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </form>
+      </div>
+    </mat-tab>    <!-- Results Tab -->
+    <mat-tab label="Analysis Results" [disabled]="!analysisResult">
+      <div class="tab-content" *ngIf="analysisResult">
+        <!-- Overall Impact -->
+        <mat-card class="results-overview-card">
+          <mat-card-header>
+            <mat-card-title>Scenario Impact Overview</mat-card-title>
+            <mat-card-subtitle>{{ analysisResult.scenario.name }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="impact-metrics">
+              <div class="metric-item">
+                <div class="metric-icon">
+                  <mat-icon [color]="analysisResult.impact.financialImpact >= 0 ? 'primary' : 'warn'">
+                    {{ analysisResult.impact.financialImpact >= 0 ? 'trending_up' : 'trending_down' }}
+                  </mat-icon>
+                </div>
+                <div class="metric-content">
+                  <span class="metric-label">Net Monthly Change</span>
+                  <span class="metric-value" [ngClass]="analysisResult.impact.financialImpact >= 0 ? 'positive' : 'negative'">
+                    {{ analysisResult.impact.financialImpact >= 0 ? '+' : '' }}${{ analysisResult.impact.financialImpact | number:'1.0-0' }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="metric-item">
+                <div class="metric-icon">
+                  <mat-icon color="accent">analytics</mat-icon>
+                </div>
+                <div class="metric-content">
+                  <span class="metric-label">Feasibility Score</span>
+                  <span class="metric-value">
+                    {{ analysisResult.impact.feasibility | number:'1.0-0' }}%
+                  </span>
+                </div>
+              </div>
+              
+              <div class="metric-item">
+                <div class="metric-icon">
+                  <mat-icon [color]="getRiskColor(analysisResult.impact.riskLevel)">shield</mat-icon>
+                </div>
+                <div class="metric-content">
+                  <span class="metric-label">Risk Level</span>
+                  <span class="metric-value" [ngClass]="analysisResult.impact.riskLevel.toLowerCase()">
+                    {{ analysisResult.impact.riskLevel }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>        <!-- Category Impact Details -->
+        <mat-card class="category-impacts-card">
+          <mat-card-header>
+            <mat-card-title>Category Impact Analysis</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="category-impacts-grid">
+              <div *ngFor="let category of analysisResult.projectedBudget.categories" class="impact-item">
+                <div class="impact-header">
+                  <span class="category-name">{{ category.categoryName }}</span>
+                  <mat-chip class="impact-level" [ngClass]="getImpactLevel(category.changePercentage).toLowerCase()">
+                    {{ getImpactLevel(category.changePercentage) }} Impact
+                  </mat-chip>
+                </div>
+                
+                <div class="impact-details">
+                  <div class="amount-change">
+                    <span class="from">${{ category.originalAmount | number:'1.0-0' }}</span>
+                    <mat-icon>arrow_forward</mat-icon>
+                    <span class="to" [ngClass]="getAmountChangeClass(category.originalAmount, category.newAmount)">
+                      ${{ category.newAmount | number:'1.0-0' }}
+                    </span>
+                  </div>
+                  
+                  <div class="percentage-change">
+                    <span [ngClass]="category.changePercentage >= 0 ? 'positive' : 'negative'">
+                      {{ category.changePercentage >= 0 ? '+' : '' }}{{ category.changePercentage | number:'1.1-1' }}%
+                    </span>
+                  </div>
+                </div>
+                
+                <mat-progress-bar 
+                  [value]="Math.abs(category.changePercentage)" 
+                  [color]="category.changePercentage >= 0 ? 'primary' : 'warn'"
+                  mode="determinate">
+                </mat-progress-bar>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>        <!-- Recommendations & Warnings -->
+        <div class="insights-row">
+          <mat-card class="recommendations-card" *ngIf="analysisResult.impact.recommendations?.length">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon color="primary">lightbulb</mat-icon>
+                Recommendations
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <ul class="insights-list">
+                <li *ngFor="let recommendation of analysisResult.impact.recommendations">
+                  {{ recommendation }}
+                </li>
+              </ul>
+            </mat-card-content>
+          </mat-card>
+          
+          <mat-card class="warnings-card" *ngIf="analysisResult.impact.riskLevel !== 'low'">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon color="warn">warning</mat-icon>
+                Risk Assessment
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="risk-details">
+                <p>Risk Level: <strong>{{ analysisResult.impact.riskLevel | titlecase }}</strong></p>
+                <p>Consider the potential risks before implementing this scenario.</p>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="results-actions">
+          <button mat-raised-button color="primary" (click)="saveScenario()">
+            <mat-icon>save</mat-icon>
+            Save Scenario
+          </button>
+          
+          <button mat-stroked-button (click)="exportScenario()">
+            <mat-icon>download</mat-icon>
+            Export
+          </button>
+          
+          <button mat-stroked-button (click)="applyScenario()" *ngIf="canApplyScenario()">
+            <mat-icon>check_circle</mat-icon>
+            Apply to Budget
+          </button>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Saved Scenarios Tab -->
+    <mat-tab label="Saved Scenarios">
+      <div class="tab-content">
+        <div class="saved-scenarios-header">
+          <h3>Your Saved Scenarios</h3>
+          <button mat-raised-button color="primary" (click)="loadSavedScenarios()">
+            <mat-icon>refresh</mat-icon>
+            Refresh
+          </button>
+        </div>
+        
+        <div class="saved-scenarios-grid" *ngIf="savedScenarios.length > 0; else noSavedScenarios">
+          <mat-card *ngFor="let scenario of savedScenarios" class="saved-scenario-card">
+            <mat-card-header>
+              <mat-card-title>{{ scenario.name }}</mat-card-title>
+              <mat-card-subtitle>{{ scenario.createdAt | date:'short' }}</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <p class="scenario-description">{{ scenario.description }}</p>
+              
+              <div class="scenario-summary">
+                <div class="summary-item">
+                  <span class="label">Net Change:</span>
+                  <span class="value" [ngClass]="scenario.projectedSavings >= 0 ? 'positive' : 'negative'">
+                    {{ scenario.projectedSavings >= 0 ? '+' : '' }}${{ scenario.projectedSavings | number:'1.0-0' }}
+                  </span>
+                </div>
+                <div class="summary-item">
+                  <span class="label">Risk:</span>
+                  <span class="value" [ngClass]="scenario.riskLevel.toLowerCase()">{{ scenario.riskLevel }}</span>
+                </div>
+              </div>
+            </mat-card-content>
+            
+            <mat-card-actions>
+              <button mat-button color="primary" (click)="loadScenario(scenario)">
+                <mat-icon>play_arrow</mat-icon>
+                Load
+              </button>
+              <button mat-button (click)="duplicateScenario(scenario)">
+                <mat-icon>content_copy</mat-icon>
+                Duplicate
+              </button>
+              <button mat-button color="warn" (click)="deleteScenario(scenario)">
+                <mat-icon>delete</mat-icon>
+                Delete
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+        
+        <ng-template #noSavedScenarios>
+          <div class="empty-state">
+            <mat-icon>assessment</mat-icon>
+            <h3>No Saved Scenarios</h3>
+            <p>Create and save scenarios to compare different budget options</p>
+          </div>
+        </ng-template>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isAnalyzing">
+    <mat-card class="loading-card">
+      <mat-card-content>
+        <div class="loading-content">
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+          <h3>Analyzing Scenario...</h3>
+          <p>Running financial projections and risk analysis</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

@@ -1,0 +1,123 @@
+<div class="category-modal">
+  <div class="modal-header">
+    <h2 mat-dialog-title>{{ isEditMode ? 'Edit Category' : 'Create New Category' }}</h2>
+    <button mat-icon-button class="close-button" (click)="onCancel()" aria-label="Close dialog">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+  <div class="modal-content" mat-dialog-content>
+    <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="category-form">
+      
+      <!-- Category Preview -->
+      <div class="category-preview" *ngIf="selectedIcon">
+        <div class="preview-item" [ngStyle]="getPreviewStyle()">
+          <mat-icon>{{ selectedIcon.icon }}</mat-icon>
+          <span>{{ categoryForm.get('name')?.value || 'Category Name' }}</span>
+        </div>
+      </div>
+
+      <!-- Category Name -->
+      <div class="form-field">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Category Name</mat-label>
+          <input matInput 
+                 formControlName="name" 
+                 placeholder="Enter category name"
+                 maxlength="50">
+          <mat-hint align="end">{{ categoryForm.get('name')?.value?.length || 0 }}/50</mat-hint>
+          <mat-error *ngIf="isFieldInvalid('name')">
+            {{ getFieldError('name') }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Transaction Type -->
+      <div class="form-field">
+        <label class="field-label">Transaction Type *</label>
+        <ng-container *ngIf="transactionTypes && transactionTypes.length">
+          <mat-radio-group formControlName="type" class="type-radio-group">
+            <mat-radio-button 
+              *ngFor="let type of transactionTypes" 
+              [value]="type"
+              class="type-option">
+              {{ type | titlecase }}
+            </mat-radio-button>
+          </mat-radio-group>
+        </ng-container>
+        <div class="field-error" *ngIf="isFieldInvalid('type')">
+          <mat-icon>error</mat-icon>
+          {{ getFieldError('type') }}
+        </div>
+      </div>
+
+      <!-- Icon Selection -->
+      <div class="form-field">
+        <label class="field-label">Select Icon *</label>
+        <div class="icon-grid">
+          <button 
+            type="button"
+            *ngFor="let icon of categoryIcons" 
+            class="icon-option"
+            [class.selected]="selectedIcon?.icon === icon.icon"
+            (click)="selectIcon(icon)"
+            [attr.aria-label]="'Select ' + icon.name + ' icon'">
+            <div class="icon-preview" [style.background-color]="icon.color">
+              <mat-icon>{{ icon.icon }}</mat-icon>
+            </div>
+            <span class="icon-label">{{ icon.name }}</span>
+          </button>
+        </div>
+        <div class="field-error" *ngIf="!selectedIcon">
+          <mat-icon>error</mat-icon>
+          Please select an icon for the category
+        </div>
+      </div>
+
+      <!-- Description (Optional) -->
+      <div class="form-field">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description (Optional)</mat-label>
+          <textarea matInput 
+                    formControlName="description" 
+                    placeholder="Enter category description"
+                    rows="3"
+                    maxlength="200"></textarea>
+          <mat-hint align="end">{{ categoryForm.get('description')?.value?.length || 0 }}/200</mat-hint>
+          <mat-error *ngIf="isFieldInvalid('description')">
+            {{ getFieldError('description') }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Active Status -->
+      <div class="form-field">
+        <mat-checkbox formControlName="isActive" class="active-checkbox">
+          Active Category
+        </mat-checkbox>
+        <div class="field-hint">
+          Inactive categories won't appear in transaction forms but existing transactions will remain unchanged.
+        </div>
+      </div>
+
+    </form>
+  </div>
+  <!-- Modal Actions -->
+  <div class="modal-actions" mat-dialog-actions>
+    <button mat-stroked-button 
+            type="button" 
+            (click)="onCancel()" 
+            class="cancel-button"
+            [disabled]="isLoading">
+      Cancel
+    </button>
+    <button mat-raised-button 
+            color="primary" 
+            (click)="onSubmit()" 
+            class="save-button"
+            [disabled]="!categoryForm.valid || !selectedIcon || isLoading">
+      <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+      <span *ngIf="!isLoading">{{ isEditMode ? 'Update' : 'Create' }} Category</span>
+      <span *ngIf="isLoading">{{ isEditMode ? 'Updating...' : 'Creating...' }}</span>
+    </button>
+  </div>
+</div>

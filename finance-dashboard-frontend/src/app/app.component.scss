@@ -1,0 +1,22 @@
+/* Skip link for keyboard navigation accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #1976d2;
+  color: white;
+  padding: 8px;
+  z-index: 100;
+  transition: top 0.3s ease;
+  
+  &:focus {
+    top: 0;
+    outline: 3px solid #4caf50;
+  }
+}
+
+/* Focus visible utility class for keyboard navigation */
+:focus-visible {
+  outline: 3px solid #4caf50;
+  outline-offset: 2px;
+}

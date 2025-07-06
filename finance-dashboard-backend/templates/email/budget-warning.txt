@@ -1,0 +1,51 @@
+BUDGET WARNING ALERT - {{appName}}
+
+Hello {{firstName}},
+
+⚠️ BUDGET WARNING ALERT ⚠️
+
+You're approaching your budget limit! You've spent {{currency}}{{spentAmount}} ({{utilizationPercentage}}%) of your {{currency}}{{budgetAmount}} budget for {{budgetName}}.
+
+BUDGET OVERVIEW
+===============
+Budget Period: {{budgetPeriod}} ({{startDate}} - {{endDate}})
+Total Budget: {{currency}}{{budgetAmount}}
+Amount Spent: {{currency}}{{spentAmount}}
+Remaining Budget: {{currency}}{{remainingAmount}}
+Alert Threshold: {{alertThreshold}}%
+{{#if daysRemaining}}
+Days Remaining: {{daysRemaining}} days
+{{/if}}
+
+PROGRESS: [{{utilizationPercentage}}%] {{#repeat utilizationPercentage}}▓{{/repeat}}{{#repeat (subtract 100 utilizationPercentage)}}░{{/repeat}}
+
+{{#if categoryBreakdown}}
+CATEGORY BREAKDOWN
+==================
+{{#each categoryBreakdown}}
+{{this.name}}: {{../currency}}{{this.spent}} / {{../currency}}{{this.allocated}} ({{this.percentage}}%){{#if this.isNearLimit}} ⚠️{{/if}}
+{{/each}}
+{{/if}}
+
+TIPS TO STAY WITHIN BUDGET
+===========================
+• Review your spending patterns for the current period
+• Consider postponing non-essential purchases
+• Look for opportunities to save in high-spending categories
+• Track daily spending to avoid exceeding your budget
+{{#if daysRemaining}}
+• You have {{remainingAmount}} left for {{daysRemaining}} days ({{avgDailyBudget}}/day)
+{{/if}}
+
+ACTIONS
+=======
+Review Budget: {{dashboardUrl}}/budgets/{{budgetId}}
+View Transactions: {{dashboardUrl}}/transactions
+
+This alert was triggered because you've reached {{alertThreshold}}% of your budget limit. You can adjust your alert thresholds in your budget settings.
+
+Best regards,
+The {{appName}} Team
+
+Manage Notifications: {{dashboardUrl}}/settings/notifications
+Contact Support: {{supportUrl}}

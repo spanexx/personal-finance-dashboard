@@ -1,0 +1,153 @@
+.health-score-card {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+
+  .health-score-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+  }
+}
+
+.score-display {
+  display: flex;
+  justify-content: center;
+  margin: 24px 0;
+
+  .score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    
+    .score-number {
+      font-size: 32px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .score-max {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-top: -4px;
+    }
+  }
+}
+
+.score-breakdown {
+  .metric {
+    margin-bottom: 16px;
+
+    .metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+
+      .metric-name {
+        font-weight: 500;
+        color: #333;
+      }
+
+      .metric-score {
+        font-weight: 600;
+        color: #666;
+      }
+    }
+
+    mat-progress-bar {
+      height: 8px;
+      border-radius: 4px;
+    }
+  }
+}
+
+.improvement-chips {
+  margin-top: 24px;
+
+  h4 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  mat-chip-set {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    mat-chip {
+      background-color: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+      font-size: 12px;
+    }
+  }
+}
+
+.recommendations {
+  margin-top: 24px;
+
+  h4 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .recommendation-list {
+    .recommendation-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .recommendation-icon {
+        color: #2196f3;
+        margin-right: 12px;
+        font-size: 20px;
+      }
+
+      .recommendation-text {
+        font-size: 14px;
+        color: #555;
+        line-height: 1.4;
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .score-display .score-circle {
+    width: 100px;
+    height: 100px;
+
+    .score-number {
+      font-size: 24px;
+    }
+  }
+
+  .improvement-chips mat-chip-set {
+    justify-content: center;
+  }
+}

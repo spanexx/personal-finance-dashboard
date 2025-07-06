@@ -1,0 +1,43 @@
+Data Import Complete - Personal Finance Dashboard
+
+Hello!
+
+Your data import has been completed! Here's a summary of what was processed:
+
+IMPORT SUMMARY
+==============
+File: {{fileName}}
+Import Type: {{importType}}
+Processing Time: {{processingTime}}
+
+STATISTICS
+==========
+Records Processed: {{recordsProcessed}}
+Records Imported: {{recordsImported}}
+Records Skipped: {{recordsSkipped}}
+Errors: {{errorCount}}
+Success Rate: {{successRate}}%
+
+{{#if errors}}
+ERRORS ENCOUNTERED
+==================
+{{#each errors}}
+- Row {{this.row}}: {{this.message}}
+{{/each}}
+{{/if}}
+
+{{#if warnings}}
+WARNINGS
+========
+{{#each warnings}}
+- Row {{this.row}}: {{this.message}}
+{{/each}}
+{{/if}}
+
+Your imported data is now available in your dashboard. If you have any questions about the import process, please contact our support team.
+
+Best regards,
+Personal Finance Dashboard Team
+
+---
+This is an automated message. Please do not reply to this email.

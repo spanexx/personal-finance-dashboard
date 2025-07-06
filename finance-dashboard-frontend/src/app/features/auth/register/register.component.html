@@ -1,0 +1,313 @@
+<div class="register-container">
+  <div class="register-card">
+    <!-- Header -->
+    <div class="register-header">
+      <h1 class="register-title">Create Account</h1>
+      <p class="register-subtitle">Get started with your personal finance dashboard</p>
+    </div>
+
+    <!-- Multi-step Registration -->
+    <mat-stepper linear #stepper class="register-stepper" [selectedIndex]="currentStep">
+      <!-- Step 1: Personal Information -->
+      <mat-step [stepControl]="personalInfoForm">
+        <ng-template matStepLabel>Personal Info</ng-template>
+        <form [formGroup]="personalInfoForm" class="register-form">
+          <h2 class="step-title">Personal Information</h2>
+          
+          <!-- First Name -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>First Name</mat-label>
+            <input 
+              matInput 
+              formControlName="firstName" 
+              placeholder="Enter your first name"
+              [attr.aria-label]="'First Name'"
+              autocomplete="given-name">
+            <mat-icon matPrefix>person</mat-icon>            <mat-error *ngIf="personalInfoForm.get('firstName')?.invalid && personalInfoForm.get('firstName')?.touched">
+              {{ getErrorMessage('firstName', personalInfoForm) }}
+            </mat-error>
+          </mat-form-field>
+          
+          <!-- Last Name -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Last Name</mat-label>
+            <input 
+              matInput 
+              formControlName="lastName" 
+              placeholder="Enter your last name"
+              [attr.aria-label]="'Last Name'"
+              autocomplete="family-name">
+            <mat-icon matPrefix>person_outline</mat-icon>
+            <mat-error *ngIf="personalInfoForm.get('lastName')?.invalid && personalInfoForm.get('lastName')?.touched">
+              {{ getErrorMessage('lastName', personalInfoForm) }}
+            </mat-error>
+          </mat-form-field>
+          
+          <!-- Email -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Email</mat-label>
+            <input 
+              matInput 
+              formControlName="email" 
+              type="email" 
+              placeholder="Enter your email address"
+              [attr.aria-label]="'Email Address'"
+              autocomplete="email">
+            <mat-icon matPrefix>email</mat-icon>
+            <mat-error *ngIf="personalInfoForm.get('email')?.invalid && personalInfoForm.get('email')?.touched">
+              {{ getErrorMessage('email', personalInfoForm) }}
+            </mat-error>
+          </mat-form-field>
+          
+          <!-- Username -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Username</mat-label>
+            <input 
+              matInput 
+              formControlName="username" 
+              placeholder="Choose a unique username"
+              [attr.aria-label]="'Username'"
+              autocomplete="username">
+            <mat-icon matPrefix>alternate_email</mat-icon>
+            <mat-error *ngIf="personalInfoForm.get('username')?.invalid && personalInfoForm.get('username')?.touched">
+              {{ getErrorMessage('username', personalInfoForm) }}
+            </mat-error>
+          </mat-form-field>
+          
+          <!-- Step actions -->
+          <div class="step-actions">
+            <button mat-button type="button" (click)="onLogin()" class="link-button">
+              Already have an account?
+            </button>
+            <button 
+              mat-raised-button 
+              color="primary" 
+              type="button"
+              (click)="nextStep()"
+              [disabled]="personalInfoForm.invalid"
+              class="next-button">
+              Next
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </form>
+      </mat-step>
+      
+      <!-- Step 2: Password Setup -->
+      <mat-step [stepControl]="passwordForm">
+        <ng-template matStepLabel>Password</ng-template>
+        <form [formGroup]="passwordForm" class="register-form">
+          <h2 class="step-title">Create Your Password</h2>
+          
+          <!-- Password -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Password</mat-label>
+            <input 
+              matInput 
+              formControlName="password" 
+              [type]="hidePassword ? 'password' : 'text'" 
+              placeholder="Create a strong password"
+              [attr.aria-label]="'Password'"
+              autocomplete="new-password">
+            <mat-icon matPrefix>lock</mat-icon>
+            <button 
+              mat-icon-button 
+              matSuffix 
+              type="button" 
+              (click)="hidePassword = !hidePassword"
+              [attr.aria-label]="hidePassword ? 'Show password' : 'Hide password'">
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>            <mat-error *ngIf="passwordForm.get('password')?.invalid && passwordForm.get('password')?.touched">
+              {{ getErrorMessage('password', passwordForm) }}
+            </mat-error>
+          </mat-form-field>
+          
+          <!-- Confirm Password -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Confirm Password</mat-label>
+            <input 
+              matInput 
+              formControlName="confirmPassword" 
+              [type]="hideConfirmPassword ? 'password' : 'text'" 
+              placeholder="Confirm your password"
+              [attr.aria-label]="'Confirm Password'"
+              autocomplete="new-password">
+            <mat-icon matPrefix>lock_outline</mat-icon>
+            <button 
+              mat-icon-button 
+              matSuffix 
+              type="button" 
+              (click)="hideConfirmPassword = !hideConfirmPassword"
+              [attr.aria-label]="hideConfirmPassword ? 'Show password' : 'Hide password'">
+              <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="passwordForm.get('confirmPassword')?.invalid && passwordForm.get('confirmPassword')?.touched">
+              {{ getErrorMessage('confirmPassword', passwordForm) }}
+            </mat-error>
+          </mat-form-field>            <!-- Password Strength Indicator -->
+          <div class="password-strength" *ngIf="passwordForm.get('password')?.value">
+            <div class="strength-label">Password Strength:</div>            <div class="strength-bar">
+              <div class="strength-fill" [class]="'strength-' + getPasswordStrength().level"></div>
+            </div>
+            <div class="strength-text" [class]="'strength-' + getPasswordStrength().level">
+              {{ getPasswordStrength().label }}
+            </div>
+              <!-- Password Requirements -->
+            <div class="password-requirements">
+              <div class="requirement" [class.met]="getPasswordStrength().requirements?.length">
+                <mat-icon class="requirement-icon">
+                  {{ getPasswordStrength().requirements?.length ? 'check_circle' : 'radio_button_unchecked' }}
+                </mat-icon>
+                At least 8 characters
+              </div>
+              <div class="requirement" [class.met]="getPasswordStrength().requirements?.uppercase">
+                <mat-icon class="requirement-icon">
+                  {{ getPasswordStrength().requirements?.uppercase ? 'check_circle' : 'radio_button_unchecked' }}
+                </mat-icon>
+                One uppercase letter
+              </div>
+              <div class="requirement" [class.met]="getPasswordStrength().requirements?.lowercase">
+                <mat-icon class="requirement-icon">
+                  {{ getPasswordStrength().requirements?.lowercase ? 'check_circle' : 'radio_button_unchecked' }}
+                </mat-icon>
+                One lowercase letter
+              </div>
+              <div class="requirement" [class.met]="getPasswordStrength().requirements?.number">
+                <mat-icon class="requirement-icon">
+                  {{ getPasswordStrength().requirements?.number ? 'check_circle' : 'radio_button_unchecked' }}
+                </mat-icon>
+                One number
+              </div>
+              <div class="requirement" [class.met]="getPasswordStrength().requirements?.special">
+                <mat-icon class="requirement-icon">
+                  {{ getPasswordStrength().requirements?.special ? 'check_circle' : 'radio_button_unchecked' }}
+                </mat-icon>
+                One special character
+              </div>
+            </div>
+          </div>
+          
+          <!-- Step actions -->
+          <div class="step-actions">
+            <button 
+              mat-button 
+              type="button" 
+              (click)="previousStep()"
+              class="back-button">
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+            <button 
+              mat-raised-button 
+              color="primary" 
+              type="button"
+              (click)="nextStep()"
+              [disabled]="passwordForm.invalid"
+              class="next-button">
+              Next
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </form>
+      </mat-step>
+        <!-- Step 3: Email Verification -->
+      <mat-step [stepControl]="verificationForm">
+        <ng-template matStepLabel>Verification</ng-template>
+        <form [formGroup]="verificationForm" class="register-form verification-step">
+          <h2 class="step-title">Verify Your Email</h2>
+            <!-- Email sent confirmation -->
+          <div class="email-sent-card" *ngIf="!isEmailVerified">
+            <mat-icon class="email-icon">mark_email_unread</mat-icon>
+            <h3>Check Your Email</h3>
+            <p>We've sent a verification link to:</p>
+            <div class="email-address">{{ personalInfoForm.get('email')?.value }}</div>
+            <p>Click the verification link in your email to activate your account.</p>
+            
+            <div class="verification-instructions">
+              <div class="instruction-item">
+                <mat-icon>email</mat-icon>
+                <span>Check your inbox and spam folder</span>
+              </div>
+              <div class="instruction-item">
+                <mat-icon>link</mat-icon>
+                <span>Click the verification link in the email</span>
+              </div>
+              <div class="instruction-item">
+                <mat-icon>login</mat-icon>
+                <span>Return here to log in once verified</span>
+              </div>
+            </div>
+            
+            <!-- Resend Email -->
+            <div class="resend-section">
+              <p *ngIf="resendCountdown > 0">
+                Didn't receive the email? Resend in {{ resendCountdown }}s
+              </p>
+              <button 
+                mat-button 
+                color="primary" 
+                *ngIf="resendCountdown === 0"
+                (click)="resendVerificationCode()"
+                [disabled]="isLoading">
+                Resend Verification Email
+              </button>
+            </div>
+          </div>
+          
+          <!-- Email verified success -->
+          <div class="email-verified-card" *ngIf="isEmailVerified">
+            <mat-icon class="success-icon">verified</mat-icon>
+            <h3>Email Verified Successfully!</h3>
+            <p>Your email has been verified. You can now complete your registration.</p>
+          </div>
+          
+          <!-- Step actions -->
+          <div class="step-actions">
+            <button 
+              mat-button 
+              type="button" 
+              (click)="previousStep()"
+              class="back-button">
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>            <button 
+              mat-raised-button 
+              color="primary" 
+              type="button"
+              (click)="onSubmit()"
+              [disabled]="isLoading"
+              class="complete-button">
+              <mat-spinner *ngIf="isLoading" diameter="20" class="button-spinner"></mat-spinner>
+              <span *ngIf="!isLoading">Go to Login</span>
+            </button>
+          </div>
+        </form>
+      </mat-step>
+    </mat-stepper>
+    
+    <!-- Error Display -->
+    <div class="error-container" *ngIf="errorMessage">
+      <mat-card class="error-card">
+        <mat-card-content>
+          <div class="error-content">
+            <mat-icon class="error-icon">error</mat-icon>
+            <div class="error-text">
+              <h4>Registration Failed</h4>
+              <p>{{ errorMessage }}</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+    
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+      </div>
+      <div class="progress-text">
+        Step {{ currentStep + 1 }} of 3
+      </div>
+    </div>
+  </div>
+</div>

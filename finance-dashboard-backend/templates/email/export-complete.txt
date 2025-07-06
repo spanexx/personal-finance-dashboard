@@ -1,0 +1,24 @@
+Data Export Complete - Personal Finance Dashboard
+
+Hello!
+
+Great news! Your financial data export has been completed successfully and is ready for download.
+
+EXPORT DETAILS:
+===============
+File Name: {{fileName}}
+Export Type: {{exportType}}
+Format: {{format}}
+File Size: {{fileSize}}
+
+Download your export here: {{downloadUrl}}
+
+IMPORTANT: This download link will expire in 30 days. Please download your file before then.
+
+If you have any questions or need assistance, please don't hesitate to contact our support team.
+
+Best regards,
+Personal Finance Dashboard Team
+
+---
+This is an automated message. Please do not reply to this email.

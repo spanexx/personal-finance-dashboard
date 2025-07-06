@@ -1,0 +1,85 @@
+// Table Shared Styles
+// Reusable table styles for data display components
+
+// Data Tables
+.data-table {
+  width: 100%;
+  
+  .mat-mdc-table {
+    width: 100%;
+    background: transparent;
+  }
+
+  .mat-mdc-header-row {
+    background-color: var(--mat-surface-variant);
+  }
+
+  .mat-mdc-header-cell {
+    font-weight: 600;
+    color: var(--mat-on-surface-variant);
+  }
+
+  .mat-mdc-row {
+    &:hover {
+      background-color: var(--mat-action-hover);
+    }
+  }
+
+  .mat-mdc-cell {
+    padding: 12px 8px;
+  }
+}
+
+// Responsive Tables
+.responsive-table {
+  overflow-x: auto;
+  
+  @media (max-width: 768px) {
+    .mat-mdc-table {
+      min-width: 600px;
+    }
+  }
+}
+
+// Action Columns
+.action-column {
+  width: 120px;
+  text-align: center;
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+
+    .mat-mdc-icon-button {
+      width: 32px;
+      height: 32px;
+      line-height: 32px;
+    }
+  }
+}
+
+// Status Indicators
+.status-cell {
+  .status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+
+    &.success {
+      background-color: var(--mat-success-container);
+      color: var(--mat-on-success-container);
+    }
+
+    &.warning {
+      background-color: var(--mat-warning-container);
+      color: var(--mat-on-warning-container);
+    }
+
+    &.error {
+      background-color: var(--mat-error-container);
+      color: var(--mat-on-error-container);
+    }
+  }
+}

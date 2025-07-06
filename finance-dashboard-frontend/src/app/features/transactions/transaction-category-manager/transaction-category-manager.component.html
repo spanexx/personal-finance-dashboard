@@ -1,0 +1,259 @@
+<div class="category-manager-container">
+  <!-- Skip Links for Keyboard Navigation -->
+  <div class="skip-links">
+    <a href="#category-form" class="skip-link">Skip to category form</a>
+    <a href="#categories-list" class="skip-link">Skip to categories list</a>
+  </div>
+
+  <div class="manager-header">
+    <button mat-icon-button color="primary" (click)="goBack()" aria-label="Back to transactions">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 id="page-title" class="page-title">Manage Categories</h1>
+    <!-- <button mat-raised-button color="primary" (click)="openCreateCategoryModal()" style="margin-left: auto;">
+      <mat-icon>add</mat-icon> New Category
+    </button> -->
+  </div>
+  <div class="content-layout">
+    <!-- Category Form -->    <div class="form-section">
+      <mat-card [appFocusTrap]="true">
+        <mat-card-header>
+          <mat-card-title>{{ editingCategory ? 'Edit Category' : 'Create New Category' }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" 
+                id="category-form"
+                role="form"
+                aria-labelledby="form-title"
+                aria-describedby="form-instructions">
+            
+            <div id="form-title" class="sr-only">
+              {{ editingCategory ? 'Edit Category Form' : 'Create New Category Form' }}
+            </div>
+            
+            <div id="form-instructions" class="sr-only">
+              Fill out the form fields below to {{ editingCategory ? 'update the' : 'create a new' }} category. All fields marked with asterisk are required.
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Category Name *</mat-label>
+                <input #firstField
+                       matInput 
+                       formControlName="name" 
+                       placeholder="Enter category name"
+                       aria-required="true"
+                       aria-describedby="name-help name-error"
+                       [attr.aria-invalid]="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched">
+                <mat-hint id="name-help">Enter a descriptive name for your category (maximum 30 characters)</mat-hint>
+                <mat-error id="name-error" *ngIf="categoryForm.get('name')?.hasError('required')">Name is required</mat-error>
+                <mat-error *ngIf="categoryForm.get('name')?.hasError('maxlength')">Name cannot exceed 30 characters</mat-error>
+              </mat-form-field>
+            </div>            <div class="form-row">
+              <mat-button-toggle-group formControlName="type" 
+                                       class="category-type-toggle"
+                                       aria-label="Category type selection"
+                                       aria-describedby="type-help">
+                <mat-button-toggle value="expense" aria-label="Expense category">Expense</mat-button-toggle>
+                <mat-button-toggle value="income" aria-label="Income category">Income</mat-button-toggle>
+              </mat-button-toggle-group>
+              <div id="type-help" class="sr-only">Select whether this is an expense or income category</div>
+            </div>
+
+            <div class="form-row">
+              <div class="color-picker">
+                <label class="section-label" id="color-label">Select Color *</label>                <div class="color-options" 
+                     role="radiogroup" 
+                     aria-labelledby="color-label"
+                     aria-describedby="color-help"
+                     aria-required="true">
+                  <div *ngFor="let color of colorOptions; let i = index" 
+                       class="color-option" 
+                       [style.background-color]="color"
+                       [class.selected]="selectedColor === color"
+                       (click)="selectColor(color)"
+                       (keydown)="onColorKeydown($event, color, i)"
+                       [attr.tabindex]="selectedColor === color ? 0 : -1"
+                       role="radio"
+                       [attr.aria-checked]="selectedColor === color"
+                       [attr.aria-label]="'Color option ' + (i + 1) + ', ' + color"
+                       [attr.aria-setsize]="colorOptions.length"
+                       [attr.aria-posinset]="i + 1">
+                  </div>
+                </div>
+                <div id="color-help" class="sr-only">Choose a color to represent this category</div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="icon-picker">
+                <label class="section-label" id="icon-label">Select Icon *</label>
+                <div class="icon-options"
+                     role="radiogroup"
+                     aria-labelledby="icon-label"
+                     aria-describedby="icon-help"
+                     aria-required="true">
+                  <div *ngFor="let icon of iconList; let i = index" 
+                       class="icon-option"
+                       [class.selected]="selectedIcon === icon"
+                       (click)="selectIcon(icon)"
+                       (keydown)="onIconKeydown($event, icon, i)"
+                       [attr.tabindex]="selectedIcon === icon ? 0 : -1"
+                       role="radio"
+                       [attr.aria-checked]="selectedIcon === icon"
+                       [attr.aria-label]="'Icon option ' + (i + 1) + ', ' + icon"
+                       [attr.aria-setsize]="iconList.length"
+                       [attr.aria-posinset]="i + 1">
+                    <mat-icon>{{ icon }}</mat-icon>
+                  </div>
+                </div>
+                <div id="icon-help" class="sr-only">Choose an icon to represent this category</div>
+              </div>
+            </div>            <div class="form-actions">
+              <button mat-button 
+                      type="button" 
+                      *ngIf="editingCategory" 
+                      (click)="cancelEdit()"
+                      aria-label="Cancel editing and return to form">
+                Cancel
+              </button>
+              <button mat-raised-button 
+                      color="primary" 
+                      type="submit" 
+                      [disabled]="isSubmitting || categoryForm.invalid"
+                      [attr.aria-describedby]="'submit-help'"
+                      aria-live="polite">
+                <span *ngIf="!isSubmitting">{{ editingCategory ? 'Update Category' : 'Create Category' }}</span>
+                <span *ngIf="isSubmitting">{{ editingCategory ? 'Updating...' : 'Creating...' }}</span>
+              </button>
+              <div id="submit-help" class="sr-only">
+                {{ editingCategory ? 'Update the category with the current form values' : 'Create a new category with the current form values' }}
+              </div>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </div>    <!-- Categories List -->
+    <div class="categories-section">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title id="categories-list">Your Categories</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-tab-group aria-labelledby="categories-list">
+            <mat-tab label="Expense Categories" aria-label="View and manage expense categories">
+              <div class="category-list" *ngIf="!isLoading" role="region" aria-label="Expense categories">
+                <div *ngIf="expenseCategories.length === 0" class="empty-state" role="status">
+                  <mat-icon aria-hidden="true">category</mat-icon>
+                  <p>No expense categories found</p>
+                  <button mat-stroked-button 
+                          color="primary" 
+                          (click)="categoryForm.get('type')?.setValue('expense')"
+                          aria-label="Create your first expense category">
+                    Create Your First Expense Category
+                  </button>
+                </div>
+
+                <mat-list *ngIf="expenseCategories.length > 0" role="list" aria-label="Expense categories list">
+                  <mat-list-item *ngFor="let category of expenseCategories; let i = index" 
+                                 class="category-item" 
+                                 role="listitem"
+                                 [attr.aria-label]="'Category ' + (i + 1) + ' of ' + expenseCategories.length + ': ' + category.name">
+                    <div class="category-display">
+                      <div class="category-icon" 
+                           [style.background-color]="category.color"
+                           [attr.aria-label]="'Category color: ' + category.color">                        <mat-icon [attr.aria-label]="'Category icon: ' + category.icon">{{ category.icon }}</mat-icon>
+                      </div>
+                      <div class="category-details">
+                        <h3>{{ category.name }}</h3>
+                        <div class="category-badges">
+                          <span class="default-badge" 
+                                *ngIf="false"
+                                aria-label="This is the default expense category">Default</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="category-actions" role="group" [attr.aria-label]="'Actions for ' + category.name + ' category'">
+                      <button mat-icon-button 
+                              color="primary" 
+                              (click)="editCategory(category)" 
+                              [attr.aria-label]="'Edit ' + category.name + ' category'"
+                              matTooltip="Edit category">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-icon-button 
+                              color="warn" 
+                              (click)="deleteCategory(category)" 
+                              [attr.aria-label]="'Delete ' + category.name + ' category'"
+                              matTooltip="Delete category" 
+                              [disabled]="false">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </mat-list-item>
+                </mat-list>
+              </div>
+            </mat-tab>
+              <mat-tab label="Income Categories" aria-label="View and manage income categories">
+              <div class="category-list" *ngIf="!isLoading" role="region" aria-label="Income categories">
+                <div *ngIf="incomeCategories.length === 0" class="empty-state" role="status">
+                  <mat-icon aria-hidden="true">category</mat-icon>
+                  <p>No income categories found</p>
+                  <button mat-stroked-button 
+                          color="primary" 
+                          (click)="categoryForm.get('type')?.setValue('income')"
+                          aria-label="Create your first income category">
+                    Create Your First Income Category
+                  </button>
+                </div>
+
+                <mat-list *ngIf="incomeCategories.length > 0" role="list" aria-label="Income categories list">
+                  <mat-list-item *ngFor="let category of incomeCategories; let i = index" 
+                                 class="category-item"
+                                 role="listitem"
+                                 [attr.aria-label]="'Category ' + (i + 1) + ' of ' + incomeCategories.length + ': ' + category.name">
+                    <div class="category-display">
+                      <div class="category-icon" 
+                           [style.background-color]="category.color"
+                           [attr.aria-label]="'Category color: ' + category.color">
+                        <mat-icon [attr.aria-label]="'Category icon: ' + category.icon">{{ category.icon }}</mat-icon>
+                      </div>
+                      <div class="category-details">
+                        <h3>{{ category.name }}</h3>
+                        <div class="category-badges">
+                          <span class="default-badge" 
+                                *ngIf="false"
+                                aria-label="This is the default income category">Default</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="category-actions" role="group" [attr.aria-label]="'Actions for ' + category.name + ' category'">
+                      <button mat-icon-button 
+                              color="primary" 
+                              (click)="editCategory(category)" 
+                              [attr.aria-label]="'Edit ' + category.name + ' category'"
+                              matTooltip="Edit category">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-icon-button 
+                              color="warn" 
+                              (click)="deleteCategory(category)" 
+                              [attr.aria-label]="'Delete ' + category.name + ' category'"
+                              matTooltip="Delete category" 
+                              [disabled]="false">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </mat-list-item>
+                </mat-list>
+              </div>
+            </mat-tab>
+          </mat-tab-group>          <div *ngIf="isLoading" class="loading-spinner" role="status" aria-live="polite">
+            <mat-spinner diameter="40" aria-label="Loading categories"></mat-spinner>
+            <p>Loading categories...</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

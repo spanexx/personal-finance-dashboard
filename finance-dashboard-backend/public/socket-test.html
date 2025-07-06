@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Finance Dashboard - WebSocket Test</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    h1, h2 {
+      color: #333;
+    }
+    
+    .notification {
+      background-color: #f8f9fa;
+      border-left: 4px solid #28a745;
+      padding: 10px 15px;
+      margin-bottom: 10px;
+    }
+    
+    .notification.error {
+      border-left-color: #dc3545;
+    }
+    
+    .notification.warning {
+      border-left-color: #ffc107;
+    }
+    
+    #notifications {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    input, textarea, button {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      padding: 10px;
+      font-weight: bold;
+    }
+    
+    button:hover {
+      background-color: #0069d9;
+    }
+    
+    .status {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    
+    .connected {
+      background-color: #28a745;
+    }
+    
+    .disconnected {
+      background-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <h1>Personal Finance Dashboard - WebSocket Test</h1>
+  
+  <div class="card">
+    <h2>Connection Status</h2>
+    <p>
+      <span class="status disconnected" id="status-indicator"></span>
+      <span id="connection-status">Disconnected</span>
+    </p>
+    <p id="socket-id">Socket ID: -</p>
+    <p id="user-id">User ID: -</p>
+    
+    <div class="form-group">
+      <label for="auth-token">Authentication Token (JWT)</label>
+      <input type="text" id="auth-token" placeholder="Enter your JWT token">
+    </div>
+    
+    <button id="connect-btn">Connect</button>
+    <button id="disconnect-btn" disabled>Disconnect</button>
+  </div>
+  
+  <div class="card">
+    <h2>Real-time Notifications</h2>
+    <div id="notifications">
+      <div class="notification">
+        <p><strong>System:</strong> Welcome to the WebSocket test page. Connect using your JWT token to receive real-time updates.</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="card">
+    <h2>Send Test Message</h2>
+    <div class="form-group">
+      <label for="event-name">Event Name</label>
+      <input type="text" id="event-name" placeholder="Enter event name" value="test:message">
+    </div>
+    
+    <div class="form-group">
+      <label for="message-content">Message Content</label>
+      <textarea id="message-content" rows="3" placeholder="Enter message content"></textarea>
+    </div>
+    
+    <button id="send-btn" disabled>Send Message</button>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let socket;
+      const serverUrl = 'http://localhost:5000'; // Update with your server URL
+      
+      // DOM elements
+      const statusIndicator = document.getElementById('status-indicator');
+      const connectionStatus = document.getElementById('connection-status');
+      const socketId = document.getElementById('socket-id');
+      const userId = document.getElementById('user-id');
+      const authToken = document.getElementById('auth-token');
+      const connectBtn = document.getElementById('connect-btn');
+      const disconnectBtn = document.getElementById('disconnect-btn');
+      const notifications = document.getElementById('notifications');
+      const eventName = document.getElementById('event-name');
+      const messageContent = document.getElementById('message-content');
+      const sendBtn = document.getElementById('send-btn');
+      
+      // Connect to socket server
+      connectBtn.addEventListener('click', () => {
+        const token = authToken.value.trim();
+        
+        if (!token) {
+          addNotification('Please enter a valid authentication token', 'error');
+          return;
+        }
+        
+        // Initialize socket connection with auth token
+        socket = io(serverUrl, {
+          auth: { token },
+          transports: ['websocket', 'polling']
+        });
+        
+        // Connection events
+        socket.on('connect', () => {
+          statusIndicator.classList.remove('disconnected');
+          statusIndicator.classList.add('connected');
+          connectionStatus.textContent = 'Connected';
+          socketId.textContent = `Socket ID: ${socket.id}`;
+          
+          connectBtn.disabled = true;
+          disconnectBtn.disabled = false;
+          sendBtn.disabled = false;
+          
+          addNotification('Socket connection established successfully');
+        });
+        
+        socket.on('disconnect', () => {
+          statusIndicator.classList.remove('connected');
+          statusIndicator.classList.add('disconnected');
+          connectionStatus.textContent = 'Disconnected';
+          
+          connectBtn.disabled = false;
+          disconnectBtn.disabled = true;
+          sendBtn.disabled = true;
+          
+          addNotification('Socket disconnected', 'warning');
+        });
+        
+        socket.on('error', (error) => {
+          addNotification(`Socket error: ${error.message}`, 'error');
+        });
+        
+        socket.on('authentication_error', (error) => {
+          addNotification(`Authentication error: ${error.message}`, 'error');
+          socket.disconnect();
+        });
+        
+        socket.on('authentication_success', (data) => {
+          userId.textContent = `User ID: ${data.userId}`;
+          addNotification('Authentication successful');
+        });
+        
+        // Listen for real-time events
+        socket.on('transaction:created', (data) => {
+          addNotification(`New transaction created: ${data.transactionId}`);
+        });
+        
+        socket.on('budget:threshold_exceeded', (data) => {
+          addNotification(`Budget threshold exceeded: ${data.budgetId}`, 'warning');
+        });
+        
+        socket.on('goal:milestone_reached', (data) => {
+          addNotification(`Goal milestone reached: ${data.goalId} - ${data.milestone}%`);
+        });
+        
+        socket.on('balance:updated', (data) => {
+          addNotification(`Balance updated: ${data.balance}`);
+        });
+        
+        // Custom event handler for testing
+        socket.on('test:message', (data) => {
+          addNotification(`Test message received: ${data.message}`);
+        });
+      });
+      
+      // Disconnect from server
+      disconnectBtn.addEventListener('click', () => {
+        if (socket) {
+          socket.disconnect();
+        }
+      });
+      
+      // Send test message
+      sendBtn.addEventListener('click', () => {
+        if (!socket || !socket.connected) {
+          addNotification('Socket not connected', 'error');
+          return;
+        }
+        
+        const event = eventName.value.trim();
+        const content = messageContent.value.trim();
+        
+        if (!event || !content) {
+          addNotification('Please enter both event name and message content', 'error');
+          return;
+        }
+        
+        // Send message to server
+        socket.emit(event, { message: content, timestamp: new Date().toISOString() });
+        addNotification(`Message sent with event: ${event}`);
+      });
+      
+      // Helper function to add notifications
+      function addNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        
+        const timestamp = new Date().toLocaleTimeString();
+        notification.innerHTML = `
+          <p><strong>${timestamp}:</strong> ${message}</p>
+        `;
+        
+        notifications.prepend(notification);
+      }
+    });
+  </script>
+</body>
+</html>

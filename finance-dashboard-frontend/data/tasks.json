@@ -1,0 +1,64 @@
+{
+  "tasks": [
+    {
+      "desc": "Fix 'loading', 'error', 'currentBudget', and 'loadCurrentBudget' properties in BudgetOverviewComponent. - COMPLETED",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "desc": "Fix 'loading', 'error', 'saving', 'loadData', 'loadBudgetFailure', 'loadBudget', 'clearSelectedBudget', 'updateBudget', 'createBudget', 'take', and 'switchMap' properties/methods in BudgetSetupComponent. - COMPLETED",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "desc": "Fix 'isSubmitting', 'categoryId', and 'take' properties/methods in QuickAddTransactionComponent. - COMPLETED",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "desc": "Fix 'isLoading' and 'isSubmitting' properties in TransactionFormComponent. - COMPLETED",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "desc": "Fix 'BudgetsApiResponse' type in budget.effects.ts. - COMPLETED",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "desc": "Implement secure token storage (in-memory for access token, HttpOnly cookie for refresh token).",
+      "status": "completed",
+      "priority": "medium"
+    },
+    {
+      "desc": "Develop HTTP Interceptor for attaching access tokens and handling token refresh.",
+      "status": "completed",
+      "priority": "medium"
+    },
+    {
+      "desc": "Create Angular Route Guards for protecting authenticated routes.",
+      "status": "completed",
+      "priority": "medium"
+    },
+    {
+      "desc": "Implement robust session management and logout flow.",
+      "status": "completed",
+      "priority": "medium"
+    },
+    {
+      "desc": "Ensure backend issues HttpOnly, Secure, SameSite=Strict refresh token cookies.",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "desc": "Review and implement relevant security headers (CSP, HSTS) for frontend.",
+      "status": "completed",
+      "priority": "medium"
+    },
+    {
+      "desc": "Implement basic Role-Based Access Control (RBAC) on frontend for UI elements.",
+      "status": "completed",
+      "priority": "medium"
+    }
+  ]
+}

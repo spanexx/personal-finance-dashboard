@@ -1,0 +1,35 @@
+.dashboard-widget {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+mat-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+mat-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.balance-value {
+  font-size: 2.2rem;
+  font-weight: bold;
+}
+.balance-change {
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+.balance-label {
+  color: #757575;
+  font-size: 0.95rem;
+}
+.budget-compliance {
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.budget-alerts {
+  margin-top: 8px;
+}

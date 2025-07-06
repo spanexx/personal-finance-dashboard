@@ -1,0 +1,302 @@
+<div class="transaction-form-container" [appFocusTrap]="true">
+  <!-- Skip Link for keyboard users -->
+  <a href="#form-title" class="skip-link">Skip to form content</a>
+
+  <div class="form-header">
+    <button mat-icon-button color="primary" (click)="cancel()" aria-label="Back to transactions">
+      <mat-icon aria-hidden="true">arrow_back</mat-icon>
+    </button>
+    <h1 class="page-title" id="form-title" tabindex="-1">{{ pageTitle }}</h1>
+  </div>
+
+  <div *ngIf="isLoading$ | async" class="loading-spinner" role="status">
+    <mat-spinner diameter="40" aria-label="Loading transaction data"></mat-spinner>
+    <div aria-live="polite" class="sr-only">
+      Loading transaction data
+    </div>
+  </div>
+  <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" *ngIf="!(isLoading$ | async)" aria-labelledby="form-title">
+    <mat-card class="form-card">
+      <mat-card-content>
+        <div class="form-row">
+          <mat-button-toggle-group formControlName="type" class="transaction-type-toggle" aria-label="Transaction type">
+            <mat-button-toggle value="expense">Expense</mat-button-toggle>
+            <mat-button-toggle value="income">Income</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>        <div class="form-row">
+          <mat-form-field appearance="outline" class="amount-field">
+            <mat-label>Amount</mat-label>
+            <span matPrefix>{{ currencySymbol }}&nbsp;</span>
+            <input matInput #amountInput type="text" formControlName="amount" 
+                   placeholder="0.00" aria-required="true"
+                   (input)="onAmountInput($event)"
+                   (blur)="checkForDuplicates()">
+            <mat-error *ngIf="transactionForm.get('amount')?.invalid">{{ getErrorMessage('amount') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="date-field">
+            <mat-label>Date</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="date">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            <mat-error *ngIf="transactionForm.get('date')?.invalid">{{ getErrorMessage('date') }}</mat-error>
+          </mat-form-field>
+        </div>        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description</mat-label>
+            <input matInput formControlName="description" 
+                   placeholder="What was this transaction for?"
+                   [matAutocomplete]="descriptionAuto"
+                   (blur)="checkForDuplicates()">
+            <mat-autocomplete #descriptionAuto="matAutocomplete" 
+                             (optionSelected)="onDescriptionSelected($event)">
+              <mat-option *ngFor="let suggestion of filteredDescriptions$ | async" [value]="suggestion">
+                <mat-icon>history</mat-icon>
+                <span>{{ suggestion }}</span>
+              </mat-option>
+            </mat-autocomplete>
+            <mat-error *ngIf="transactionForm.get('description')?.invalid">{{ getErrorMessage('description') }}</mat-error>
+          </mat-form-field>
+        </div>        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Payee</mat-label>
+            <input matInput formControlName="payee" placeholder="Who was paid or who paid you?">
+            <mat-error *ngIf="transactionForm.get('payee')?.invalid">{{ getErrorMessage('payee') }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- PROMPT 3.2: Payment Method Selection -->
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Payment Method</mat-label>
+            <mat-select formControlName="paymentMethod" aria-label="Select payment method">
+              <mat-option *ngFor="let method of paymentMethods" [value]="method.id">
+                <div class="payment-method-option">
+                  <mat-icon *ngIf="method.icon" aria-hidden="true">{{ method.icon }}</mat-icon>
+                  <span>{{ method.name }}</span>
+                </div>
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="transactionForm.get('paymentMethod')?.invalid">Payment method is required</mat-error>
+          </mat-form-field>
+        </div>        <div class="form-row category-row">
+          <mat-form-field appearance="outline" class="category-field">
+            <mat-label>Category</mat-label>            <mat-select formControlName="category" role="combobox" [attr.aria-label]="'Select a ' + (transactionForm.get('type')?.value || 'transaction') + ' category'">
+              <ng-container *ngIf="transactionForm.get('type')?.value === 'expense'">
+                <mat-option *ngFor="let category of expenseCategories; trackBy: trackByCategoryId" [value]="category._id">
+                  <div class="category-option">
+                    <span class="category-color" [style.background-color]="category.color" aria-hidden="true"></span>
+                    <mat-icon *ngIf="category.icon" aria-hidden="true">{{ category.icon }}</mat-icon>
+                    <span>{{ category.name }}</span>
+                  </div>
+                </mat-option>
+                <mat-option *ngIf="expenseCategories.length === 0" disabled>
+                  <span role="alert">No expense categories found. Please create one first.</span>
+                </mat-option>
+              </ng-container>
+              
+              <ng-container *ngIf="transactionForm.get('type')?.value === 'income'">
+                <mat-option *ngFor="let category of incomeCategories" [value]="category._id">
+                  <div class="category-option">
+                    <span class="category-color" [style.background-color]="category.color"></span>
+                    <mat-icon *ngIf="category.icon">{{ category.icon }}</mat-icon>
+                    <span>{{ category.name }}</span>
+                  </div>
+                </mat-option>
+                <mat-option *ngIf="incomeCategories.length === 0" disabled>
+                  No income categories found. Please create one first.
+                </mat-option>              </ng-container>
+            </mat-select>
+            <mat-error *ngIf="transactionForm.get('category')?.invalid">{{ getErrorMessage('category') }}</mat-error>
+          </mat-form-field>
+          
+          <button mat-stroked-button 
+                  type="button" 
+                  class="create-category-btn"
+                  (click)="openNewCategoryDialog()"
+                  [attr.aria-label]="'Create new ' + (transactionForm.get('type')?.value || 'transaction') + ' category'"
+                  matTooltip="Create a new category">
+            <mat-icon aria-hidden="true">add</mat-icon>
+            <span class="btn-text">New Category</span>
+          </button>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Tags</mat-label>            <mat-chip-grid #chipGrid
+              [attr.aria-label]="'Transaction tags. ' + tags.length + ' tags added.'">
+              <mat-chip-row *ngFor="let tag of tags; index as i" (removed)="removeTag(tag)" [editable]="false"
+                [attr.aria-label]="tag + ' tag'"
+                tabindex="0">
+                {{ tag }}
+                <button matChipRemove
+                  [attr.aria-label]="'Remove ' + tag + ' tag'"
+                  (keydown.enter)="removeTag(tag)"
+                  (keydown.space)="removeTag(tag)">
+                  <mat-icon aria-hidden="true">cancel</mat-icon>
+                </button>
+              </mat-chip-row>
+              <input placeholder="New tag..."
+                [matChipInputFor]="chipGrid"
+                [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                (matChipInputTokenEnd)="addTag($event)"
+                aria-label="Enter a new tag"
+                aria-describedby="tag-help"
+                [attr.aria-expanded]="false">
+            </mat-chip-grid>
+            <div id="tag-help" class="sr-only">
+              Press enter or comma to add a tag. Use arrow keys to navigate tags. Press delete or backspace to remove a tag.
+            </div>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Notes</mat-label>
+            <textarea matInput formControlName="notes" placeholder="Add any additional notes here" rows="3"></textarea>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row recurring-toggle">
+          <mat-checkbox formControlName="isRecurring">This is a recurring transaction</mat-checkbox>
+        </div>
+
+        <div *ngIf="showRecurringOptions" class="recurring-options" formGroupName="recurringDetails">
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Frequency</mat-label>
+              <mat-select formControlName="frequency">
+                <mat-option value="daily">Daily</mat-option>
+                <mat-option value="weekly">Weekly</mat-option>
+                <mat-option value="monthly">Monthly</mat-option>
+                <mat-option value="yearly">Yearly</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Interval</mat-label>
+              <input matInput type="number" formControlName="interval" min="1" max="99">
+              <mat-hint>How often it repeats (e.g., every 2 weeks)</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>End Date (optional)</mat-label>
+              <input matInput [matDatepicker]="endDatePicker" formControlName="endDate">
+              <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
+              <mat-datepicker #endDatePicker></mat-datepicker>
+              <mat-hint>Leave blank for no end date</mat-hint>
+            </mat-form-field>
+          </div>        </div>
+
+        <!-- PROMPT 3.2: Split Transaction Toggle -->
+        <div class="form-row split-toggle">
+          <mat-checkbox formControlName="isSplitTransaction">Split this transaction across multiple categories</mat-checkbox>
+        </div>
+
+        <!-- PROMPT 3.2: Split Transaction Details -->
+        <div *ngIf="isSplitTransaction" class="split-transactions-section" formArrayName="splitTransactions">
+          <div class="split-header">
+            <h3>Split Transaction Details</h3>
+            <button mat-icon-button type="button" (click)="addSplitTransaction()" aria-label="Add split">
+              <mat-icon>add</mat-icon>
+            </button>
+          </div>
+          
+          <div *ngFor="let splitControl of splitTransactionsArray.controls; let i = index" 
+               [formGroupName]="i" class="split-transaction-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Category</mat-label>
+              <mat-select formControlName="categoryId">
+                <ng-container *ngIf="transactionForm.get('type')?.value === 'expense'">
+                  <mat-option *ngFor="let category of expenseCategories" [value]="category._id">
+                    <div class="category-option">
+                      <span class="category-color" [style.background-color]="category.color"></span>
+                      <mat-icon *ngIf="category.icon">{{ category.icon }}</mat-icon>
+                      <span>{{ category.name }}</span>
+                    </div>
+                  </mat-option>
+                </ng-container>
+                <ng-container *ngIf="transactionForm.get('type')?.value === 'income'">
+                  <mat-option *ngFor="let category of incomeCategories" [value]="category._id">
+                    <div class="category-option">
+                      <span class="category-color" [style.background-color]="category.color"></span>
+                      <mat-icon *ngIf="category.icon">{{ category.icon }}</mat-icon>
+                      <span>{{ category.name }}</span>
+                    </div>
+                  </mat-option>
+                </ng-container>
+              </mat-select>
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline">
+              <mat-label>Amount</mat-label>
+              <span matPrefix>{{ currencySymbol }}&nbsp;</span>
+              <input matInput type="text" formControlName="amount" placeholder="0.00">
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline">
+              <mat-label>Description (optional)</mat-label>
+              <input matInput formControlName="description" placeholder="Split description">
+            </mat-form-field>
+            
+            <button mat-icon-button type="button" (click)="removeSplitTransaction(i)" 
+                    aria-label="Remove split" color="warn">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+          
+          <div class="split-total" *ngIf="splitTransactionsArray.length > 0">
+            <strong>Split Total: {{ formatCurrency(calculateSplitTotal()) }}</strong>
+            <span *ngIf="calculateSplitTotal() !== transactionForm.get('amount')?.value" class="total-mismatch">
+              (Total mismatch with main amount)
+            </span>
+          </div>
+        </div>
+
+        <!-- PROMPT 3.2: File Upload for Receipts/Attachments -->
+        <div class="form-row file-upload-section">
+          <h4>Attachments</h4>
+          <div class="file-upload-area">
+            <input type="file" #fileInput multiple 
+                   [accept]="allowedFileTypes.join(',')"
+                   (change)="onFileSelected($event)"
+                   style="display: none;">
+            <button mat-stroked-button type="button" (click)="fileInput.click()">
+              <mat-icon>attach_file</mat-icon>
+              Add Receipt/Attachment
+            </button>
+            <div class="file-upload-hint">
+              <small>Supported formats: JPG, PNG, PDF (max 10MB per file)</small>
+            </div>
+          </div>
+          
+          <!-- Display uploaded files -->
+          <div *ngIf="attachments.length > 0" class="attachments-list">
+            <div *ngFor="let attachment of attachments; let i = index" class="attachment-item">
+              <div class="attachment-preview" *ngIf="attachment.preview">
+                <img [src]="attachment.preview" alt="Attachment preview" class="preview-image">
+              </div>
+              <div class="attachment-info">
+                <div class="attachment-name">{{ attachment.name }}</div>
+                <div class="attachment-size">{{ (attachment.size / 1024 / 1024) | number:'1.1-1' }} MB</div>
+              </div>
+              <button mat-icon-button (click)="removeAttachment(i)" color="warn" type="button">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-button type="button" (click)="cancel()" [disabled]="isLoading$ | async">Cancel</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="(isLoading$ | async) || transactionForm.invalid">
+          <mat-spinner diameter="20" *ngIf="isLoading$ | async"></mat-spinner>
+          <span *ngIf="!(isLoading$ | async)">{{ isEditMode ? 'Update Transaction' : 'Save Transaction' }}</span>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </form>
+</div>

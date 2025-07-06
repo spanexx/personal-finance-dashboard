@@ -1,0 +1,379 @@
+<div class="budget-setup-container" [appFocusTrap]="true" (keydown)="onKeyDown($event)">
+  <!-- Skip Navigation Links -->
+  <div class="skip-links">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <a href="#form-actions" class="skip-link">Skip to form actions</a>
+  </div>
+
+  <!-- Header Section -->
+  <div class="budget-header">
+    <h1 
+      #pageTitle
+      id="page-title"
+      class="page-title"
+      tabindex="-1"
+      aria-describedby="page-description">
+      Create New Budget
+    </h1>
+    <p id="page-description" class="page-subtitle">
+      Set up your new budget allocation by category
+    </p>
+  </div>
+  <!-- Loading State -->
+  <div *ngIf="isLoading$ | async" class="loading-container" role="status" aria-live="polite">
+    <mat-card class="loading-card">
+      <mat-card-content>
+        <div class="loading-content">
+          <mat-icon class="loading-icon" aria-hidden="true">hourglass_empty</mat-icon>
+          <p>Loading budget setup...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Error State for NgRx store errors or localError -->
+  <div *ngIf="((error$ | async) || localError) && !(isLoading$ | async)" class="error-container" role="alert" aria-live="assertive">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon class="error-icon" aria-hidden="true">error_outline</mat-icon>
+          <h3>Error Loading Data</h3>
+          <p>{{ (error$ | async) || localError }}</p>
+          <button 
+            mat-raised-button 
+            color="primary" 
+            (click)="retryLoad()"
+            aria-label="Retry loading budget data">
+            <mat-icon aria-hidden="true">refresh</mat-icon>
+            Try Again
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  <!-- Budget Setup Form -->
+  <form 
+    *ngIf="!(isLoading$ | async) && !(error$ | async) && !localError"
+    [formGroup]="budgetForm" 
+    (ngSubmit)="onSubmit()" 
+    class="budget-form"
+    id="main-content"
+    role="main"
+    aria-labelledby="page-title"
+    novalidate>
+    
+    <!-- Basic Information Card -->
+    <mat-card class="basic-info-card">
+      <mat-card-header>
+        <mat-card-title>Basic Information</mat-card-title>
+        <mat-card-subtitle>Set up your budget details</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Budget Name</mat-label>
+            <input 
+              #firstFormInput
+              matInput 
+              formControlName="name" 
+              placeholder="e.g., June 2025 Budget"
+              maxlength="50"
+              aria-describedby="name-hint name-errors"
+              [attr.aria-invalid]="budgetForm.get('name')?.invalid && budgetForm.get('name')?.touched">
+            <mat-hint id="name-hint">Enter a descriptive name for your budget</mat-hint>
+            <div id="name-errors" aria-live="polite">
+              <mat-error *ngIf="budgetForm.get('name')?.hasError('required')">
+                Budget name is required
+              </mat-error>
+              <mat-error *ngIf="budgetForm.get('name')?.hasError('minlength')">
+                Budget name must be at least 3 characters
+              </mat-error>
+            </div>
+          </mat-form-field>
+        </div>        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Budget Period</mat-label>
+            <mat-select 
+              formControlName="period"
+              aria-describedby="period-hint period-errors"
+              [attr.aria-invalid]="budgetForm.get('period')?.invalid && budgetForm.get('period')?.touched">
+              <mat-option *ngFor="let option of periodOptions" [value]="option.value">
+                {{ option.label }}
+              </mat-option>
+            </mat-select>
+            <mat-hint id="period-hint">Select how often this budget repeats</mat-hint>
+            <div id="period-errors" aria-live="polite">
+              <mat-error *ngIf="budgetForm.get('period')?.hasError('required')">
+                Budget period is required
+              </mat-error>
+            </div>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Total Budget Amount</mat-label>
+            <input matInput 
+                   type="number" 
+                   formControlName="amount"
+                   min="0"
+                   step="0.01"
+                   placeholder="0.00"
+                   aria-describedby="amount-hint amount-errors"
+                   [attr.aria-invalid]="budgetForm.get('amount')?.invalid && budgetForm.get('amount')?.touched">
+            <span matPrefix>$</span>
+            <mat-hint id="amount-hint">Enter the total amount available for this budget</mat-hint>
+            <div id="amount-errors" aria-live="polite">
+              <mat-error *ngIf="budgetForm.get('amount')?.hasError('required')">
+                Amount is required
+              </mat-error>
+              <mat-error *ngIf="budgetForm.get('amount')?.hasError('min')">
+                Amount must be greater than 0
+              </mat-error>
+            </div>
+          </mat-form-field>
+        </div>        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Start Date</mat-label>
+            <input matInput 
+                   [matDatepicker]="startPicker" 
+                   formControlName="startDate"
+                   readonly
+                   aria-describedby="start-date-hint start-date-errors"
+                   [attr.aria-invalid]="budgetForm.get('startDate')?.invalid && budgetForm.get('startDate')?.touched">
+            <mat-datepicker-toggle matSuffix [for]="startPicker" aria-label="Open calendar for start date"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+            <mat-hint id="start-date-hint">When does this budget period begin?</mat-hint>
+            <div id="start-date-errors" aria-live="polite">
+              <mat-error *ngIf="budgetForm.get('startDate')?.hasError('required')">
+                Start date is required
+              </mat-error>
+            </div>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>End Date</mat-label>
+            <input matInput 
+                   [matDatepicker]="endPicker" 
+                   formControlName="endDate"
+                   readonly
+                   aria-describedby="end-date-hint end-date-errors"
+                   [attr.aria-invalid]="budgetForm.get('endDate')?.invalid && budgetForm.get('endDate')?.touched">
+            <mat-datepicker-toggle matSuffix [for]="endPicker" aria-label="Open calendar for end date"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+            <mat-hint id="end-date-hint">When does this budget period end?</mat-hint>
+            <div id="end-date-errors" aria-live="polite">
+              <mat-error *ngIf="budgetForm.get('endDate')?.hasError('required')">
+                End date is required
+              </mat-error>
+            </div>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>    <!-- Budget Summary Card -->
+    <mat-card class="budget-summary-card" role="region" aria-labelledby="summary-title">
+      <mat-card-header>
+        <mat-card-title id="summary-title">Budget Summary</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="summary-grid" role="group" aria-label="Budget allocation summary">
+          <div class="summary-item">
+            <div class="summary-label" id="total-budget-label">Total Budget</div>
+            <div 
+              class="summary-value primary" 
+              aria-labelledby="total-budget-label"
+              aria-live="polite">
+              {{ formatCurrency(budgetForm.get('amount')?.value || 0) }}
+            </div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-label" id="total-allocated-label">Total Allocated</div>
+            <div 
+              class="summary-value allocated" 
+              aria-labelledby="total-allocated-label"
+              aria-live="polite">
+              {{ formatCurrency(getTotalAllocated()) }}
+            </div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-label" id="unallocated-label">Unallocated</div>
+            <div 
+              class="summary-value" 
+              [ngClass]="getUnallocated() >= 0 ? 'unallocated-positive' : 'unallocated-negative'"
+              aria-labelledby="unallocated-label"
+              aria-live="polite">
+              {{ formatCurrency(getUnallocated()) }}
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>    <!-- Category Allocations Card -->
+    <mat-card class="categories-card" role="region" aria-labelledby="categories-title">
+      <mat-card-header>
+        <mat-card-title id="categories-title">Category Allocations</mat-card-title>
+        <mat-card-subtitle>
+          Distribute your budget across categories
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div 
+          class="categories-list" 
+          formArrayName="categories"
+          role="group"
+          aria-labelledby="categories-title"
+          [attr.aria-describedby]="categoriesFormArray.length === 0 ? 'no-categories-message' : null">
+          
+          <div *ngIf="categoriesFormArray.length === 0" 
+               id="no-categories-message" 
+               class="no-categories-message"
+               role="status">
+            No categories added yet. Use the "Add Category" button to start allocating your budget.
+          </div>
+
+          <div *ngFor="let categoryControl of categoriesFormArray.controls; let i = index"
+               [formGroupName]="i"
+               class="category-item"
+               role="group"
+               [attr.aria-label]="'Category allocation for ' + categoryControl.get('categoryDetails.name')?.value">
+            
+            <div class="category-header">
+              <div class="category-info" formGroupName="categoryDetails">
+                <div 
+                  class="category-icon-container" 
+                  [style.background-color]="categoryControl.get('categoryDetails.color')?.value"
+                  role="img"
+                  [attr.aria-label]="categoryControl.get('categoryDetails.name')?.value + ' category icon'">
+                  <mat-icon class="category-icon" aria-hidden="true">{{ categoryControl.get('categoryDetails.icon')?.value }}</mat-icon>
+                </div>
+                <div class="category-name">{{ categoryControl.get('categoryDetails.name')?.value }}</div>
+              </div>
+
+              <mat-form-field appearance="outline" class="amount-field">
+                <mat-label>Amount for {{ categoryControl.get('categoryDetails.name')?.value }}</mat-label>
+                <input matInput
+                       type="number"
+                       formControlName="amount"
+                       min="0"
+                       step="0.01"
+                       (change)="onCategoryAmountChange()"
+                       [attr.aria-describedby]="'amount-errors-' + i"
+                       [attr.aria-invalid]="categoryControl.get('amount')?.invalid && categoryControl.get('amount')?.touched">
+                <span matPrefix>$</span>
+                <button mat-icon-button matSuffix 
+                        type="button"
+                        (click)="removeCategoryAllocation(i)"
+                        [attr.aria-label]="'Remove ' + categoryControl.get('categoryDetails.name')?.value + ' from budget allocations'"
+                        class="remove-category-btn">
+                  <mat-icon aria-hidden="true">remove_circle_outline</mat-icon>
+                </button>
+                
+                <div [id]="'amount-errors-' + i" aria-live="polite">
+                  <mat-error *ngIf="categoryControl.get('amount')?.hasError('required')">
+                    Amount is required for {{ categoryControl.get('categoryDetails.name')?.value }}
+                  </mat-error>
+                  <mat-error *ngIf="categoryControl.get('amount')?.hasError('min')">
+                    Amount must be greater than or equal to 0
+                  </mat-error>
+                </div>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Category Button -->
+        <div class="add-category-section" *ngIf="categories.length > categoriesFormArray.length">
+          <button 
+            mat-stroked-button 
+            type="button"
+            (click)="addNewCategoryAllocation()"
+            aria-label="Add a new category to budget allocations"
+            class="add-category-btn">
+            <mat-icon aria-hidden="true">add</mat-icon>
+            Add Category
+          </button>
+          <button mat-stroked-button
+                  type="button"
+                  (click)="undoRemoveCategoryAllocation()"
+                  *ngIf="lastRemovedCategory"
+                  aria-label="Undo remove last category"
+                  class="undo-remove-btn">
+            <mat-icon aria-hidden="true">undo</mat-icon>
+            Undo Remove
+          </button>
+        </div>
+
+        <!-- Total Allocated Summary -->
+        <div class="total-allocated" role="group" aria-label="Total budget allocation summary">
+          <div class="total-label" id="total-allocated-summary-label">Total Allocated</div>
+          <div 
+            class="total-amount" 
+            [class.over-budget]="getTotalAllocated() > budgetForm.get('amount')?.value"
+            aria-labelledby="total-allocated-summary-label"
+            aria-live="polite"
+            [attr.aria-describedby]="getTotalAllocated() > budgetForm.get('amount')?.value ? 'over-budget-warning' : null">
+            {{ getTotalAllocated() | currency }}
+          </div>
+          <div 
+            *ngIf="getTotalAllocated() > budgetForm.get('amount')?.value" 
+            id="over-budget-warning"
+            class="over-budget-warning"
+            role="alert"
+            aria-live="assertive">
+            Warning: Total allocated amount exceeds the budget limit
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>    <!-- Action Buttons -->
+    <div class="form-actions" id="form-actions" role="group" aria-label="Form actions">
+      <button 
+        mat-stroked-button 
+        type="button" 
+        (click)="cancel()"
+        aria-label="Cancel budget setup and return to previous page">
+        <mat-icon aria-hidden="true">cancel</mat-icon>
+        Cancel
+      </button>
+      <button 
+        mat-raised-button
+        color="primary"
+        type="submit"
+        [disabled]="budgetForm.invalid || saving"
+        [attr.aria-describedby]="budgetForm.invalid ? 'form-validation-summary' : null"
+        aria-label="Save budget configuration">
+        <mat-icon *ngIf="saving" aria-hidden="true" class="spinning">hourglass_empty</mat-icon>
+        <mat-icon *ngIf="!saving" aria-hidden="true">save</mat-icon>
+        {{ saving ? 'Saving...' : 'Create Budget' }}
+      </button>
+    </div>
+
+    <!-- Form Validation Summary (for screen readers) -->
+    <div 
+      *ngIf="budgetForm.invalid && budgetForm.touched" 
+      id="form-validation-summary"
+      class="form-validation-summary sr-only"
+      role="alert"
+      aria-live="polite">
+      Please correct the following errors before submitting:
+      <ul>
+        <li *ngIf="budgetForm.get('name')?.invalid && budgetForm.get('name')?.touched">
+          Budget name is required and must be at least 3 characters
+        </li>
+        <li *ngIf="budgetForm.get('period')?.invalid && budgetForm.get('period')?.touched">
+          Budget period is required
+        </li>
+        <li *ngIf="budgetForm.get('amount')?.invalid && budgetForm.get('amount')?.touched">
+          Budget amount is required and must be greater than 0
+        </li>
+        <li *ngIf="budgetForm.get('startDate')?.invalid && budgetForm.get('startDate')?.touched">
+          Start date is required
+        </li>
+        <li *ngIf="budgetForm.get('endDate')?.invalid && budgetForm.get('endDate')?.touched">
+          End date is required
+        </li>
+      </ul>
+    </div>
+  </form>
+</div>

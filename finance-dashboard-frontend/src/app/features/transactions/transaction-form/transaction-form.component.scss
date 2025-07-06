@@ -1,0 +1,380 @@
+.transaction-form-container {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  
+  .page-title {
+    margin: 0 0 0 8px;
+    font-size: 24px;
+    font-weight: 500;
+  }
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  
+  p {
+    margin-top: 16px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.form-card {
+  margin-bottom: 24px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  
+  @media (max-width: 600px) {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.amount-field,
+.date-field {
+  flex: 1;
+}
+
+.transaction-type-toggle {
+  width: 100%;
+  margin-bottom: 16px;
+  
+  ::ng-deep .mat-button-toggle-label-content {
+    line-height: 48px;
+  }
+  
+  ::ng-deep .mat-button-toggle {
+    flex: 1;
+    text-align: center;
+  }
+  
+  ::ng-deep .mat-button-toggle-checked {
+    background-color: #1976d2;
+    color: white;
+  }
+}
+
+.recurring-toggle {
+  margin-top: 8px;
+}
+
+.recurring-options {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.category-option {
+  display: flex;
+  align-items: center;
+  
+  .category-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin-right: 8px;
+  }
+  
+  mat-icon {
+    margin-right: 8px;
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+}
+
+// Category row with button styling
+.category-row {
+  align-items: flex-end;
+  
+  .category-field {
+    flex: 1;
+    margin-right: 16px;
+  }
+  
+  .create-category-btn {
+    height: 56px;
+    min-width: auto;
+    white-space: nowrap;
+    padding: 0 16px;
+    border: 2px solid #1976d2;
+    color: #1976d2;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background-color: #1976d2;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+    }
+    
+    &:focus {
+      outline: 2px solid #1976d2;
+      outline-offset: 2px;
+    }
+    
+    mat-icon {
+      margin-right: 8px;
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+    
+    .btn-text {
+      font-weight: 500;
+    }
+    
+    @media (max-width: 600px) {
+      margin-top: 16px;
+      width: 100%;
+      
+      .btn-text {
+        display: inline;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .btn-text {
+        display: none;
+      }
+      
+      padding: 0 12px;
+      min-width: 48px;
+    }
+  }
+}
+
+// Fix for mat-chip-grid
+::ng-deep .mat-mdc-form-field-type-mat-chip-grid .mat-mdc-chip-grid {
+  padding: 4px 0;
+}
+
+// PROMPT 3.2: Enhanced styles for new features
+
+// Payment method option styling
+.payment-method-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+}
+
+// Split transaction styling
+.split-toggle {
+  margin: 24px 0 16px 0;
+}
+
+.split-transactions-section {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  
+  .split-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+    }
+  }
+  
+  .split-transaction-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    background: white;
+    padding: 12px;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    mat-form-field {
+      flex: 1;
+      
+      &:last-of-type {
+        margin-right: 8px;
+      }
+    }
+    
+    button {
+      margin-top: 8px;
+    }
+  }
+  
+  .split-total {
+    text-align: right;
+    padding: 12px;
+    background: #e8f5e8;
+    border-radius: 4px;
+    margin-top: 16px;
+    
+    .total-mismatch {
+      color: #d32f2f;
+      font-size: 12px;
+      display: block;
+    }
+  }
+}
+
+// File upload styling
+.file-upload-section {
+  margin: 24px 0;
+  
+  h4 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  
+  .file-upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    transition: border-color 0.3s ease;
+    
+    &:hover {
+      border-color: #1976d2;
+    }
+    
+    button {
+      margin-bottom: 8px;
+    }
+    
+    .file-upload-hint {
+      color: #666;
+    }
+  }
+  
+  .attachments-list {
+    margin-top: 16px;
+    
+    .attachment-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      
+      .attachment-preview {
+        .preview-image {
+          width: 48px;
+          height: 48px;
+          object-fit: cover;
+          border-radius: 4px;
+        }
+      }
+      
+      .attachment-info {
+        flex: 1;
+        
+        .attachment-name {
+          font-weight: 500;
+          margin-bottom: 4px;
+        }
+        
+        .attachment-size {
+          font-size: 12px;
+          color: #666;
+        }
+      }
+    }
+  }
+}
+
+// Autocomplete enhancements
+::ng-deep .mat-mdc-autocomplete-panel {
+  .mat-mdc-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    mat-icon {
+      color: #666;
+      font-size: 18px;
+    }
+  }
+}
+
+// Enhanced category option styling
+.category-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  .category-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+}
+
+// Responsive enhancements
+@media (max-width: 600px) {
+  .transaction-form-container {
+    padding: 16px;
+  }
+  
+  .form-row {
+    gap: 8px;
+  }
+  
+  .split-transactions-section {
+    padding: 12px;
+    
+    .split-transaction-row {
+      padding: 8px;
+    }
+  }
+  
+  .file-upload-area {
+    padding: 16px;
+  }
+}

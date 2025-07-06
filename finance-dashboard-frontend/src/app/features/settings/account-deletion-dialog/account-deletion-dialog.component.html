@@ -1,0 +1,321 @@
+<div class="account-deletion-dialog">
+  <div class="dialog-header">
+    <h2 mat-dialog-title class="dialog-title">
+      <mat-icon class="warning-icon">warning</mat-icon>
+      Delete Account
+    </h2>
+    <p class="dialog-subtitle">{{ getStepDescription() }}</p>
+    
+    <!-- Progress Indicator -->
+    <div class="progress-container">
+      <mat-progress-bar 
+        mode="determinate" 
+        [value]="(currentStep / totalSteps) * 100"
+        class="progress-bar">
+      </mat-progress-bar>
+      <div class="step-indicator">
+        Step {{ currentStep }} of {{ totalSteps }}: {{ getStepTitle() }}
+      </div>
+    </div>
+  </div>
+
+  <mat-dialog-content class="dialog-content">
+    <form [formGroup]="deletionForm" class="deletion-form">
+      
+      <!-- Step 1: Reason Selection -->
+      <div *ngIf="currentStep === 1" class="step-content">
+        <div class="warning-notice">
+          <mat-icon>info</mat-icon>
+          <div>
+            <strong>This action cannot be undone.</strong>
+            <p>Deleting your account will permanently remove all your data, including transactions, budgets, and reports.</p>
+          </div>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Why are you deleting your account?</mat-label>
+          <mat-select formControlName="reason" required>
+            <mat-option *ngFor="let reason of deletionReasons" [value]="reason.id">
+              {{ reason.label }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="deletionForm.get('reason')?.hasError('required')">
+            Please select a reason
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field 
+          *ngIf="requiresReasonDetails" 
+          appearance="outline" 
+          class="full-width">
+          <mat-label>Please provide more details</mat-label>
+          <textarea 
+            matInput 
+            formControlName="reasonDetails"
+            rows="4"
+            placeholder="Help us understand your specific concerns..."
+            [required]="requiresReasonDetails">
+          </textarea>
+          <mat-hint>Minimum 10 characters</mat-hint>
+          <mat-error *ngIf="deletionForm.get('reasonDetails')?.hasError('required')">
+            Please provide details about your reason
+          </mat-error>
+          <mat-error *ngIf="deletionForm.get('reasonDetails')?.hasError('minlength')">
+            Please provide at least 10 characters
+          </mat-error>
+        </mat-form-field>
+
+        <div class="feedback-notice">
+          <mat-icon>feedback</mat-icon>
+          <p>Your feedback helps us improve our service for other users.</p>
+        </div>
+      </div>
+
+      <!-- Step 2: Password Verification -->
+      <div *ngIf="currentStep === 2" class="step-content">
+        <div class="security-notice">
+          <mat-icon>security</mat-icon>
+          <div>
+            <strong>Security Verification Required</strong>
+            <p>Please confirm your password to verify your identity before proceeding with account deletion.</p>
+          </div>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Current Password</mat-label>
+          <input 
+            matInput 
+            type="password" 
+            formControlName="password"
+            placeholder="Enter your current password"
+            required>
+          <mat-icon matSuffix>lock</mat-icon>
+          <mat-error *ngIf="deletionForm.get('password')?.hasError('required')">
+            Password is required
+          </mat-error>
+          <mat-error *ngIf="deletionForm.get('password')?.hasError('incorrect')">
+            Incorrect password. Please try again.
+          </mat-error>
+        </mat-form-field>
+
+        <div class="password-help">
+          <mat-icon>help_outline</mat-icon>
+          <p>Forgot your password? <a href="/auth/forgot-password" target="_blank">Reset it here</a> before proceeding.</p>
+        </div>
+      </div>
+
+      <!-- Step 3: Data Export & Options -->
+      <div *ngIf="currentStep === 3" class="step-content">
+        <div class="data-export-section">
+          <h3>Data Export (Optional)</h3>
+          <p>Before deleting your account, you can export a copy of your data.</p>
+          
+          <mat-checkbox 
+            formControlName="dataExportRequested"
+            class="data-export-checkbox">
+            Export my data before deletion
+          </mat-checkbox>
+          
+          <div *ngIf="deletionForm.get('dataExportRequested')?.value" class="export-info">
+            <mat-icon>download</mat-icon>
+            <div>
+              <p><strong>What will be exported:</strong></p>
+              <ul>
+                <li>Profile information and settings</li>
+                <li>All financial transactions</li>
+                <li>Budget and category data</li>
+                <li>Reports and analytics data</li>
+                <li>File attachments (receipts, documents)</li>
+              </ul>
+              <p><small>Export will be sent to your email address within 24 hours.</small></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="deletion-timing-section">
+          <h3>Deletion Timing</h3>
+          <p>Choose when you want your account to be deleted.</p>
+          
+          <mat-radio-group formControlName="immediateDelation" class="deletion-timing-options">
+            <mat-radio-button [value]="true" class="timing-option">
+              <div class="timing-option-content">
+                <strong>Delete immediately</strong>
+                <p>Account will be deleted within 24 hours</p>
+              </div>
+            </mat-radio-button>
+            
+            <mat-radio-button [value]="false" class="timing-option">
+              <div class="timing-option-content">
+                <strong>Schedule deletion</strong>
+                <p>Set a future date (minimum 30 days from now)</p>
+              </div>
+            </mat-radio-button>
+          </mat-radio-group>
+
+          <mat-form-field 
+            *ngIf="!deletionForm.get('immediateDelation')?.value" 
+            appearance="outline" 
+            class="full-width scheduled-date">
+            <mat-label>Scheduled Deletion Date</mat-label>
+            <input 
+              matInput 
+              [matDatepicker]="picker" 
+              formControlName="scheduledDate"
+              [min]="getMinDate()"
+              required>
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            <mat-hint>You can cancel the deletion anytime before this date</mat-hint>
+            <mat-error *ngIf="deletionForm.get('scheduledDate')?.hasError('required')">
+              Please select a deletion date
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="gdpr-notice">
+          <mat-icon>gavel</mat-icon>
+          <div>
+            <strong>Your Rights Under GDPR</strong>
+            <p>You have the right to request deletion of your personal data. We will process your request in accordance with applicable data protection laws.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Final Confirmation -->
+      <div *ngIf="currentStep === 4" class="step-content">
+        <div class="final-warning">
+          <mat-icon class="danger-icon">dangerous</mat-icon>
+          <div>
+            <strong>Final Warning</strong>
+            <p>This is your last chance to reconsider. Once confirmed, this action cannot be undone.</p>
+          </div>
+        </div>
+
+        <div class="deletion-summary">
+          <h3>Deletion Summary</h3>
+          <div class="summary-item">
+            <strong>Reason:</strong> {{ selectedReason?.label }}
+          </div>
+          <div *ngIf="deletionForm.get('reasonDetails')?.value" class="summary-item">
+            <strong>Details:</strong> {{ deletionForm.get('reasonDetails')?.value }}
+          </div>
+          <div class="summary-item">
+            <strong>Data Export:</strong> 
+            {{ deletionForm.get('dataExportRequested')?.value ? 'Yes - will be sent to your email' : 'No' }}
+          </div>
+          <div class="summary-item">
+            <strong>Timing:</strong> 
+            {{ deletionForm.get('immediateDelation')?.value ? 'Immediate (within 24 hours)' : 'Scheduled for ' + formatDate(deletionForm.get('scheduledDate')?.value) }}
+          </div>
+        </div>
+
+        <div class="confirmation-section">
+          <p><strong>Type "DELETE MY ACCOUNT" to confirm:</strong></p>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Confirmation Text</mat-label>
+            <input 
+              matInput 
+              formControlName="confirmationText"
+              placeholder="DELETE MY ACCOUNT"
+              required>
+            <mat-error *ngIf="deletionForm.get('confirmationText')?.hasError('required')">
+              Please type the confirmation text
+            </mat-error>
+            <mat-error *ngIf="deletionForm.get('confirmationText')?.hasError('confirmationMismatch')">
+              Please type exactly: DELETE MY ACCOUNT
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="alternative-options">
+          <h4>Before you go, consider these alternatives:</h4>
+          <div class="alternatives">
+            <div class="alternative">
+              <mat-icon>pause</mat-icon>
+              <div>
+                <strong>Take a break</strong>
+                <p>Temporarily deactivate your account instead</p>
+              </div>
+            </div>
+            <div class="alternative">
+              <mat-icon>settings</mat-icon>
+              <div>
+                <strong>Adjust privacy settings</strong>
+                <p>Control how your data is used without deleting</p>
+              </div>
+            </div>
+            <div class="alternative">
+              <mat-icon>help</mat-icon>
+              <div>
+                <strong>Get help</strong>
+                <p>Contact support to resolve your concerns</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions class="dialog-actions">
+    <div class="actions-container">
+      <div class="navigation-buttons">
+        <button 
+          mat-button 
+          *ngIf="currentStep > 1"
+          (click)="previousStep()"
+          [disabled]="isSubmitting">
+          <mat-icon>arrow_back</mat-icon>
+          Back
+        </button>
+      </div>
+      
+      <div class="action-buttons">
+        <button 
+          mat-button 
+          (click)="onCancel()"
+          [disabled]="isSubmitting">
+          Cancel
+        </button>
+        
+        <button 
+          *ngIf="currentStep === 1"
+          mat-raised-button 
+          color="primary"
+          (click)="nextStep()"
+          [disabled]="!canProceedToStep2">
+          Continue
+        </button>
+        
+        <button 
+          *ngIf="currentStep === 2"
+          mat-raised-button 
+          color="primary"
+          (click)="verifyPassword()"
+          [disabled]="!canProceedToStep3 || isSubmitting">
+          <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
+          Verify Password
+        </button>
+        
+        <button 
+          *ngIf="currentStep === 3"
+          mat-raised-button 
+          color="primary"
+          (click)="nextStep()">
+          Continue to Confirmation
+        </button>
+        
+        <button 
+          *ngIf="currentStep === 4"
+          mat-raised-button 
+          color="warn"
+          (click)="onSubmit()"
+          [disabled]="!canSubmit || isSubmitting">
+          <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
+          <mat-icon *ngIf="!isSubmitting">delete_forever</mat-icon>
+          {{ isSubmitting ? 'Processing...' : 'Delete My Account' }}
+        </button>
+      </div>
+    </div>
+  </mat-dialog-actions>
+</div>

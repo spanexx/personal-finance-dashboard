@@ -1,0 +1,385 @@
+<!-- Skip Navigation Links -->
+<div class="skip-links">
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <a href="#form-actions" class="skip-link">Skip to form actions</a>
+</div>
+
+<div class="user-preferences-container" [appFocusTrap]="true" (keydown)="onKeyDown($event)">
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <button 
+        mat-icon-button 
+        class="back-button"
+        (click)="onBack()"
+        aria-label="Go back to settings overview"
+        title="Back to Settings">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      
+      <div class="title-section">
+        <h1 
+          #pageTitle
+          id="page-title"
+          class="page-title"
+          tabindex="-1"
+          aria-describedby="page-description">
+          User Preferences
+        </h1>
+        <p id="page-description" class="page-description">
+          Customize your dashboard experience and application settings
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="main-content" role="main">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container" role="status" aria-live="polite">
+      <mat-spinner diameter="40" aria-label="Loading user preferences"></mat-spinner>
+      <p class="loading-text">Loading your preferences...</p>
+    </div>
+
+    <!-- Preferences Form -->
+    <form 
+      *ngIf="!isLoading"
+      [formGroup]="preferencesForm" 
+      (ngSubmit)="onSubmit()"
+      class="preferences-form"
+      novalidate
+      aria-labelledby="page-title">
+
+      <!-- General Preferences Section -->
+      <mat-card class="form-section">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>settings</mat-icon>
+            General Preferences
+          </mat-card-title>
+          <mat-card-subtitle>
+            Basic application settings and localization
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="form-row">
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Currency</mat-label>
+              <mat-select 
+                #firstControl
+                formControlName="currency"
+                (selectionChange)="onPreferenceChange('currency', $event.value)"
+                aria-describedby="currency-help">
+                <mat-option *ngFor="let option of currencyOptions" [value]="option.value">
+                  {{ option.label }}
+                </mat-option>
+              </mat-select>
+              <mat-hint id="currency-help">Default currency for all financial data</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Language</mat-label>
+              <mat-select 
+                formControlName="language"
+                (selectionChange)="onPreferenceChange('language', $event.value)"
+                aria-describedby="language-help">
+                <mat-option *ngFor="let option of languageOptions" [value]="option.value">
+                  {{ option.label }}
+                </mat-option>
+              </mat-select>
+              <mat-hint id="language-help">Interface language</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Timezone</mat-label>
+              <mat-select 
+                formControlName="timezone"
+                aria-describedby="timezone-help">
+                <mat-option *ngFor="let option of timezoneOptions" [value]="option.value">
+                  {{ option.label }}
+                </mat-option>
+              </mat-select>
+              <mat-hint id="timezone-help">Used for date and time display</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Date Format</mat-label>
+              <mat-select 
+                formControlName="dateFormat"
+                aria-describedby="dateFormat-help">
+                <mat-option *ngFor="let option of dateFormatOptions" [value]="option.value">
+                  {{ option.label }}
+                </mat-option>
+              </mat-select>
+              <mat-hint id="dateFormat-help">How dates are displayed</mat-hint>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Display Preferences Section -->
+      <mat-card class="form-section">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>palette</mat-icon>
+            Display Preferences
+          </mat-card-title>
+          <mat-card-subtitle>
+            Customize the appearance and visual settings
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="form-row">
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Theme</mat-label>
+              <mat-select 
+                formControlName="theme"
+                (selectionChange)="onPreferenceChange('theme', $event.value)"
+                aria-describedby="theme-help">
+                <mat-option *ngFor="let option of themeOptions" [value]="option.value">
+                  {{ option.label }}
+                </mat-option>
+              </mat-select>
+              <mat-hint id="theme-help">Color scheme for the application</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="toggle-group" role="group" aria-labelledby="display-toggles-label">
+            <h3 id="display-toggles-label" class="group-label">Display Options</h3>
+            
+            <div class="toggle-item">
+              <mat-slide-toggle 
+                formControlName="compactView"
+                (change)="onPreferenceChange('compactView', $event.checked)"
+                aria-describedby="compactView-help">
+                Compact View
+              </mat-slide-toggle>
+              <p id="compactView-help" class="toggle-description">
+                Use smaller spacing and condensed layouts
+              </p>
+            </div>
+
+            <div class="toggle-item">
+              <mat-slide-toggle 
+                formControlName="showCents"
+                (change)="onPreferenceChange('showCents', $event.checked)"
+                aria-describedby="showCents-help">
+                Show Cents
+              </mat-slide-toggle>
+              <p id="showCents-help" class="toggle-description">
+                Display decimal places in currency amounts
+              </p>
+            </div>
+
+            <div class="toggle-item">
+              <mat-slide-toggle 
+                formControlName="animationsEnabled"
+                (change)="onPreferenceChange('animationsEnabled', $event.checked)"
+                aria-describedby="animations-help">
+                Enable Animations
+              </mat-slide-toggle>
+              <p id="animations-help" class="toggle-description">
+                Use smooth transitions and animated effects
+              </p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Dashboard Preferences Section -->
+      <mat-card class="form-section">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>dashboard</mat-icon>
+            Dashboard Preferences
+          </mat-card-title>
+          <mat-card-subtitle>
+            Customize your dashboard experience
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="form-row">
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Default Dashboard View</mat-label>
+              <mat-select formControlName="defaultDashboardView" aria-describedby="dashboardView-help">
+                <mat-option value="overview">Overview</mat-option>
+                <mat-option value="detailed">Detailed</mat-option>
+                <mat-option value="charts">Charts</mat-option>
+                <mat-option value="summary">Summary</mat-option>
+              </mat-select>
+              <mat-hint id="dashboardView-help">Initial view when opening dashboard</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Auto Refresh Interval (seconds)</mat-label>
+              <mat-select 
+                formControlName="refreshInterval" 
+                aria-describedby="refreshInterval-help"
+                [disabled]="!preferencesForm.get('autoRefreshDashboard')?.value">
+                <mat-option value="15">15 seconds</mat-option>
+                <mat-option value="30">30 seconds</mat-option>
+                <mat-option value="60">1 minute</mat-option>
+                <mat-option value="300">5 minutes</mat-option>
+                <mat-option value="600">10 minutes</mat-option>
+              </mat-select>
+              <mat-hint id="refreshInterval-help">How often to refresh dashboard data</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="toggle-group" role="group" aria-labelledby="dashboard-toggles-label">
+            <h3 id="dashboard-toggles-label" class="group-label">Dashboard Options</h3>
+            
+            <div class="toggle-item">
+              <mat-slide-toggle 
+                formControlName="showWelcomeMessage"
+                aria-describedby="welcomeMessage-help">
+                Show Welcome Message
+              </mat-slide-toggle>
+              <p id="welcomeMessage-help" class="toggle-description">
+                Display personalized greeting on dashboard
+              </p>
+            </div>
+
+            <div class="toggle-item">
+              <mat-slide-toggle 
+                formControlName="autoRefreshDashboard"
+                aria-describedby="autoRefresh-help">
+                Auto Refresh Dashboard
+              </mat-slide-toggle>
+              <p id="autoRefresh-help" class="toggle-description">
+                Automatically update dashboard data at regular intervals
+              </p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Accessibility Preferences Section -->
+      <mat-card class="form-section">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>accessibility</mat-icon>
+            Accessibility Preferences
+          </mat-card-title>
+          <mat-card-subtitle>
+            Settings to improve accessibility and usability
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="toggle-group" role="group" aria-labelledby="accessibility-toggles-label">
+            <h3 id="accessibility-toggles-label" class="group-label">Accessibility Options</h3>
+            
+            <div class="toggle-item">
+              <mat-slide-toggle 
+                formControlName="colorBlindFriendly"
+                (change)="onPreferenceChange('colorBlindFriendly', $event.checked)"
+                aria-describedby="colorBlind-help">
+                Color Blind Friendly Mode
+              </mat-slide-toggle>
+              <p id="colorBlind-help" class="toggle-description">
+                Use patterns and shapes in addition to colors for data visualization
+              </p>
+            </div>
+
+            <div class="toggle-item">
+              <mat-slide-toggle 
+                formControlName="highContrastMode"
+                (change)="onPreferenceChange('highContrastMode', $event.checked)"
+                aria-describedby="highContrast-help">
+                High Contrast Mode
+              </mat-slide-toggle>
+              <p id="highContrast-help" class="toggle-description">
+                Increase contrast between text and background colors
+              </p>
+            </div>
+
+            <div class="toggle-item">
+              <mat-slide-toggle 
+                formControlName="showDataLabels"
+                aria-describedby="dataLabels-help">
+                Show Data Labels on Charts
+              </mat-slide-toggle>
+              <p id="dataLabels-help" class="toggle-description">
+                Display numerical values directly on chart elements
+              </p>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Default Chart Type</mat-label>
+              <mat-select formControlName="defaultChartType" aria-describedby="chartType-help">
+                <mat-option value="line">Line Chart</mat-option>
+                <mat-option value="bar">Bar Chart</mat-option>
+                <mat-option value="pie">Pie Chart</mat-option>
+                <mat-option value="table">Data Table</mat-option>
+              </mat-select>
+              <mat-hint id="chartType-help">Preferred chart format for data visualization</mat-hint>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Form Actions -->
+      <div id="form-actions" class="form-actions" role="group" aria-label="Form actions">
+        <button 
+          type="button"
+          mat-stroked-button 
+          class="reset-button"
+          (click)="onReset()"
+          [disabled]="isSaving"
+          aria-label="Reset all preferences to default values">
+          <mat-icon>restore</mat-icon>
+          Reset to Defaults
+        </button>
+
+        <div class="primary-actions">
+          <button 
+            type="button"
+            mat-stroked-button 
+            class="cancel-button"
+            (click)="onBack()"
+            [disabled]="isSaving"
+            aria-label="Cancel and return to settings">
+            <mat-icon>cancel</mat-icon>
+            Cancel
+          </button>
+
+          <button 
+            type="submit"
+            mat-raised-button 
+            color="primary"
+            class="save-button"
+            [disabled]="isSaving || !hasUnsavedChanges"
+            [attr.aria-label]="isSaving ? 'Saving preferences' : 'Save preferences'">
+            <mat-spinner *ngIf="isSaving" diameter="20" class="button-spinner"></mat-spinner>
+            <mat-icon *ngIf="!isSaving">save</mat-icon>
+            {{ isSaving ? 'Saving...' : 'Save Preferences' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Unsaved Changes Warning -->
+      <div 
+        *ngIf="hasUnsavedChanges && !isSaving" 
+        class="unsaved-warning"
+        role="status"
+        aria-live="polite">
+        <mat-icon>warning</mat-icon>
+        <span>You have unsaved changes</span>
+      </div>
+    </form>
+  </main>
+</div>
+
+<!-- Screen Reader Only Instructions -->
+<div class="sr-only" aria-live="polite" aria-atomic="true">
+  <span *ngIf="isSaving">Saving your preferences, please wait...</span>
+  <span *ngIf="hasUnsavedChanges && !isSaving">You have unsaved changes. Use Ctrl+S to save or the Cancel button to discard changes.</span>
+</div>

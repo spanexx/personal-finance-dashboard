@@ -1,0 +1,338 @@
+<div class="privacy-settings-container" #privacySettingsContainer>
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <mat-icon aria-hidden="true">security</mat-icon>
+        Privacy & Data Protection
+      </h1>
+      <p class="page-subtitle">
+        Manage your privacy settings and control how your data is used and shared
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container" aria-live="polite">
+    <mat-spinner diameter="40" aria-label="Loading privacy settings"></mat-spinner>
+    <span class="loading-text">Loading privacy settings...</span>
+  </div>
+
+  <!-- Privacy Settings Form -->
+  <form [formGroup]="privacyForm" (ngSubmit)="savePrivacySettings()" *ngIf="!isLoading">
+    <!-- Profile Visibility Section -->
+    <mat-card class="settings-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>visibility</mat-icon>
+          Profile Visibility
+        </mat-card-title>
+        <mat-card-subtitle>
+          Control who can see your profile information
+        </mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Profile Visibility</mat-label>
+          <mat-select formControlName="profileVisibility" 
+                     [attr.aria-describedby]="'profile-visibility-help'">
+            <mat-option value="private">
+              <div class="option-content">
+                <span class="option-title">Private</span>
+                <span class="option-description">Only you can see your profile</span>
+              </div>
+            </mat-option>
+            <mat-option value="contacts">
+              <div class="option-content">
+                <span class="option-title">Contacts Only</span>
+                <span class="option-description">Only your contacts can see your profile</span>
+              </div>
+            </mat-option>
+            <mat-option value="public">
+              <div class="option-content">
+                <span class="option-title">Public</span>
+                <span class="option-description">Anyone can see your profile</span>
+              </div>
+            </mat-option>
+          </mat-select>
+          <mat-hint id="profile-visibility-help">
+            This setting affects who can view your basic profile information
+          </mat-hint>
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Data Sharing Section -->
+    <mat-card class="settings-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>share</mat-icon>
+          Data Sharing Preferences
+        </mat-card-title>
+        <mat-card-subtitle>
+          Control how your data is shared and used
+        </mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content formGroupName="dataSharing">
+        <div class="toggle-group">
+          <mat-slide-toggle formControlName="analytics"
+                           color="primary"
+                           [attr.aria-describedby]="'analytics-help'">
+            <span class="toggle-label">Anonymous Analytics</span>
+          </mat-slide-toggle>
+          <p id="analytics-help" class="toggle-description">
+            Help improve our service by sharing anonymous usage data
+          </p>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="toggle-group">
+          <mat-slide-toggle formControlName="marketing"
+                           color="primary"
+                           [attr.aria-describedby]="'marketing-help'">
+            <span class="toggle-label">Marketing Communications</span>
+          </mat-slide-toggle>
+          <p id="marketing-help" class="toggle-description">
+            Receive marketing emails and promotional content
+          </p>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="toggle-group">
+          <mat-slide-toggle formControlName="thirdParty"
+                           color="primary"
+                           [attr.aria-describedby]="'third-party-help'">
+            <span class="toggle-label">Third-party Integrations</span>
+          </mat-slide-toggle>
+          <p id="third-party-help" class="toggle-description">
+            Allow trusted third-party services to access your data
+          </p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Cookie Preferences Section -->
+    <mat-card class="settings-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>cookie</mat-icon>
+          Cookie Preferences
+        </mat-card-title>
+        <mat-card-subtitle>
+          Manage cookie and tracking preferences
+        </mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content formGroupName="cookies">
+        <div class="toggle-group">
+          <mat-slide-toggle formControlName="essential"
+                           color="primary"
+                           [disabled]="true"
+                           [attr.aria-describedby]="'essential-help'">
+            <span class="toggle-label">Essential Cookies</span>
+            <mat-icon class="required-icon" matTooltip="Required for site functionality">lock</mat-icon>
+          </mat-slide-toggle>
+          <p id="essential-help" class="toggle-description">
+            Required for the site to function properly (cannot be disabled)
+          </p>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="toggle-group">
+          <mat-slide-toggle formControlName="functional"
+                           color="primary"
+                           [attr.aria-describedby]="'functional-help'">
+            <span class="toggle-label">Functional Cookies</span>
+          </mat-slide-toggle>
+          <p id="functional-help" class="toggle-description">
+            Enable enhanced functionality and personalization features
+          </p>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="toggle-group">
+          <mat-slide-toggle formControlName="analytics"
+                           color="primary"
+                           [attr.aria-describedby]="'analytics-cookies-help'">
+            <span class="toggle-label">Analytics Cookies</span>
+          </mat-slide-toggle>
+          <p id="analytics-cookies-help" class="toggle-description">
+            Help us understand how visitors use our site
+          </p>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="toggle-group">
+          <mat-slide-toggle formControlName="advertising"
+                           color="primary"
+                           [attr.aria-describedby]="'advertising-help'">
+            <span class="toggle-label">Advertising Cookies</span>
+          </mat-slide-toggle>
+          <p id="advertising-help" class="toggle-description">
+            Used to deliver relevant advertisements
+          </p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Data Retention Section -->
+    <mat-card class="settings-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>schedule_send</mat-icon>
+          Data Retention
+        </mat-card-title>
+        <mat-card-subtitle>
+          Control how long your data is stored
+        </mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content formGroupName="dataRetention">
+        <div class="toggle-group">
+          <mat-slide-toggle formControlName="autoDelete"
+                           color="primary"
+                           [attr.aria-describedby]="'auto-delete-help'">
+            <span class="toggle-label">Automatic Data Deletion</span>
+          </mat-slide-toggle>
+          <p id="auto-delete-help" class="toggle-description">
+            Automatically delete old data after the specified retention period
+          </p>
+        </div>
+
+        <mat-form-field appearance="outline" class="retention-period-field"
+                       *ngIf="dataRetention.get('autoDelete')?.value">
+          <mat-label>Retention Period (Days)</mat-label>
+          <input matInput 
+                 type="number" 
+                 formControlName="retentionPeriod"
+                 min="30" 
+                 max="3650"
+                 [attr.aria-describedby]="'retention-period-help'">
+          <mat-hint id="retention-period-help">
+            Data will be automatically deleted after this many days (minimum 30 days)
+          </mat-hint>
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Contact Preferences Section -->
+    <mat-card class="settings-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>contact_mail</mat-icon>
+          Contact Preferences
+        </mat-card-title>
+        <mat-card-subtitle>
+          Control how we can contact you
+        </mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content formGroupName="contactPreferences">
+        <div class="toggle-group">
+          <mat-slide-toggle formControlName="allowContact"
+                           color="primary"
+                           [attr.aria-describedby]="'allow-contact-help'">
+            <span class="toggle-label">Allow Contact</span>
+          </mat-slide-toggle>
+          <p id="allow-contact-help" class="toggle-description">
+            Allow us to contact you about important account matters
+          </p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button mat-button 
+              type="button" 
+              (click)="resetToDefaults()"
+              [disabled]="isSaving">
+        <mat-icon>restore</mat-icon>
+        Reset to Defaults
+      </button>
+      
+      <button mat-raised-button 
+              color="primary" 
+              type="submit"
+              [disabled]="privacyForm.invalid || isSaving">
+        <mat-icon>save</mat-icon>
+        <span *ngIf="!isSaving">Save Privacy Settings</span>
+        <span *ngIf="isSaving" class="saving-text">
+          <mat-spinner diameter="16" class="inline-spinner"></mat-spinner>
+          Saving...
+        </span>
+      </button>
+    </div>
+  </form>
+
+  <!-- GDPR Section -->
+  <mat-card class="gdpr-section">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>gavel</mat-icon>
+        Your Data Rights (GDPR)
+      </mat-card-title>
+      <mat-card-subtitle>
+        Exercise your rights regarding your personal data
+      </mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="gdpr-rights">
+        <h3>Your Rights Include:</h3>
+        <ul class="rights-list">
+          <li><strong>Right to Access:</strong> Request a copy of your personal data</li>
+          <li><strong>Right to Rectification:</strong> Request correction of inaccurate data</li>
+          <li><strong>Right to Erasure:</strong> Request deletion of your personal data</li>
+          <li><strong>Right to Portability:</strong> Request your data in a portable format</li>
+          <li><strong>Right to Object:</strong> Object to processing of your personal data</li>
+          <li><strong>Right to Restrict:</strong> Request restriction of data processing</li>
+        </ul>
+      </div>
+
+      <div class="gdpr-actions">
+        <button mat-stroked-button 
+                class="gdpr-action-btn"
+                (click)="openDataExportDialog()"
+                [disabled]="dataExportInProgress"
+                aria-label="Export your personal data">
+          <mat-icon>download</mat-icon>
+          <span *ngIf="!dataExportInProgress">Export My Data</span>
+          <span *ngIf="dataExportInProgress" class="processing-text">
+            <mat-spinner diameter="16" class="inline-spinner"></mat-spinner>
+            Processing...
+          </span>
+        </button>
+
+        <button mat-stroked-button 
+                class="gdpr-action-btn danger"
+                (click)="openAccountDeletionDialog()"
+                [disabled]="accountDeletionRequested"
+                aria-label="Request account deletion">
+          <mat-icon>delete_forever</mat-icon>
+          <span *ngIf="!accountDeletionRequested">Delete My Account</span>
+          <span *ngIf="accountDeletionRequested" class="processing-text">
+            <mat-spinner diameter="16" class="inline-spinner"></mat-spinner>
+            Processing...
+          </span>
+        </button>
+      </div>
+
+      <div class="gdpr-notice">
+        <mat-icon class="info-icon">info</mat-icon>
+        <p>
+          For any data protection questions or to exercise your rights, 
+          please contact our Data Protection Officer at 
+          <a href="mailto:privacy@financedashboard.com">privacy/financedashboard.com</a>
+        </p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Exceeded Alert - {{appName}}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .alert-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .content {
+            padding: 30px;
+        }
+        .alert-message {
+            background-color: #fef2f2;
+            border-left: 4px solid #e74c3c;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .budget-details {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .budget-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .budget-row:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            color: #e74c3c;
+        }
+        .amount {
+            font-weight: 600;
+        }
+        .overspend {
+            color: #e74c3c;
+        }
+        .actions {
+            margin: 30px 0;
+            text-align: center;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .tips {
+            background-color: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .tips h3 {
+            color: #2980b9;
+            margin-top: 0;
+        }
+        .tips ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .content {
+                padding: 20px;
+            }
+            .budget-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .button {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="alert-icon">⚠️</span>
+            <h1>Budget Exceeded Alert</h1>
+        </div>
+        
+        <div class="content">
+            <h2>Hello {{firstName}},</h2>
+            
+            <div class="alert-message">
+                <strong>Your budget has been exceeded!</strong> 
+                You've spent <strong class="overspend">{{currency}}{{spentAmount}}</strong> against your budget of <strong>{{currency}}{{budgetAmount}}</strong> for {{budgetName}}.
+            </div>
+            
+            <div class="budget-details">
+                <h3>Budget Overview</h3>
+                <div class="budget-row">
+                    <span>Budget Period:</span>
+                    <span>{{budgetPeriod}} ({{startDate}} - {{endDate}})</span>
+                </div>
+                <div class="budget-row">
+                    <span>Total Budget:</span>
+                    <span class="amount">{{currency}}{{budgetAmount}}</span>
+                </div>
+                <div class="budget-row">
+                    <span>Amount Spent:</span>
+                    <span class="amount">{{currency}}{{spentAmount}}</span>
+                </div>
+                <div class="budget-row">
+                    <span>Over Budget By:</span>
+                    <span class="amount overspend">{{currency}}{{overAmount}}</span>
+                </div>
+                <div class="budget-row">
+                    <span>Budget Utilization:</span>
+                    <span class="amount overspend">{{utilizationPercentage}}%</span>
+                </div>
+            </div>
+
+            {{#if categoryBreakdown}}
+            <div class="budget-details">
+                <h3>Category Breakdown</h3>
+                {{#each categoryBreakdown}}
+                <div class="budget-row">
+                    <span>{{this.name}}:</span>
+                    <span class="amount {{#if this.isOverBudget}}overspend{{/if}}">
+                        {{../currency}}{{this.spent}} / {{../currency}}{{this.allocated}}
+                        {{#if this.isOverBudget}}(+{{../currency}}{{this.overAmount}}){{/if}}
+                    </span>
+                </div>
+                {{/each}}
+            </div>
+            {{/if}}
+
+            <div class="tips">
+                <h3>💡 Quick Tips to Get Back on Track</h3>
+                <ul>
+                    <li>Review your recent transactions to identify unnecessary expenses</li>
+                    <li>Consider adjusting your budget allocations for next period</li>
+                    <li>Set up spending alerts to prevent future overspending</li>
+                    <li>Look for opportunities to reduce spending in overspent categories</li>
+                </ul>
+            </div>
+
+            <div class="actions">
+                <a href="{{dashboardUrl}}/budgets/{{budgetId}}" class="button">Review Budget</a>
+                <a href="{{dashboardUrl}}/transactions" class="button">View Transactions</a>
+            </div>
+
+            <p>You can adjust your notification preferences or modify your budget settings anytime in your dashboard.</p>
+        </div>
+
+        <div class="footer">
+            <p>Best regards,<br>The {{appName}} Team</p>
+            <p>
+                <a href="{{dashboardUrl}}/settings/notifications">Manage Notifications</a> | 
+                <a href="{{supportUrl}}">Contact Support</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

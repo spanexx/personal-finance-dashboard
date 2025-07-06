@@ -1,0 +1,68 @@
+{
+    "data": [
+        {
+            "id": "user1",
+            "email": "john.doe@example.com",
+            "firstName": "John",
+            "lastName": "Doe",
+            "profileImage": "https://randomuser.me/api/portraits/men/1.jpg",
+            "settings": {
+                "currency": "USD",
+                "language": "en",
+                "theme": "light",
+                "notificationPreferences": {
+                    "email": true,
+                    "push": true,
+                    "budgetAlerts": true,
+                    "goalReminders": true
+                }
+            },
+            "isVerified": true,
+            "createdAt": "2024-01-01T00:00:00.000Z",
+            "updatedAt": "2025-05-01T00:00:00.000Z"
+        },
+        {
+            "id": "user2",
+            "email": "jane.smith@example.com",
+            "firstName": "Jane",
+            "lastName": "Smith",
+            "profileImage": "https://randomuser.me/api/portraits/women/2.jpg",
+            "settings": {
+                "currency": "EUR",
+                "language": "en",
+                "theme": "dark",
+                "notificationPreferences": {
+                    "email": true,
+                    "push": false,
+                    "budgetAlerts": true,
+                    "goalReminders": false
+                }
+            },
+            "isVerified": true,
+            "createdAt": "2024-02-15T00:00:00.000Z",
+            "updatedAt": "2025-04-20T00:00:00.000Z"
+        }
+    ],
+    "auth": {
+        "tokens": {
+            "user1": {
+                "accessToken": "mock-access-token-user1",
+                "refreshToken": "mock-refresh-token-user1"
+            },
+            "user2": {
+                "accessToken": "mock-access-token-user2",
+                "refreshToken": "mock-refresh-token-user2"
+            }
+        },
+        "validCredentials": [
+            {
+                "email": "john.doe@example.com",
+                "password": "Password123"
+            },
+            {
+                "email": "jane.smith@example.com",
+                "password": "Password123"
+            }
+        ]
+    }
+}

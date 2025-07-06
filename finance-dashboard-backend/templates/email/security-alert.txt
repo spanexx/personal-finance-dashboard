@@ -1,0 +1,38 @@
+SECURITY ALERT - Personal Finance Dashboard
+==========================================
+
+Hello {{firstName}},
+
+We detected {{alertType}} on your Personal Finance Dashboard account.
+
+{{alertMessage}}
+
+Activity Details:
+- Activity Type: {{activityType}}
+- Date & Time: {{timestamp}}
+- IP Address: {{ipAddress}}
+- Location: {{location}}
+- Device: {{userAgent}}
+
+If this was you, no action is needed. If you don't recognize this activity, please take immediate action:
+
+{{#if isHighRisk}}
+1. Secure your account: {{secureAccountUrl}}
+2. Change your password: {{changePasswordUrl}}
+{{/if}}
+
+Security Recommendations:
+- Always log out from shared or public computers
+- Use a strong, unique password for your account
+- Enable two-factor authentication if available
+- Regularly review your account activity
+- Never share your login credentials with anyone
+
+If you believe your account has been compromised, please contact our security team immediately.
+
+---
+Personal Finance Dashboard Security Team
+Alert sent to: {{email}}
+Account ID: {{accountId}}
+
+This is an automated security alert. For your protection, please do not ignore this message.

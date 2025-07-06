@@ -1,0 +1,118 @@
+// Shared Settings Components Styles
+// Common styles for all settings components to reduce duplication
+
+// Form Controls
+.settings-form {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+
+  .form-group {
+    margin-bottom: 24px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .form-field {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--mat-divider-color);
+  }
+}
+
+// Card Layouts
+.settings-card {
+  margin-bottom: 24px;
+  
+  .mat-mdc-card-header {
+    padding-bottom: 16px;
+  }
+
+  .mat-mdc-card-content {
+    padding-top: 0;
+  }
+
+  .card-section {
+    margin-bottom: 32px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// Section Headers
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  
+  .mat-icon {
+    margin-right: 8px;
+    color: var(--mat-primary-color);
+  }
+
+  h3 {
+    margin: 0;
+    font-weight: 500;
+  }
+}
+
+// Toggle Lists
+.toggle-list {
+  .mat-list-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--mat-divider-color);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .toggle-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .toggle-description {
+    flex: 1;
+    margin-right: 16px;
+
+    .primary-text {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .secondary-text {
+      color: var(--mat-text-secondary);
+      font-size: 0.875rem;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .settings-form {
+    padding: 16px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    
+    .mat-mdc-button {
+      width: 100%;
+    }
+  }
+}

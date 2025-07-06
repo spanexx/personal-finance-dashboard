@@ -1,0 +1,244 @@
+<div class="budget-optimization-container">
+  <div class="header-section">
+    <h1>Budget Optimization</h1>
+    <p>Improve your financial health with AI-powered recommendations and scenario planning</p>
+  </div>
+
+  <mat-tab-group class="optimization-tabs" (selectedTabChange)="onTabChange($event)">
+    <!-- Recommendations Tab -->
+    <mat-tab label="Recommendations">
+      <div class="tab-content">
+        <div class="recommendations-header">
+          <h2>Personalized Recommendations</h2>
+          <div class="filter-controls">
+            <mat-form-field>
+              <mat-label>Priority Level</mat-label>
+              <mat-select [(value)]="selectedPriority" (selectionChange)="filterRecommendations()">
+                <mat-option value="all">All Priorities</mat-option>
+                <mat-option value="high">High Priority</mat-option>
+                <mat-option value="medium">Medium Priority</mat-option>
+                <mat-option value="low">Low Priority</mat-option>
+              </mat-select>
+            </mat-form-field>
+            
+            <mat-form-field>
+              <mat-label>Category</mat-label>
+              <mat-select [(value)]="selectedCategory" (selectionChange)="filterRecommendations()">
+                <mat-option value="all">All Categories</mat-option>
+                <mat-option value="spending">Spending</mat-option>
+                <mat-option value="savings">Savings</mat-option>
+                <mat-option value="debt">Debt Management</mat-option>
+                <mat-option value="investment">Investment</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div class="recommendations-grid" *ngIf="!isLoading; else loadingTemplate">
+          <mat-card class="recommendation-card" 
+                    *ngFor="let recommendation of filteredRecommendations" 
+                    [ngClass]="'priority-' + recommendation.priority">
+            <mat-card-header>
+              <mat-card-title>{{ recommendation.title }}</mat-card-title>
+              <mat-card-subtitle>
+                <mat-chip [ngClass]="'priority-' + recommendation.priority">
+                  {{ recommendation.priority | titlecase }} Priority
+                </mat-chip>
+              </mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <p>{{ recommendation.description }}</p>
+              
+              <div class="impact-metrics">
+                <div class="metric">
+                  <span class="label">Potential Savings:</span>
+                  <span class="value positive">${{ recommendation.potentialSavings | number:'1.0-0' }}</span>
+                </div>
+                <div class="metric">
+                  <span class="label">Implementation Effort:</span>
+                  <span class="value">{{ recommendation.effort }}</span>
+                </div>
+                <div class="metric">
+                  <span class="label">Time to Impact:</span>
+                  <span class="value">{{ recommendation.timeframe }}</span>
+                </div>
+              </div>
+            </mat-card-content>
+            
+            <mat-card-actions>
+              <button mat-flat-button color="primary" (click)="implementRecommendation(recommendation)">
+                Implement
+              </button>
+              <button mat-stroked-button (click)="learnMore(recommendation)">
+                Learn More
+              </button>
+              <button mat-icon-button (click)="dismissRecommendation(recommendation)">
+                <mat-icon>close</mat-icon>
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Scenario Planning Tab -->
+    <mat-tab label="What-If Analysis">
+      <div class="tab-content">
+        <app-scenario-planning [budgetId]="selectedBudgetId"></app-scenario-planning>
+      </div>
+    </mat-tab>
+
+    <!-- Savings Opportunities Tab -->
+    <mat-tab label="Savings Opportunities">
+      <div class="tab-content">
+        <div class="savings-header">
+          <h2>Savings Opportunities</h2>
+          <p>Discover ways to optimize your spending and increase savings</p>
+        </div>
+
+        <div class="savings-grid" *ngIf="!isLoading; else loadingTemplate">
+          <mat-card class="savings-card" *ngFor="let opportunity of savingsOpportunities">
+            <mat-card-header>
+              <mat-card-title>{{ opportunity.title }}</mat-card-title>
+              <mat-card-subtitle>{{ opportunity.category }}</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="opportunity-visual">
+                <div class="savings-amount">
+                  <span class="currency">$</span>
+                  <span class="amount">{{ opportunity.monthlySavings }}</span>
+                  <span class="period">/month</span>
+                </div>
+                <div class="annual-projection">
+                  <span>${{ opportunity.annualSavings | number:'1.0-0' }} annually</span>
+                </div>
+              </div>
+              
+              <p>{{ opportunity.description }}</p>
+              
+              <div class="difficulty-indicator">
+                <span class="label">Implementation:</span>
+                <div class="difficulty-bar">
+                  <div class="fill" [style.width.%]="opportunity.difficultyLevel * 20"></div>
+                </div>
+                <span class="difficulty-text">{{ getDifficultyText(opportunity.difficultyLevel) }}</span>
+              </div>
+            </mat-card-content>
+            
+            <mat-card-actions>
+              <button mat-flat-button color="primary" (click)="implementSavingsOpportunity(opportunity)">
+                Get Started
+              </button>
+              <button mat-stroked-button (click)="viewSavingsDetails(opportunity)">
+                View Details
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Educational Content Tab -->
+    <mat-tab label="Learn & Improve">
+      <div class="tab-content">
+        <div class="education-header">
+          <h2>Financial Education</h2>
+          <p>Expand your financial knowledge with personalized content</p>
+        </div>
+
+        <div class="content-filters">
+          <mat-chip-list>
+            <mat-chip *ngFor="let tag of contentTags" 
+                     [selected]="selectedTags.includes(tag)"
+                     (click)="toggleTag(tag)"
+                     [ngClass]="{'selected': selectedTags.includes(tag)}">
+              {{ tag }}
+            </mat-chip>
+          </mat-chip-list>
+        </div>
+
+        <div class="education-content" *ngIf="!isLoading; else loadingTemplate">
+          <div class="content-grid">
+            <mat-card class="content-card" *ngFor="let content of filteredEducationalContent">
+              <mat-card-header>
+                <mat-card-title>{{ content.title }}</mat-card-title>
+                <mat-card-subtitle>
+                  <mat-chip class="content-type">{{ content.type }}</mat-chip>
+                  <span class="reading-time">{{ content.readingTime }} min read</span>
+                </mat-card-subtitle>
+              </mat-card-header>
+              
+              <mat-card-content>
+                <p>{{ content.summary }}</p>
+                
+                <div class="content-tags">
+                  <mat-chip *ngFor="let tag of content.tags" class="tag-chip">
+                    {{ tag }}
+                  </mat-chip>
+                </div>
+                
+                <div class="content-meta">
+                  <div class="difficulty">
+                    <mat-icon>school</mat-icon>
+                    <span>{{ content.difficulty }}</span>
+                  </div>
+                  <div class="relevance">
+                    <mat-icon>trending_up</mat-icon>
+                    <span>{{ content.relevanceScore }}% relevant</span>
+                  </div>
+                </div>
+              </mat-card-content>
+              
+              <mat-card-actions>
+                <button mat-flat-button color="primary" (click)="openContent(content)">
+                  Read Article
+                </button>
+                <button mat-icon-button (click)="bookmarkContent(content)">
+                  <mat-icon>{{ content.bookmarked ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+                </button>
+                <button mat-icon-button (click)="shareContent(content)">
+                  <mat-icon>share</mat-icon>
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<!-- Loading Template -->
+<ng-template #loadingTemplate>
+  <div class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading optimization data...</p>
+  </div>
+</ng-template>
+
+<!-- Quick Actions FAB -->
+<button mat-fab class="quick-actions-fab" [matMenuTriggerFor]="quickActionsMenu">
+  <mat-icon>assistant</mat-icon>
+</button>
+
+<mat-menu #quickActionsMenu="matMenu" class="quick-actions-menu">
+  <button mat-menu-item (click)="generateQuickReport()">
+    <mat-icon>assessment</mat-icon>
+    <span>Generate Quick Report</span>
+  </button>
+  <button mat-menu-item (click)="scheduleOptimizationReview()">
+    <mat-icon>schedule</mat-icon>
+    <span>Schedule Review</span>
+  </button>
+  <button mat-menu-item (click)="exportOptimizationPlan()">
+    <mat-icon>download</mat-icon>
+    <span>Export Plan</span>
+  </button>
+  <mat-divider></mat-divider>
+  <button mat-menu-item (click)="openOptimizationSettings()">
+    <mat-icon>settings</mat-icon>
+    <span>Settings</span>
+  </button>
+</mat-menu>

@@ -1,0 +1,451 @@
+<!-- Profile Settings Component Template -->
+<div class="profile-settings-container" 
+     [attr.aria-busy]="isLoading ? 'true' : 'false'" 
+     [appFocusTrap]="true">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <button 
+        mat-icon-button 
+        type="button"
+        (click)="onBack()"
+        class="back-button"
+        aria-label="Go back to settings"
+        matTooltip="Back to Settings">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1 #pageTitle tabindex="-1" class="page-title">Profile Settings</h1>
+    </div>
+    <div class="header-actions">
+      <button 
+        mat-stroked-button 
+        type="button"
+        (click)="onCancel()"
+        [disabled]="!hasUnsavedChanges || isSaving"
+        class="cancel-button">
+        Cancel Changes
+      </button>
+      <button 
+        mat-raised-button 
+        color="primary"
+        type="submit"
+        form="profileForm"
+        [disabled]="!profileForm.valid || !hasUnsavedChanges || isSaving"
+        class="save-button">
+        <mat-icon *ngIf="isSaving" class="spinner">refresh</mat-icon>
+        <span>{{ isSaving ? 'Saving...' : 'Save Changes' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container" role="status" aria-label="Loading profile data">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p class="loading-text">Loading your profile...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading" class="content-wrapper">
+    
+    <!-- Profile Overview Card -->
+    <mat-card class="profile-overview-card">
+      <mat-card-header>
+        <mat-card-title>Profile Overview</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="profile-overview-content">
+          <!-- Profile Image Section -->
+          <div class="profile-image-section">
+            <div class="image-container">
+              <img 
+                [src]="getProfileImageUrl()" 
+                [alt]="currentProfile?.firstName + ' ' + currentProfile?.lastName + ' profile image'"
+                class="profile-image"
+                (error)="onImageError($event)">
+              
+              <!-- Upload Progress Overlay -->
+              <div *ngIf="isUploadingImage" class="upload-overlay" role="status" aria-label="Uploading image">
+                <mat-spinner diameter="30"></mat-spinner>
+              </div>
+            </div>
+            
+            <!-- Image Actions -->
+            <div class="image-actions">
+              <input 
+                #fileInput 
+                type="file" 
+                accept="image/*" 
+                (change)="onFileSelected($event)"
+                style="display: none"
+                aria-label="Select profile image">
+              
+              <button 
+                mat-stroked-button 
+                type="button"
+                (click)="fileInput.click()"
+                [disabled]="isUploadingImage"
+                aria-label="Upload new profile image">
+                <mat-icon>upload</mat-icon>
+                Change Photo
+              </button>
+              
+              <button 
+                *ngIf="currentProfile?.profileImage && !selectedImageFile"
+                mat-stroked-button 
+                color="warn"
+                type="button"
+                (click)="deleteProfileImage()"
+                [disabled]="isUploadingImage"
+                aria-label="Delete current profile image">
+                <mat-icon>delete</mat-icon>
+                Remove
+              </button>
+            </div>
+
+            <!-- Image Preview and Upload Controls -->
+            <div *ngIf="selectedImageFile" class="image-preview-section">
+              <div class="preview-container">
+                <img [src]="imagePreviewUrl" alt="Image preview" class="image-preview">
+              </div>
+              <div class="preview-actions">
+                <button 
+                  mat-raised-button 
+                  color="primary"
+                  type="button"
+                  (click)="uploadProfileImage()"
+                  [disabled]="isUploadingImage">
+                  <mat-icon>save</mat-icon>
+                  Upload
+                </button>
+                <button 
+                  mat-stroked-button 
+                  type="button"
+                  (click)="cancelImageUpload()"
+                  [disabled]="isUploadingImage">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Profile Stats -->
+          <div class="profile-stats">
+            <div class="stat-item">
+              <div class="stat-label">Profile Completion</div>
+              <div class="stat-value">
+                <span class="completion-text">{{ getProfileCompletionText() }}</span>
+                <mat-progress-bar 
+                  mode="determinate" 
+                  [value]="currentProfile?.profileCompleteness?.percentage || 0"
+                  class="completion-bar">
+                </mat-progress-bar>
+              </div>
+            </div>
+            
+            <div class="stat-item">
+              <div class="stat-label">Member Since</div>
+              <div class="stat-value">{{ getMemberSince() }}</div>
+            </div>
+            
+            <div class="stat-item">
+              <div class="stat-label">Last Login</div>
+              <div class="stat-value">{{ getLastLogin() }}</div>
+            </div>
+
+            <!-- Email Verification Status -->
+            <div class="stat-item" *ngIf="currentProfile?.email">
+              <div class="stat-label">Email Status</div>
+              <div class="stat-value">
+                <mat-chip-set aria-label="Email verification status">                  <mat-chip 
+                    [color]="(currentProfile?.emailVerified || currentProfile?.isEmailVerified) ? 'primary' : 'warn'">
+                    <mat-icon>{{ (currentProfile?.emailVerified || currentProfile?.isEmailVerified) ? 'verified' : 'warning' }}</mat-icon>
+                    {{ (currentProfile?.emailVerified || currentProfile?.isEmailVerified) ? 'Verified' : 'Unverified' }}
+                  </mat-chip>
+                </mat-chip-set>
+                
+                <button 
+                  *ngIf="!(currentProfile?.emailVerified || currentProfile?.isEmailVerified)"
+                  mat-button 
+                  color="primary"
+                  type="button"
+                  (click)="resendEmailVerification()"
+                  class="resend-verification-btn">
+                  Resend Verification Email
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Profile Form -->
+    <mat-card class="profile-form-card">
+      <mat-card-header>
+        <mat-card-title>Personal Information</mat-card-title>
+        <mat-card-subtitle>Update your personal details</mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <form 
+          id="profileForm"
+          [formGroup]="profileForm" 
+          (ngSubmit)="onSubmit()"
+          (keydown)="onKeyDown($event)"
+          novalidate>
+          
+          <div class="form-row">
+            <!-- First Name -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>First Name</mat-label>
+              <input 
+                #firstInput
+                matInput 
+                formControlName="firstName"
+                placeholder="Enter your first name"
+                [attr.aria-invalid]="isFieldInvalid('firstName')"
+                [attr.aria-describedby]="isFieldInvalid('firstName') ? 'firstName-error' : null"
+                required>
+              <mat-icon matSuffix>person</mat-icon>
+              <mat-error 
+                id="firstName-error"
+                *ngIf="isFieldInvalid('firstName')"
+                role="alert">
+                {{ getFieldError('firstName') }}
+              </mat-error>
+            </mat-form-field>
+
+            <!-- Last Name -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Last Name</mat-label>
+              <input 
+                matInput 
+                formControlName="lastName"
+                placeholder="Enter your last name"
+                [attr.aria-invalid]="isFieldInvalid('lastName')"
+                [attr.aria-describedby]="isFieldInvalid('lastName') ? 'lastName-error' : null"
+                required>
+              <mat-icon matSuffix>person</mat-icon>
+              <mat-error 
+                id="lastName-error"
+                *ngIf="isFieldInvalid('lastName')"
+                role="alert">
+                {{ getFieldError('lastName') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <!-- Email -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Email Address</mat-label>
+              <input 
+                matInput 
+                type="email"
+                formControlName="email"
+                placeholder="Enter your email address"
+                [attr.aria-invalid]="isFieldInvalid('email')"
+                [attr.aria-describedby]="isFieldInvalid('email') ? 'email-error' : null"
+                required>
+              <mat-icon matSuffix>email</mat-icon>
+              <mat-error 
+                id="email-error"
+                *ngIf="isFieldInvalid('email')"
+                role="alert">
+                {{ getFieldError('email') }}
+              </mat-error>
+            </mat-form-field>
+
+            <!-- Phone -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Phone Number</mat-label>
+              <input 
+                matInput 
+                type="tel"
+                formControlName="phone"
+                placeholder="Enter your phone number"
+                [attr.aria-invalid]="isFieldInvalid('phone')"
+                [attr.aria-describedby]="isFieldInvalid('phone') ? 'phone-error' : null">
+              <mat-icon matSuffix>phone</mat-icon>
+              <mat-error 
+                id="phone-error"
+                *ngIf="isFieldInvalid('phone')"
+                role="alert">
+                {{ getFieldError('phone') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <!-- Username -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Username</mat-label>
+              <input 
+                matInput 
+                formControlName="username"
+                placeholder="Choose a username"
+                [attr.aria-invalid]="isFieldInvalid('username')"
+                [attr.aria-describedby]="isFieldInvalid('username') ? 'username-error' : null">
+              <mat-icon matSuffix>alternate_email</mat-icon>
+              <mat-hint>Optional - Used for public display</mat-hint>
+              <mat-error 
+                id="username-error"
+                *ngIf="isFieldInvalid('username')"
+                role="alert">
+                {{ getFieldError('username') }}
+              </mat-error>
+            </mat-form-field>
+
+            <!-- Date of Birth -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Date of Birth</mat-label>
+              <input 
+                matInput 
+                [matDatepicker]="dobPicker"
+                formControlName="dateOfBirth"
+                placeholder="Select your date of birth"
+                readonly>
+              <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
+              <mat-datepicker #dobPicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+
+          <!-- Bio -->
+          <div class="form-row full-width">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Bio</mat-label>
+              <textarea 
+                matInput 
+                formControlName="bio"
+                placeholder="Tell us about yourself"
+                rows="3"
+                maxlength="500">
+              </textarea>
+              <mat-hint>{{ profileForm.get('bio')?.value?.length || 0 }}/500 characters</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <!-- Address Section -->
+          <div formGroupName="address" class="address-section">
+            <h3 class="section-title">Address Information</h3>
+            
+            <div class="form-row full-width">
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Street Address</mat-label>
+                <input 
+                  matInput 
+                  formControlName="street"
+                  placeholder="Enter your street address">
+                <mat-icon matSuffix>home</mat-icon>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>City</mat-label>
+                <input 
+                  matInput 
+                  formControlName="city"
+                  placeholder="Enter your city">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>State/Province</mat-label>
+                <input 
+                  matInput 
+                  formControlName="state"
+                  placeholder="Enter your state">
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>ZIP/Postal Code</mat-label>
+                <input 
+                  matInput 
+                  formControlName="zipCode"
+                  placeholder="Enter your ZIP code">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Country</mat-label>
+                <input 
+                  matInput 
+                  formControlName="country"
+                  placeholder="Enter your country">
+              </mat-form-field>
+            </div>
+          </div>
+
+          <!-- Form Actions (Mobile) -->
+          <div class="form-actions mobile-only">
+            <button 
+              mat-stroked-button 
+              type="button"
+              (click)="onCancel()"
+              [disabled]="!hasUnsavedChanges || isSaving"
+              class="cancel-button-mobile">
+              Cancel
+            </button>
+            <button 
+              mat-raised-button 
+              color="primary"
+              type="submit"
+              [disabled]="!profileForm.valid || !hasUnsavedChanges || isSaving"
+              class="save-button-mobile">
+              <mat-icon *ngIf="isSaving" class="spinner">refresh</mat-icon>
+              <span>{{ isSaving ? 'Saving...' : 'Save' }}</span>
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Account Security Card -->
+    <mat-card class="security-card">
+      <mat-card-header>
+        <mat-card-title>Account Security</mat-card-title>
+        <mat-card-subtitle>Manage your account security settings</mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div class="security-actions">
+          <button 
+            mat-stroked-button 
+            color="primary"
+            type="button"
+            routerLink="/settings/security"
+            class="security-action-btn">
+            <mat-icon>lock</mat-icon>
+            Change Password
+          </button>
+          
+          <button 
+            mat-stroked-button 
+            color="primary"
+            type="button"
+            routerLink="/settings/sessions"
+            class="security-action-btn">
+            <mat-icon>devices</mat-icon>
+            Manage Sessions
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  <!-- Unsaved Changes Warning -->
+  <div 
+    *ngIf="hasUnsavedChanges" 
+    class="unsaved-warning"
+    role="alert"
+    aria-live="polite">
+    <mat-icon>warning</mat-icon>
+    <span>You have unsaved changes</span>
+  </div>
+</div>
+
+<!-- Screen Reader Only Instructions -->
+<div class="sr-only" aria-live="polite" aria-atomic="true">
+  <span *ngIf="isSaving">Saving your profile changes, please wait...</span>
+  <span *ngIf="hasUnsavedChanges && !isSaving">You have unsaved changes. Use Ctrl+S to save or the Cancel button to discard changes.</span>
+</div>

@@ -1,0 +1,61 @@
+<div class="dashboard-widget" *ngIf="!isLoading; else loadingTpl">
+  <mat-card [style.background]="getWidgetConfig().color">
+    <mat-card-header *ngIf="showHeader">
+      <mat-icon>{{ getWidgetConfig().icon }}</mat-icon>
+      <span>{{ getWidgetConfig().title }}</span>
+      <button mat-icon-button (click)="refreshData()" matTooltip="Refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      <mat-icon [style.color]="getConnectionStatusColor()" matTooltip="Connection Status">
+        {{ getConnectionStatusIcon() }}
+      </mat-icon>
+    </mat-card-header>
+    <mat-card-content>
+      <ng-container [ngSwitch]="widgetType">
+        <ng-container *ngSwitchCase="'balance'">
+          <div *ngIf="getBalanceData() as data">
+            <div class="balance-value">{{ formatCurrency(data.current) }}</div>
+            <div class="balance-change" [style.color]="getChangeColor(data.change)">
+              <mat-icon>{{ getChangeIcon(data.change) }}</mat-icon>
+              {{ data.change | number:'1.0-0' }}
+            </div>
+            <div class="balance-label">{{ data.label }}</div>
+          </div>
+        </ng-container>
+        <ng-container *ngSwitchCase="'budget'">
+          <div *ngIf="getBudgetData() as data">
+            <div class="budget-compliance">Compliance: {{ formatPercentage(data.compliance) }}</div>
+            <div class="budget-alerts" *ngIf="data.alertsCount > 0">
+              <div *ngFor="let alert of data.recentAlerts">
+                <mat-icon [style.color]="getAlertLevelColor(alert.severity)">warning</mat-icon>
+                {{ alert.message }}
+              </div>
+            </div>
+          </div>
+        </ng-container>
+        <ng-container *ngSwitchCase="'goals'">
+          <div *ngIf="getGoalsData() as data">
+            <div>Progress: {{ formatPercentage(data.progress) }}</div>
+            <div>Emergency Fund: {{ formatPercentage(data.emergencyFund) }}</div>
+            <div>Investment Growth: {{ formatPercentage(data.investment) }}</div>
+          </div>
+        </ng-container>
+        <ng-container *ngSwitchCase="'notifications'">
+          <div *ngIf="getNotificationsData() as data">
+            <div>Unread: <span [matBadge]="data.unread" matBadgeColor="warn">{{ data.unread }}</span></div>
+            <div>Status: <mat-icon>{{ data.connected ? 'wifi' : 'wifi_off' }}</mat-icon></div>
+            <div>Last Update: {{ getTimeAgo(data.lastUpdate) }}</div>
+          </div>
+        </ng-container>
+      </ng-container>
+    </mat-card-content>
+  </mat-card>
+</div>
+<ng-template #loadingTpl>
+  <mat-card>
+    <mat-card-content>
+      <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+      Loading...
+    </mat-card-content>
+  </mat-card>
+</ng-template>

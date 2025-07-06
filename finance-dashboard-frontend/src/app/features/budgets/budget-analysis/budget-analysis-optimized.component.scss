@@ -1,0 +1,436 @@
+@import '../../../../assets/styles/material-overrides';
+
+.budget-analysis-container {
+  @include default-mobile-responsive;
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.analysis-header {
+  margin-bottom: 24px;
+
+  .header-content {
+    @extend %flex-between;
+    flex-wrap: wrap;
+    gap: 16px;
+
+    @include mobile-responsive {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  .page-title {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 300;
+    color: var(--primary-color, #1976d2);
+
+    @include mobile-responsive {
+      font-size: 2rem;
+      text-align: center;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+
+    @include mobile-responsive { 
+      justify-content: center; 
+    }
+  }
+
+  .action-button {
+    @extend %primary-button;
+    @extend %flex-center;
+    gap: 8px;
+    font-weight: 500;
+  }
+}
+
+// Filter section
+.filter-section {
+  @extend %card-container;
+  padding: 20px;
+  margin-bottom: 24px;
+
+  .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    align-items: end;
+
+    @include mobile-responsive {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .filter-controls {
+    @extend %flex-center;
+    gap: 12px;
+    margin-top: 16px;
+
+    @include mobile-responsive {
+      flex-direction: column;
+    }
+  }
+}
+
+// Key metrics
+.key-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+
+  @include mobile-responsive {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .metric-card {
+    @extend %metric-card;
+    
+    &.spending .metric-value { color: $accent-500; }
+    &.budget .metric-value { color: $primary-500; }
+    &.variance {
+      .metric-value {
+        &.positive { color: $success; }
+        &.negative { color: $error; }
+      }
+    }
+    &.remaining .metric-value { color: $secondary-500; }
+  }
+}
+
+// Charts section
+.charts-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+
+  @include mobile-responsive {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .chart-card {
+    @extend %chart-container;
+    
+    .chart-content {
+      height: 300px;
+      position: relative;
+
+      @include mobile-responsive {
+        height: 250px;
+      }
+    }
+  }
+}
+
+// Category breakdown
+.category-breakdown {
+  margin-bottom: 24px;
+
+  .section-header {
+    @extend %flex-between;
+    margin-bottom: 16px;
+    
+    h3 {
+      margin: 0;
+      color: var(--text-primary, #333);
+    }
+  }
+
+  .category-list {
+    .category-item {
+      @extend %category-summary;
+      
+      .category-details {
+        padding: 0 20px 16px;
+        
+        .transaction-list {
+          .transaction-item {
+            @extend %budget-item;
+            padding: 8px 0;
+            
+            .transaction-icon {
+              @extend %icon-circle;
+              width: 24px;
+              height: 24px;
+              font-size: 12px;
+              background-color: rgba($neutral-500, 0.1);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Spending timeline
+.spending-timeline {
+  @extend %chart-container;
+  margin-bottom: 24px;
+  
+  .timeline-controls {
+    @extend %flex-center;
+    gap: 8px;
+    margin-bottom: 16px;
+    
+    .period-button {
+      @extend %primary-button;
+      font-size: 0.875rem;
+      padding: 6px 12px;
+      
+      &.active {
+        background-color: $primary-500;
+        color: white;
+      }
+    }
+  }
+  
+  .timeline-chart {
+    height: 200px;
+    position: relative;
+  }
+}
+
+// Budget recommendations
+.budget-recommendations {
+  @extend %card-container;
+  padding: 24px;
+
+  .section-header {
+    @extend %flex-between;
+    margin-bottom: 16px;
+    
+    h3 {
+      margin: 0;
+      color: var(--text-primary, #333);
+    }
+  }
+
+  .recommendation-list {
+    .recommendation-item {
+      @extend %budget-item;
+      
+      .recommendation-icon {
+        @extend %icon-circle;
+        width: 32px;
+        height: 32px;
+        background-color: rgba($info, 0.1);
+        color: $info;
+        font-size: 14px;
+      }
+      
+      .recommendation-content {
+        flex: 1;
+        
+        .recommendation-title {
+          font-weight: 500;
+          margin-bottom: 4px;
+        }
+        
+        .recommendation-description {
+          color: var(--text-secondary, #666);
+          font-size: 0.875rem;
+        }
+      }
+      
+      .recommendation-action {
+        @extend %primary-button;
+        font-size: 0.875rem;
+        padding: 6px 12px;
+      }
+    }
+  }
+}
+
+// Insights panel
+.insights-panel {
+  @extend %card-container;
+  padding: 24px;
+  margin-bottom: 24px;
+  
+  .insights-header {
+    @extend %flex-between;
+    margin-bottom: 16px;
+    
+    h3 {
+      margin: 0;
+      color: var(--text-primary, #333);
+    }
+  }
+  
+  .insight-list {
+    .insight-item {
+      @extend %budget-item;
+      
+      .insight-icon {
+        @extend %icon-circle;
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+        
+        &.positive {
+          background-color: rgba($success, 0.1);
+          color: $success;
+        }
+        
+        &.warning {
+          background-color: rgba($warning, 0.1);
+          color: $warning;
+        }
+        
+        &.negative {
+          background-color: rgba($error, 0.1);
+          color: $error;
+        }
+      }
+      
+      .insight-text {
+        flex: 1;
+        font-size: 0.875rem;
+        line-height: 1.4;
+      }
+    }
+  }
+}
+
+// Comparison section
+.comparison-section {
+  @extend %chart-container;
+  margin-bottom: 24px;
+  
+  .comparison-controls {
+    @extend %flex-center;
+    gap: 12px;
+    margin-bottom: 16px;
+    
+    @include mobile-responsive {
+      flex-direction: column;
+      gap: 8px;
+    }
+  }
+  
+  .comparison-chart {
+    height: 250px;
+    position: relative;
+  }
+}
+
+// Export section
+.export-section {
+  @extend %card-container;
+  padding: 20px;
+  
+  .export-options {
+    @extend %flex-between;
+    gap: 16px;
+    
+    @include mobile-responsive {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .export-info {
+      flex: 1;
+      
+      h4 {
+        margin: 0 0 8px 0;
+        color: var(--text-primary, #333);
+      }
+      
+      p {
+        margin: 0;
+        color: var(--text-secondary, #666);
+        font-size: 0.875rem;
+      }
+    }
+    
+    .export-actions {
+      display: flex;
+      gap: 8px;
+      
+      .export-button {
+        @extend %primary-button;
+        @extend %flex-center;
+        gap: 6px;
+        font-size: 0.875rem;
+      }
+    }
+  }
+}
+
+// Loading states
+.loading-overlay {
+  @extend %flex-center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+}
+
+// Error states
+.error-state {
+  @extend %flex-center;
+  flex-direction: column;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-secondary, #666);
+  
+  .error-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: $error;
+  }
+  
+  .error-message {
+    margin-bottom: 16px;
+  }
+  
+  .retry-button {
+    @extend %primary-button;
+  }
+}
+
+// Accessibility and animations
+@include high-contrast {
+  .category-item,
+  .metric-card,
+  .chart-card {
+    border: 2px solid #000;
+  }
+}
+
+@include reduced-motion {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+// Print styles
+@media print {
+  .budget-analysis-container {
+    max-width: none;
+    padding: 0;
+  }
+  
+  .header-actions,
+  .filter-section,
+  .export-section {
+    display: none;
+  }
+  
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+}

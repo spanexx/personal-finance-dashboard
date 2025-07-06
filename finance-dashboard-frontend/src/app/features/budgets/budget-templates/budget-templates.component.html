@@ -1,0 +1,365 @@
+<div class="budget-templates">
+  <!-- Header Section -->
+  <div class="templates-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1>Budget Templates</h1>
+        <p class="subtitle">Create, manage, and use budget templates to streamline your budget creation process</p>
+      </div>
+      
+      <div class="actions-section">
+        <button mat-raised-button color="primary" (click)="createTemplate()">
+          <mat-icon>add</mat-icon>
+          Create Template
+        </button>
+        
+        <input 
+          type="file" 
+          accept=".json" 
+          (change)="importTemplate($event)"
+          style="display: none"
+          #fileInput>
+        <button mat-stroked-button (click)="fileInput.click()">
+          <mat-icon>upload</mat-icon>
+          Import Template
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Filters -->
+  <div class="templates-toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search templates</mat-label>
+      <input matInput (keyup)="applyFilter($event)" placeholder="Search by name, description, or type">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+  </div>
+
+  <!-- Templates Table -->
+  <div class="templates-table">
+    <mat-table [dataSource]="dataSource" matSort class="template-table">
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>Template Name</mat-header-cell>
+        <mat-cell *matCellDef="let template">
+          <div class="template-name-cell">
+            <div class="template-info">
+              <h4 class="template-title">{{ template.name }}</h4>
+              <p class="template-description">{{ template.description }}</p>
+            </div>
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Type Column -->
+      <ng-container matColumnDef="type">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>Type</mat-header-cell>
+        <mat-cell *matCellDef="let template">
+          <mat-chip 
+            [class]="'type-' + template.type"
+            [color]="template.type === 'predefined' ? 'primary' : 'accent'">
+            {{ template.type | titlecase }}
+          </mat-chip>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Categories Column -->
+      <ng-container matColumnDef="categories">
+        <mat-header-cell *matHeaderCellDef>Categories</mat-header-cell>
+        <mat-cell *matCellDef="let template">
+          <div class="categories-preview">
+            <div class="category-count">{{ template.categories.length }} categories</div>
+            <div class="category-colors">
+              <div 
+                class="category-dot" 
+                *ngFor="let category of template.categories.slice(0, 5)"
+                [style.background-color]="category.color"
+                [title]="category.name + ': ' + category.allocated + '%'">
+              </div>
+              <span class="more-categories" *ngIf="template.categories.length > 5">
+                +{{ template.categories.length - 5 }}
+              </span>
+            </div>
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Percentage Column -->
+      <ng-container matColumnDef="percentage">
+        <mat-header-cell *matHeaderCellDef>Allocation</mat-header-cell>
+        <mat-cell *matCellDef="let template">
+          <div class="percentage-cell">
+            <div class="percentage-value">{{ template.totalPercentage }}%</div>
+            <div class="percentage-bar">
+              <div 
+                class="percentage-fill" 
+                [style.width.%]="template.totalPercentage"
+                [class.complete]="template.totalPercentage === 100">
+              </div>
+            </div>
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Usage Column -->
+      <ng-container matColumnDef="usage">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>Usage Count</mat-header-cell>
+        <mat-cell *matCellDef="let template">
+          <div class="usage-count">
+            <mat-icon>trending_up</mat-icon>
+            {{ template.usageCount }}
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+        <mat-cell *matCellDef="let template">
+          <mat-slide-toggle 
+            [checked]="template.isActive"
+            [disabled]="template.type === 'predefined'"
+            (change)="toggleTemplateStatus(template)"
+            color="primary">
+            {{ template.isActive ? 'Active' : 'Inactive' }}
+          </mat-slide-toggle>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell *matCellDef="let template">
+          <div class="actions-menu">
+            <button mat-icon-button [matMenuTriggerFor]="actionsMenu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            
+            <mat-menu #actionsMenu="matMenu">
+              <button mat-menu-item (click)="useTemplate(template)">
+                <mat-icon>play_arrow</mat-icon>
+                <span>Use Template</span>
+              </button>
+              
+              <button mat-menu-item (click)="duplicateTemplate(template)">
+                <mat-icon>content_copy</mat-icon>
+                <span>Duplicate</span>
+              </button>
+              
+              <button 
+                mat-menu-item 
+                (click)="editTemplate(template)"
+                [disabled]="template.type === 'predefined'">
+                <mat-icon>edit</mat-icon>
+                <span>Edit</span>
+              </button>
+              
+              <button mat-menu-item (click)="exportTemplate(template)">
+                <mat-icon>download</mat-icon>
+                <span>Export</span>
+              </button>
+              
+              <mat-divider></mat-divider>
+              
+              <button 
+                mat-menu-item 
+                (click)="deleteTemplate(template)"
+                [disabled]="template.type === 'predefined'"
+                class="delete-action">
+                <mat-icon>delete</mat-icon>
+                <span>Delete</span>
+              </button>
+            </mat-menu>
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Table Header and Rows -->
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;" class="template-row"></mat-row>
+    </mat-table>
+
+    <!-- Paginator -->
+    <mat-paginator 
+      [pageSizeOptions]="[10, 25, 50]" 
+      showFirstLastButtons>
+    </mat-paginator>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="dataSource.data.length === 0">
+    <mat-icon>description</mat-icon>
+    <h3>No Budget Templates</h3>
+    <p>Create your first budget template to get started</p>
+    <button mat-raised-button color="primary" (click)="createTemplate()">
+      <mat-icon>add</mat-icon>
+      Create Template
+    </button>
+  </div>
+</div>
+
+<!-- Template Creation/Edit Dialog -->
+<ng-template #templateDialog>
+  <div class="template-dialog">
+    <mat-dialog-content>
+      <div class="dialog-header">
+        <h2>{{ isEditMode ? 'Edit Template' : 'Create New Template' }}</h2>
+        <p class="dialog-subtitle">
+          {{ isEditMode ? 'Modify your custom budget template' : 'Create a reusable budget template' }}
+        </p>
+      </div>
+
+      <form [formGroup]="templateForm" (ngSubmit)="onSubmit()" class="template-form">
+        <!-- Basic Information -->
+        <div class="form-section">
+          <h3>Basic Information</h3>
+          
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Template Name</mat-label>
+            <input matInput formControlName="name" placeholder="Enter template name">
+            <mat-error *ngIf="templateForm.get('name')?.hasError('required')">
+              Template name is required
+            </mat-error>
+            <mat-error *ngIf="templateForm.get('name')?.hasError('minlength')">
+              Template name must be at least 3 characters
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description</mat-label>
+            <textarea 
+              matInput 
+              formControlName="description" 
+              placeholder="Describe this budget template..."
+              rows="3">
+            </textarea>
+            <mat-error *ngIf="templateForm.get('description')?.hasError('required')">
+              Description is required
+            </mat-error>
+            <mat-error *ngIf="templateForm.get('description')?.hasError('minlength')">
+              Description must be at least 10 characters
+            </mat-error>
+          </mat-form-field>
+
+          <mat-checkbox formControlName="isActive">
+            Active template (available for selection)
+          </mat-checkbox>
+        </div>
+
+        <!-- Categories Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <h3>Budget Categories</h3>
+            <div class="allocation-summary">
+              <span class="total-label">Total Allocation:</span>
+              <span 
+                class="total-percentage"
+                [class.valid]="isPercentageValid"
+                [class.invalid]="!isPercentageValid">
+                {{ totalPercentage }}%
+              </span>
+            </div>
+          </div>
+
+          <div formArrayName="categories" class="categories-list">
+            <div 
+              *ngFor="let category of categories.controls; let i = index"
+              [formGroupName]="i"
+              class="category-item">
+              
+              <div class="category-form">
+                <mat-form-field appearance="outline">
+                  <mat-label>Category Name</mat-label>
+                  <input matInput formControlName="name" placeholder="e.g., Housing">
+                  <mat-error *ngIf="category.get('name')?.hasError('required')">
+                    Category name is required
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Allocation %</mat-label>
+                  <input 
+                    matInput 
+                    type="number" 
+                    formControlName="allocated" 
+                    min="0" 
+                    max="100"
+                    placeholder="0">
+                  <span matSuffix>%</span>
+                  <mat-error *ngIf="category.get('allocated')?.hasError('required')">
+                    Allocation is required
+                  </mat-error>
+                  <mat-error *ngIf="category.get('allocated')?.hasError('min')">
+                    Allocation must be positive
+                  </mat-error>
+                  <mat-error *ngIf="category.get('allocated')?.hasError('max')">
+                    Allocation cannot exceed 100%
+                  </mat-error>
+                </mat-form-field>
+
+                <div class="color-picker">
+                  <mat-label>Color</mat-label>
+                  <input 
+                    type="color" 
+                    formControlName="color"
+                    class="color-input">
+                </div>
+
+                <button 
+                  type="button"
+                  mat-icon-button 
+                  color="warn"
+                  (click)="removeCategory(i)"
+                  [disabled]="categories.length <= 1"
+                  class="remove-category">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+
+              <!-- Category Preview -->
+              <div class="category-preview">
+                <div 
+                  class="preview-bar"
+                  [style.background-color]="category.get('color')?.value"
+                  [style.width.%]="category.get('allocated')?.value">
+                </div>
+                <span class="preview-label">
+                  {{ category.get('name')?.value || 'Unnamed Category' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button 
+            type="button"
+            mat-stroked-button 
+            (click)="addCategory()"
+            class="add-category-btn">
+            <mat-icon>add</mat-icon>
+            Add Category
+          </button>
+        </div>
+
+        <!-- Validation Alerts -->
+        <div class="validation-alerts" *ngIf="!isPercentageValid">
+          <mat-error>
+            <mat-icon>warning</mat-icon>
+            Total allocation must equal 100%. Current total: {{ totalPercentage }}%
+          </mat-error>
+        </div>
+      </form>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button mat-button (click)="cancelDialog()">Cancel</button>
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="onSubmit()"
+        [disabled]="!templateForm.valid || !isPercentageValid">
+        {{ isEditMode ? 'Update Template' : 'Create Template' }}
+      </button>
+    </mat-dialog-actions>
+  </div>
+</ng-template>

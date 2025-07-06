@@ -1,0 +1,247 @@
+{
+  "data": [
+    {
+      "id": "report1",
+      "user": "user1",
+      "name": "Monthly Spending Report",
+      "type": "spending",
+      "parameters": {
+        "startDate": "2025-05-01T00:00:00.000Z",
+        "endDate": "2025-05-31T23:59:59.999Z",
+        "groupBy": "category"
+      },
+      "createdAt": "2025-05-25T00:00:00.000Z",
+      "lastGenerated": "2025-05-25T00:00:00.000Z"
+    },
+    {
+      "id": "report2",
+      "user": "user1",
+      "name": "Income Sources",
+      "type": "income",
+      "parameters": {
+        "startDate": "2025-01-01T00:00:00.000Z",
+        "endDate": "2025-05-31T23:59:59.999Z",
+        "groupBy": "category"
+      },
+      "createdAt": "2025-05-20T00:00:00.000Z",
+      "lastGenerated": "2025-05-20T00:00:00.000Z"
+    },
+    {
+      "id": "report3",
+      "user": "user1",
+      "name": "Budget Performance",
+      "type": "budget",
+      "parameters": {
+        "budgetId": "budget1",
+        "startDate": "2025-05-01T00:00:00.000Z",
+        "endDate": "2025-05-31T23:59:59.999Z"
+      },
+      "createdAt": "2025-05-25T00:00:00.000Z",
+      "lastGenerated": "2025-05-25T00:00:00.000Z"
+    },
+    {
+      "id": "report4",
+      "user": "user1",
+      "name": "Year-to-Date Cashflow",
+      "type": "cashflow",
+      "parameters": {
+        "startDate": "2025-01-01T00:00:00.000Z",
+        "endDate": "2025-05-31T23:59:59.999Z",
+        "groupBy": "month"
+      },
+      "createdAt": "2025-05-15T00:00:00.000Z",
+      "lastGenerated": "2025-05-15T00:00:00.000Z"
+    },
+    {
+      "id": "report5",
+      "user": "user1",
+      "name": "Goals Progress",
+      "type": "goals",
+      "parameters": {},
+      "createdAt": "2025-05-10T00:00:00.000Z",
+      "lastGenerated": "2025-05-10T00:00:00.000Z"
+    }
+  ],
+  "reportResults": {
+    "spending": {
+      "totalSpending": 2082.73,
+      "averageSpending": 260.34,
+      "spendingByCategory": [
+        {
+          "category": {
+            "id": "cat4",
+            "name": "Housing",
+            "color": "#2196f3"
+          },
+          "amount": 1200.00,
+          "percentage": 57.62
+        },
+        {
+          "category": {
+            "id": "cat6",
+            "name": "Healthcare",
+            "color": "#f44336"
+          },
+          "amount": 500.00,
+          "percentage": 24.01
+        },
+        {
+          "category": {
+            "id": "cat1",
+            "name": "Groceries",
+            "color": "#43a047"
+          },
+          "amount": 120.50,
+          "percentage": 5.79
+        },
+        {
+          "category": {
+            "id": "cat8",
+            "name": "Clothing",
+            "color": "#795548"
+          },
+          "amount": 89.50,
+          "percentage": 4.30
+        },
+        {
+          "category": {
+            "id": "cat7",
+            "name": "Utilities",
+            "color": "#607d8b"
+          },
+          "amount": 65.99,
+          "percentage": 3.17
+        },
+        {
+          "category": {
+            "id": "cat2",
+            "name": "Dining Out",
+            "color": "#e91e63"
+          },
+          "amount": 45.75,
+          "percentage": 2.20
+        },
+        {
+          "category": {
+            "id": "cat3",
+            "name": "Transportation",
+            "color": "#ff9800"
+          },
+          "amount": 35.00,
+          "percentage": 1.68
+        },
+        {
+          "category": {
+            "id": "cat5",
+            "name": "Entertainment",
+            "color": "#9c27b0"
+          },
+          "amount": 25.99,
+          "percentage": 1.25
+        }
+      ],
+      "spendingByPeriod": [
+        {
+          "period": "Week 1",
+          "amount": 1200.00
+        },
+        {
+          "period": "Week 2",
+          "amount": 600.99
+        },
+        {
+          "period": "Week 3",
+          "amount": 165.75
+        },
+        {
+          "period": "Week 4",
+          "amount": 115.99
+        }
+      ]
+    },
+    "income": {
+      "totalIncome": 4250.00,
+      "averageIncome": 2125.00,
+      "incomeByCategory": [
+        {
+          "category": {
+            "id": "cat9",
+            "name": "Salary",
+            "color": "#4caf50"
+          },
+          "amount": 3500.00,
+          "percentage": 82.35
+        },
+        {
+          "category": {
+            "id": "cat10",
+            "name": "Freelance",
+            "color": "#00bcd4"
+          },
+          "amount": 750.00,
+          "percentage": 17.65
+        }
+      ],
+      "incomeByPeriod": [
+        {
+          "period": "January",
+          "amount": 3500.00
+        },
+        {
+          "period": "February",
+          "amount": 3500.00
+        },
+        {
+          "period": "March",
+          "amount": 4250.00
+        },
+        {
+          "period": "April",
+          "amount": 3500.00
+        },
+        {
+          "period": "May",
+          "amount": 4250.00
+        }
+      ]
+    },
+    "cashflow": {
+      "totalIncome": 19000.00,
+      "totalExpenses": 11204.58,
+      "netCashflow": 7795.42,
+      "savingsRate": 41.03,
+      "cashflowByPeriod": [
+        {
+          "period": "January",
+          "income": 3500.00,
+          "expenses": 2100.25,
+          "net": 1399.75
+        },
+        {
+          "period": "February",
+          "income": 3500.00,
+          "expenses": 2250.50,
+          "net": 1249.50
+        },
+        {
+          "period": "March",
+          "income": 4250.00,
+          "expenses": 2350.75,
+          "net": 1899.25
+        },
+        {
+          "period": "April",
+          "income": 3500.00,
+          "expenses": 2420.35,
+          "net": 1079.65
+        },
+        {
+          "period": "May",
+          "income": 4250.00,
+          "expenses": 2082.73,
+          "net": 2167.27
+        }
+      ]
+    }
+  }
+}

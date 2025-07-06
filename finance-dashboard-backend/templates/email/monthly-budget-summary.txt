@@ -1,0 +1,63 @@
+MONTHLY BUDGET SUMMARY - {{appName}}
+
+Hello {{firstName}},
+
+📊 MONTHLY BUDGET SUMMARY - {{monthYear}} 📊
+
+{{#if overallPerformance.isPositive}}
+Great job staying within your budget this month!
+{{else}}
+You exceeded your budget this month, but don't worry - use these insights to improve next month.
+{{/if}}
+
+SUMMARY STATISTICS
+==================
+Total Spent: {{currency}}{{totalSpent}}
+Total Budget: {{currency}}{{totalBudget}}
+{{#if overallPerformance.isPositive}}
+Remaining: {{currency}}{{remainingBudget}}
+{{else}}
+Over Budget: {{currency}}{{overBudget}}
+{{/if}}
+Budget Used: {{utilizationPercentage}}%
+
+BUDGET PERFORMANCE
+==================
+Overall Status: {{#if overallPerformance.isPositive}}✅ Within Budget{{else}}❌ Over Budget{{/if}}
+Categories On Track: {{categoriesOnTrack}}/{{totalCategories}}
+Average Daily Spending: {{currency}}{{avgDailySpending}}
+{{#if savingsRate}}
+Savings Rate: {{savingsRate}}%
+{{/if}}
+
+{{#if categoryBreakdown}}
+CATEGORY BREAKDOWN
+==================
+{{#each categoryBreakdown}}
+{{this.name}}: {{../currency}}{{this.spent}} / {{../currency}}{{this.budget}} ({{this.percentage}}%){{#if this.isOverBudget}} ❌ OVER{{else if (gt this.percentage 80)}} ⚠️ NEAR LIMIT{{else}} ✅ ON TRACK{{/if}}
+{{/each}}
+{{/if}}
+
+{{#if insights}}
+KEY INSIGHTS & RECOMMENDATIONS
+===============================
+{{#each insights}}
+• {{this}}
+{{/each}}
+{{/if}}
+
+ACTIONS
+=======
+View Detailed Budget: {{dashboardUrl}}/budgets
+Generate Report: {{dashboardUrl}}/reports
+{{#unless overallPerformance.isPositive}}
+Adjust Budget: {{dashboardUrl}}/budgets/create
+{{/unless}}
+
+This summary is automatically generated at the end of each month. You can customize your notification preferences or view detailed analytics anytime in your dashboard.
+
+Best regards,
+The {{appName}} Team
+
+Manage Notifications: {{dashboardUrl}}/settings/notifications
+Contact Support: {{supportUrl}}

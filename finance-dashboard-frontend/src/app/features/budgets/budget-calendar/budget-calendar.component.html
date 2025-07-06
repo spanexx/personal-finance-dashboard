@@ -1,0 +1,228 @@
+<div class="budget-calendar">
+  <!-- Calendar Header -->
+  <div class="calendar-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h2>Budget Calendar</h2>
+        <p class="subtitle" *ngIf="budget">{{ budget.name }} - {{ formatDate(selectedDate) }}</p>
+      </div>
+      
+      <div class="controls-section">
+        <!-- View Mode Toggle -->
+        <mat-button-toggle-group [(value)]="viewMode" (change)="changeViewMode($event.value)">
+          <mat-button-toggle value="month">Month</mat-button-toggle>
+          <mat-button-toggle value="week">Week</mat-button-toggle>
+          <mat-button-toggle value="day">Day</mat-button-toggle>
+        </mat-button-toggle-group>
+
+        <!-- Navigation Controls -->
+        <div class="nav-controls">
+          <button mat-icon-button (click)="goToPreviousPeriod()" aria-label="Previous period">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          
+          <button mat-stroked-button (click)="goToToday()">Today</button>
+          
+          <button mat-icon-button (click)="goToNextPeriod()" aria-label="Next period">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar Options -->
+    <div class="calendar-options">
+      <div class="display-options">
+        <mat-checkbox [(ngModel)]="showWeekends">Show Weekends</mat-checkbox>
+        <mat-checkbox [(ngModel)]="showTransactions">Show Transactions</mat-checkbox>
+        <mat-checkbox [(ngModel)]="showAlerts">Show Alerts</mat-checkbox>
+        <mat-checkbox [(ngModel)]="showMilestones">Show Milestones</mat-checkbox>
+      </div>
+
+      <!-- Legend -->
+      <div class="legend">
+        <div class="legend-item" *ngFor="let item of legendItems">
+          <div class="legend-color" [style.background-color]="item.color"></div>
+          <span class="legend-label">{{ item.label }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendar Container -->
+  <div class="calendar-container">
+    <!-- Main Calendar -->
+    <div class="calendar-main">      <mat-calendar
+        #calendar
+        [(selected)]="selectedDate"
+        (selectedChange)="onCalendarSelectedChange($event)"
+        (monthSelected)="onMonthChanged($event)"
+        [dateClass]="dateClass">
+      </mat-calendar>
+
+      <!-- Custom Calendar Overlay for Events -->
+      <div class="calendar-overlay">
+        <div class="month-grid" *ngIf="viewMode === 'month'">
+          <div 
+            class="day-cell"
+            *ngFor="let day of getDaysInMonth()"
+            [class.other-month]="!isCurrentMonth(day)"
+            [class.today]="isToday(day)"
+            [class.selected]="isSameDate(day, selectedDate)"
+            (click)="onDayClick(day)">
+            
+            <div class="day-number">{{ day.getDate() }}</div>
+            
+            <!-- Event Indicators -->
+            <div class="event-indicators" *ngIf="getEventsForDate(day).length > 0">
+              <div 
+                class="event-dot" 
+                *ngFor="let event of getEventsForDate(day).slice(0, 3)"
+                [style.background-color]="event.color"
+                [title]="event.title"
+                (click)="onEventClick(event); $event.stopPropagation()">
+              </div>
+              <div class="more-events" *ngIf="getEventsForDate(day).length > 3">
+                +{{ getEventsForDate(day).length - 3 }}
+              </div>
+            </div>
+
+            <!-- Daily Spending Indicator -->
+            <div class="spending-indicator" *ngIf="getDaySpending(day) > 0">
+              <div class="spending-bar" 
+                   [style.width.%]="getBudgetProgressForDate(day)"
+                   [title]="'Spent: ' + formatCurrency(getDaySpending(day))">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Event Details Sidebar -->
+    <div class="event-sidebar" *ngIf="selectedDateEvents.length > 0">
+      <div class="sidebar-header">
+        <h3>{{ formatDate(selectedDate) }}</h3>
+        <span class="event-count">{{ selectedDateEvents.length }} event(s)</span>
+      </div>
+
+      <div class="event-list">
+        <div 
+          class="event-item"
+          *ngFor="let event of selectedDateEvents"
+          [class]="'event-' + event.type"
+          (click)="onEventClick(event)">
+          
+          <div class="event-indicator" [style.background-color]="event.color"></div>
+          
+          <div class="event-details">
+            <div class="event-title">{{ event.title }}</div>
+            <div class="event-description" *ngIf="event.description">
+              {{ event.description }}
+            </div>
+            <div class="event-amount" *ngIf="event.amount">
+              {{ formatCurrency(event.amount) }}
+            </div>
+            <div class="event-category" *ngIf="event.category">
+              <mat-chip>{{ event.category }}</mat-chip>
+            </div>
+          </div>
+
+          <div class="event-actions">
+            <button mat-icon-button [matMenuTriggerFor]="eventMenu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            
+            <mat-menu #eventMenu="matMenu">
+              <button mat-menu-item *ngIf="event.type === 'transaction'">
+                <mat-icon>edit</mat-icon>
+                <span>Edit Transaction</span>
+              </button>
+              <button mat-menu-item *ngIf="event.type === 'alert'">
+                <mat-icon>visibility_off</mat-icon>
+                <span>Dismiss Alert</span>
+              </button>
+              <button mat-menu-item>
+                <mat-icon>info</mat-icon>
+                <span>View Details</span>
+              </button>
+            </mat-menu>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budget Summary Footer -->
+  <div class="calendar-summary" *ngIf="budget && calendarData$ | async as data">
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="card-icon">
+          <mat-icon>account_balance_wallet</mat-icon>
+        </div>        <div class="card-content">
+          <div class="card-value">{{ formatCurrency(getTotalBudget()) }}</div>
+          <div class="card-label">Total Budget</div>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon">
+          <mat-icon>trending_down</mat-icon>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ formatCurrency(getTotalSpent()) }}</div>
+          <div class="card-label">Total Spent</div>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon">
+          <mat-icon>savings</mat-icon>
+        </div>        <div class="card-content">
+          <div class="card-value">{{ formatCurrency(getRemainingBudget()) }}</div>
+          <div class="card-label">Remaining</div>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon">
+          <mat-icon>timeline</mat-icon>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ getBudgetProgress() }}%</div>
+          <div class="card-label">Period Progress</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-section">
+      <div class="progress-header">
+        <span class="progress-label">Budget Period Progress</span>        <span class="progress-dates">
+          {{ budget ? formatDate(budget.startDate) + ' - ' + formatDate(budget.endDate) : 'No budget period' }}
+        </span>
+      </div>
+      <mat-progress-bar 
+        mode="determinate" 
+        [value]="getBudgetProgress()"
+        [color]="getBudgetProgress() > 90 ? 'warn' : 'primary'">
+      </mat-progress-bar>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="!calendarData$">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading calendar data...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!budget">
+    <mat-icon>event_note</mat-icon>
+    <h3>No Budget Selected</h3>
+    <p>Select a budget to view the calendar planning interface.</p>
+    <button mat-raised-button color="primary" routerLink="/budgets/wizard">
+      Create New Budget
+    </button>
+  </div>
+</div>

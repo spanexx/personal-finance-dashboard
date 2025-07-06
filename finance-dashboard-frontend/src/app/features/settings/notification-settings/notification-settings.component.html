@@ -1,0 +1,400 @@
+<!-- Skip Navigation Links -->
+<div class="skip-links">
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <a href="#form-actions" class="skip-link">Skip to form actions</a>
+</div>
+
+<div class="notification-settings-container" [appFocusTrap]="true" (keydown)="onKeyDown($event)">
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <button 
+        mat-icon-button 
+        class="back-button"
+        (click)="onBack()"
+        aria-label="Go back to settings overview"
+        title="Back to Settings">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      
+      <div class="title-section">
+        <h1 
+          #pageTitle
+          id="page-title"
+          class="page-title"
+          tabindex="-1"
+          aria-describedby="page-description">
+          Notification Settings
+        </h1>
+        <p id="page-description" class="page-description">
+          Configure how and when you receive notifications about your finances
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="main-content" role="main">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container" role="status" aria-live="polite">
+      <mat-spinner diameter="40" aria-label="Loading notification settings"></mat-spinner>
+      <p class="loading-text">Loading your notification preferences...</p>
+    </div>
+
+    <!-- Notification Form -->
+    <form 
+      *ngIf="!isLoading"
+      [formGroup]="notificationForm" 
+      (ngSubmit)="onSubmit()"
+      class="notification-form"
+      novalidate
+      aria-labelledby="page-title">
+
+      <!-- Global Settings Section -->
+      <mat-card class="form-section">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>notifications</mat-icon>
+            Global Settings
+          </mat-card-title>
+          <mat-card-subtitle>
+            Master controls for all notifications
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="toggle-group" role="group" aria-labelledby="global-settings-label">
+            <h3 id="global-settings-label" class="group-label">Master Controls</h3>
+            
+            <div class="toggle-item primary-toggle">
+              <mat-slide-toggle 
+                #firstControl
+                formControlName="globalEnabled"
+                (change)="onGlobalToggleChange($event.checked)"
+                aria-describedby="globalEnabled-help">
+                <span class="toggle-label">Enable All Notifications</span>
+              </mat-slide-toggle>
+              <p id="globalEnabled-help" class="toggle-description">
+                Turn this off to disable all notifications completely
+              </p>
+            </div>
+          </div>
+
+          <div class="notification-channels" role="group" aria-labelledby="channels-label">
+            <h3 id="channels-label" class="group-label">Notification Channels</h3>
+            
+            <div class="channel-row">
+              <div class="channel-item">
+                <mat-slide-toggle 
+                  formControlName="emailNotifications"
+                  (change)="onChannelToggleChange('email', $event.checked)"
+                  [disabled]="!notificationForm.get('globalEnabled')?.value"
+                  aria-describedby="email-help">
+                  <mat-icon>email</mat-icon>
+                  Email Notifications
+                </mat-slide-toggle>
+                <p id="email-help" class="channel-description">
+                  Receive notifications via email
+                </p>
+              </div>
+
+              <div class="channel-item">
+                <mat-slide-toggle 
+                  formControlName="pushNotifications"
+                  (change)="onChannelToggleChange('push', $event.checked)"
+                  [disabled]="!notificationForm.get('globalEnabled')?.value"
+                  aria-describedby="push-help">
+                  <mat-icon>notifications_active</mat-icon>
+                  Push Notifications
+                </mat-slide-toggle>
+                <p id="push-help" class="channel-description">
+                  Receive browser push notifications
+                </p>
+              </div>
+
+              <div class="channel-item">
+                <mat-slide-toggle 
+                  formControlName="smsNotifications"
+                  (change)="onChannelToggleChange('sms', $event.checked)"
+                  [disabled]="!notificationForm.get('globalEnabled')?.value"
+                  aria-describedby="sms-help">
+                  <mat-icon>sms</mat-icon>
+                  SMS Notifications
+                </mat-slide-toggle>
+                <p id="sms-help" class="channel-description">
+                  Receive text message notifications
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="test-section">
+            <button 
+              type="button"
+              mat-stroked-button 
+              class="test-button"
+              (click)="testNotification()"
+              [disabled]="!notificationForm.get('globalEnabled')?.value"
+              aria-label="Send a test notification to verify settings">
+              <mat-icon>send</mat-icon>
+              Send Test Notification
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Delivery Preferences Section -->
+      <mat-card class="form-section">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>schedule</mat-icon>
+            Delivery Preferences
+          </mat-card-title>
+          <mat-card-subtitle>
+            Control when and how often you receive notifications
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="form-row">
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Email Frequency</mat-label>
+              <mat-select 
+                formControlName="emailFrequency"
+                [disabled]="!notificationForm.get('emailNotifications')?.value"
+                aria-describedby="emailFrequency-help">
+                <mat-option *ngFor="let option of frequencyOptions" [value]="option.value">
+                  {{ option.label }}
+                </mat-option>
+              </mat-select>
+              <mat-hint id="emailFrequency-help">How often to send email notifications</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="quiet-hours-section" formGroupName="quietHours">
+            <div class="toggle-item">
+              <mat-slide-toggle 
+                formControlName="enabled"
+                aria-describedby="quietHours-help">
+                Enable Quiet Hours
+              </mat-slide-toggle>
+              <p id="quietHours-help" class="toggle-description">
+                Pause non-urgent notifications during specified hours
+              </p>
+            </div>
+
+            <div 
+              class="time-range" 
+              *ngIf="notificationForm.get('quietHours.enabled')?.value"
+              role="group"
+              aria-labelledby="quiet-hours-times">
+              <h4 id="quiet-hours-times" class="time-label">Quiet Hours Time Range</h4>
+              
+              <div class="time-inputs">
+                <mat-form-field class="time-field" appearance="outline">
+                  <mat-label>Start Time</mat-label>
+                  <input 
+                    matInput 
+                    type="time"
+                    formControlName="startTime"
+                    aria-label="Quiet hours start time">
+                </mat-form-field>
+
+                <span class="time-separator" aria-hidden="true">to</span>
+
+                <mat-form-field class="time-field" appearance="outline">
+                  <mat-label>End Time</mat-label>
+                  <input 
+                    matInput 
+                    type="time"
+                    formControlName="endTime"
+                    aria-label="Quiet hours end time">
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Contact Information Section -->
+      <mat-card class="form-section">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>contact_phone</mat-icon>
+            Contact Information
+          </mat-card-title>
+          <mat-card-subtitle>
+            Update your contact details for notifications
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="form-row">
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Phone Number</mat-label>
+              <input 
+                matInput 
+                type="tel"
+                formControlName="phoneNumber"
+                placeholder="Enter phone number for SMS"
+                autocomplete="tel"
+                [disabled]="!notificationForm.get('smsNotifications')?.value"
+                aria-describedby="phone-help">
+              <mat-hint id="phone-help">Required for SMS notifications</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Alternate Email</mat-label>
+              <input 
+                matInput 
+                type="email"
+                formControlName="alternateEmail"
+                placeholder="Optional backup email"
+                autocomplete="email"
+                aria-describedby="altEmail-help">
+              <mat-hint id="altEmail-help">Backup email for critical notifications</mat-hint>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Notification Types Section -->
+      <mat-card class="form-section notification-types">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>tune</mat-icon>
+            Notification Types
+          </mat-card-title>
+          <mat-card-subtitle>
+            Configure individual notification preferences
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <mat-accordion class="notification-accordion" formArrayName="notifications">
+            <mat-expansion-panel 
+              *ngFor="let category of notificationCategories; let categoryIndex = index"
+              class="category-panel">
+              
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  {{ category }}
+                </mat-panel-title>
+                <mat-panel-description>
+                  {{ getNotificationsByCategory(category).length }} notification types
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <div class="category-content">
+                <div 
+                  *ngFor="let notification of getNotificationsByCategory(category); let i = index; trackBy: trackByNotificationId"
+                  class="notification-item"
+                  [formGroupName]="notificationTypes.indexOf(notification)">
+                  
+                  <div class="notification-header">
+                    <div class="notification-info">
+                      <h4 class="notification-title">{{ notification.title }}</h4>
+                      <p class="notification-description">{{ notification.description }}</p>
+                    </div>
+                    
+                    <mat-slide-toggle 
+                      formControlName="enabled"
+                      (change)="onNotificationToggleChange(notificationTypes.indexOf(notification), 'enabled', $event.checked)"
+                      [disabled]="!notificationForm.get('globalEnabled')?.value"
+                      [attr.aria-label]="'Enable ' + notification.title + ' notifications'">
+                    </mat-slide-toggle>
+                  </div>
+
+                  <div 
+                    class="notification-channels"
+                    *ngIf="notificationsArray.at(notificationTypes.indexOf(notification)).get('enabled')?.value"
+                    role="group"
+                    [attr.aria-labelledby]="'channels-label-' + notification.id">
+                    
+                    <h5 [id]="'channels-label-' + notification.id" class="channels-label">
+                      Delivery channels for {{ notification.title }}
+                    </h5>
+                    
+                    <div class="channel-toggles">
+                      <mat-checkbox 
+                        *ngIf="isChannelAvailable(notification, 'email')"
+                        formControlName="email"
+                        (change)="onNotificationToggleChange(notificationTypes.indexOf(notification), 'email', $event.checked)"
+                        [disabled]="!notificationForm.get('emailNotifications')?.value"
+                        aria-label="Send via email">
+                        <mat-icon>email</mat-icon>
+                        Email
+                      </mat-checkbox>
+
+                      <mat-checkbox 
+                        *ngIf="isChannelAvailable(notification, 'push')"
+                        formControlName="push"
+                        (change)="onNotificationToggleChange(notificationTypes.indexOf(notification), 'push', $event.checked)"
+                        [disabled]="!notificationForm.get('pushNotifications')?.value"
+                        aria-label="Send via push notification">
+                        <mat-icon>notifications</mat-icon>
+                        Push
+                      </mat-checkbox>
+
+                      <mat-checkbox 
+                        *ngIf="isChannelAvailable(notification, 'sms')"
+                        formControlName="sms"
+                        (change)="onNotificationToggleChange(notificationTypes.indexOf(notification), 'sms', $event.checked)"
+                        [disabled]="!notificationForm.get('smsNotifications')?.value"
+                        aria-label="Send via SMS">
+                        <mat-icon>sms</mat-icon>
+                        SMS
+                      </mat-checkbox>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </mat-expansion-panel>
+          </mat-accordion>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Form Actions -->
+      <div id="form-actions" class="form-actions" role="group" aria-label="Form actions">
+        <button 
+          type="button"
+          mat-stroked-button 
+          class="cancel-button"
+          (click)="onBack()"
+          [disabled]="isSaving"
+          aria-label="Cancel and return to settings">
+          <mat-icon>cancel</mat-icon>
+          Cancel
+        </button>
+
+        <button 
+          type="submit"
+          mat-raised-button 
+          color="primary"
+          class="save-button"
+          [disabled]="isSaving || !hasUnsavedChanges"
+          [attr.aria-label]="isSaving ? 'Saving notification settings' : 'Save notification settings'">
+          <mat-spinner *ngIf="isSaving" diameter="20" class="button-spinner"></mat-spinner>
+          <mat-icon *ngIf="!isSaving">save</mat-icon>
+          {{ isSaving ? 'Saving...' : 'Save Settings' }}
+        </button>
+      </div>
+
+      <!-- Unsaved Changes Warning -->
+      <div 
+        *ngIf="hasUnsavedChanges && !isSaving" 
+        class="unsaved-warning"
+        role="status"
+        aria-live="polite">
+        <mat-icon>warning</mat-icon>
+        <span>You have unsaved changes</span>
+      </div>
+    </form>
+  </main>
+</div>
+
+<!-- Screen Reader Only Instructions -->
+<div class="sr-only" aria-live="polite" aria-atomic="true">
+  <span *ngIf="isSaving">Saving your notification settings, please wait...</span>
+  <span *ngIf="hasUnsavedChanges && !isSaving">You have unsaved changes. Use Ctrl+S to save or the Cancel button to discard changes.</span>
+</div>

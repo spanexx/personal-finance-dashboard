@@ -1,0 +1,695 @@
+@import '../../../../assets/styles/variables';
+@import '../../../../assets/styles/mixins';
+
+.register-container {
+  min-height: 100vh;
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
+  position: relative;
+  overflow-y: auto;
+  
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 80%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  &::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 20px;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 520px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 
+    0 32px 64px rgba(0, 0, 0, 0.15),
+    0 16px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 2;
+  margin-bottom: 20px;
+  
+  @media (max-width: 768px) {
+    max-width: 100%;
+    padding: 24px 16px;
+    margin: 0;
+    border-radius: 16px;
+  }
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.register-title {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.2;
+  
+  @media (max-width: 768px) {
+    font-size: 24px;
+  }
+}
+
+.register-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+.register-stepper {
+  ::ng-deep {
+    .mat-stepper-horizontal {
+      .mat-stepper-header {
+        padding: 0 16px;
+        margin-bottom: 24px;
+        
+        .mat-stepper-label {
+          font-size: 14px;
+          font-weight: 500;
+          color: #6b7280;
+        }
+        
+        .mat-step-icon {
+          background-color: #e5e7eb;
+          color: #6b7280;
+          width: 32px;
+          height: 32px;
+          line-height: 32px;
+          font-size: 14px;
+          font-weight: 600;
+        }
+        
+        .mat-step-icon-selected {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+        }
+        
+        .mat-step-icon-state-done {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+        }
+      }
+    }
+    
+    .mat-stepper-content {
+      padding: 0;
+    }
+    
+    .mat-stepper-header-position-bottom {
+      .mat-stepper-header {
+        margin-bottom: 0;
+        margin-top: 24px;
+      }
+    }
+  }
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.step-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 24px;
+  text-align: center;
+  
+  @media (max-width: 768px) {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+}
+
+.form-field {
+  width: 100%;
+  
+  ::ng-deep {
+    .mat-form-field-appearance-outline {
+      .mat-form-field-outline {
+        border-radius: 12px;
+        border-color: #e5e7eb;
+      }
+      
+      .mat-form-field-outline-thick {
+        border-color: #667eea;
+        border-width: 2px;
+      }
+      
+      &.mat-focused .mat-form-field-outline-thick {
+        border-color: #667eea;
+      }
+      
+      .mat-form-field-label {
+        color: #6b7280;
+        font-weight: 500;
+      }
+      
+      &.mat-focused .mat-form-field-label {
+        color: #667eea;
+      }
+      
+      .mat-form-field-prefix .mat-icon {
+        color: #9ca3af;
+        margin-right: 8px;
+      }
+      
+      &.mat-focused .mat-form-field-prefix .mat-icon {
+        color: #667eea;
+      }
+      
+      .mat-form-field-suffix .mat-icon-button {
+        width: 36px;
+        height: 36px;
+        
+        .mat-icon {
+          color: #9ca3af;
+          font-size: 20px;
+        }
+      }
+      
+      .mat-input-element {
+        font-size: 16px;
+        color: #1f2937;
+        
+        &::placeholder {
+          color: #9ca3af;
+          opacity: 1;
+        }
+      }
+    }
+    
+    .mat-error {
+      font-size: 13px;
+      color: #ef4444;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  }
+}
+
+// Password Strength Indicator
+.password-strength {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.strength-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.strength-bar {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.strength-fill {
+  height: 100%;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+  
+  &.strength-weak {
+    width: 25%;
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+  }
+  
+  &.strength-fair {
+    width: 50%;
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+  }
+  
+  &.strength-good {
+    width: 75%;
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+  }
+  
+  &.strength-strong {
+    width: 100%;
+    background: linear-gradient(90deg, #10b981, #059669);
+  }
+}
+
+.strength-text {
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  
+  &.strength-weak { color: #ef4444; }
+  &.strength-fair { color: #f59e0b; }
+  &.strength-good { color: #3b82f6; }
+  &.strength-strong { color: #10b981; }
+}
+
+.password-requirements {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.requirement {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+  transition: color 0.2s ease;
+  
+  &.met {
+    color: #10b981;
+  }
+  
+  .requirement-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// Verification Step
+.verification-step {
+  text-align: center;
+}
+
+.email-sent-card, .email-verified-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 32px 24px;
+  margin-bottom: 24px;
+  
+  @media (max-width: 768px) {
+    padding: 24px 16px;
+  }
+}
+
+.email-icon, .success-icon {
+  font-size: 48px;
+  color: #667eea;
+  margin-bottom: 16px;
+  
+  &.success-icon {
+    color: #10b981;
+  }
+}
+
+.email-sent-card h3, .email-verified-card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.email-sent-card p, .email-verified-card p {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.email-address {
+  font-size: 16px;
+  font-weight: 600;
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  padding: 8px 16px;
+  border-radius: 8px;
+  display: inline-block;
+  margin: 8px 0 16px;
+}
+
+.verification-instructions {
+  margin: 24px 0;
+  
+  .instruction-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    font-size: 14px;
+    color: #4b5563;
+    
+    mat-icon {
+      color: #667eea;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+    
+    span {
+      font-weight: 500;
+    }
+  }
+}
+
+.verification-code {
+  margin: 24px 0;
+  
+  .code-field {
+    max-width: 200px;
+    margin: 0 auto;
+    
+    ::ng-deep {
+      .mat-input-element {
+        text-align: center;
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 2px;
+      }
+    }
+  }
+}
+
+.verification-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin: 16px 0;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.resend-section {
+  margin-top: 16px;
+  
+  p {
+    font-size: 13px;
+    color: #9ca3af;
+    margin-bottom: 8px;
+  }
+}
+
+// Step Actions
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 32px;
+  gap: 16px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column-reverse;
+    gap: 12px;
+  }
+}
+
+.link-button {
+  color: #667eea !important;
+  font-weight: 500;
+  
+  &:hover {
+    background: rgba(102, 126, 234, 0.1) !important;
+  }
+}
+
+.back-button, .next-button, .verify-button, .complete-button {
+  min-width: 120px;
+  height: 44px;
+  font-weight: 500;
+  border-radius: 12px;
+  font-size: 14px;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+.back-button {
+  background: transparent !important;
+  color: #6b7280 !important;
+  border: 1px solid #e5e7eb;
+  
+  &:hover {
+    background: #f9fafb !important;
+    border-color: #d1d5db;
+  }
+  
+  .mat-icon {
+    margin-right: 4px;
+    font-size: 18px;
+  }
+}
+
+.next-button, .verify-button, .complete-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  border: none;
+  box-shadow: 
+    0 4px 12px rgba(102, 126, 234, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 
+      0 6px 16px rgba(102, 126, 234, 0.5),
+      0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  &:disabled {
+    background: #e5e7eb !important;
+    color: #9ca3af !important;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  
+  .mat-icon {
+    margin-left: 4px;
+    font-size: 18px;
+  }
+  
+  .button-spinner {
+    margin-right: 8px;
+  }
+}
+
+// Error Container
+.error-container {
+  margin-top: 24px;
+}
+
+.error-card {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  
+  ::ng-deep .mat-card-content {
+    padding: 16px !important;
+  }
+}
+
+.error-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.error-icon {
+  color: #ef4444;
+  font-size: 24px;
+  margin-top: 2px;
+}
+
+.error-text {
+  flex: 1;
+  
+  h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ef4444;
+    margin-bottom: 4px;
+  }
+  
+  p {
+    font-size: 14px;
+    color: #7f1d1d;
+    line-height: 1.5;
+    margin: 0;
+  }
+}
+
+// Progress Indicator
+.progress-indicator {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+// Accessibility & Reduced Motion
+@media (prefers-reduced-motion: reduce) {
+  .strength-fill,
+  .progress-fill,
+  .next-button,
+  .verify-button,
+  .complete-button {
+    transition: none;
+  }
+  
+  .next-button:hover:not(:disabled),
+  .verify-button:hover:not(:disabled),
+  .complete-button:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+// High Contrast Mode
+@media (prefers-contrast: high) {
+  .register-card {
+    background: white;
+    border: 2px solid #000;
+  }
+  
+  .register-title {
+    background: none;
+    -webkit-text-fill-color: initial;
+    color: #000;
+  }
+  
+  .form-field ::ng-deep .mat-form-field-outline {
+    border-color: #000;
+  }
+}
+
+.form-field {
+  margin-bottom: $spacing-4;
+}
+
+.notification-prefs {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: $spacing-6;
+  
+  h3 {
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    margin-bottom: $spacing-3;
+    color: $text-primary;
+  }
+  
+  mat-checkbox {
+    margin-bottom: $spacing-2;
+  }
+}
+
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: $spacing-4;
+}
+
+.button-spinner {
+  display: inline-block;
+  margin-right: $spacing-2;
+}
+
+// Custom styling for stepper
+::ng-deep {
+  .mat-horizontal-stepper-header-container {
+    margin-bottom: $spacing-4;
+  }
+  
+  .mat-step-icon {
+    background-color: $primary-500;
+  }
+  
+  .mat-step-label {
+    font-weight: $font-weight-medium;
+  }
+}
+
+// Responsive adjustments
+@include respond-down(sm) {
+  .register-card {
+    padding: $spacing-4;
+  }
+  
+  .register-title {
+    font-size: $font-size-xl;
+  }
+  
+  ::ng-deep {
+    .mat-horizontal-stepper-header-container {
+      display: none !important;
+    }
+  }
+}

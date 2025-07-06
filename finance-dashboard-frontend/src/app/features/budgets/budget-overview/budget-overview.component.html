@@ -1,0 +1,207 @@
+<div class="budget-overview-container">
+  <!-- Header Section -->
+  <div class="budget-header">
+    <div class="header-content">
+      <h1 class="page-title">Budget Overview</h1>
+      <div class="header-actions">
+        <button mat-stroked-button routerLink="/budgets/setup" class="action-button">
+          <mat-icon>settings</mat-icon>
+          Setup Budget
+        </button>
+        <button mat-stroked-button routerLink="/budgets/analysis" class="action-button">
+          <mat-icon>analytics</mat-icon>
+          View Analysis
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading$ | async" class="loading-container">
+    <mat-card class="loading-card">
+      <mat-card-content>
+        <div class="loading-content">
+          <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+          <p>Loading budget information...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="(error$ | async) && !(isLoading$ | async)" class="error-container">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon class="error-icon">error_outline</mat-icon>
+          <h3>Error Loading Budget</h3>
+          <p>{{ error$ | async }}</p>
+          <button mat-raised-button color="primary" (click)="dispatchLoadCurrentBudget()">
+            <mat-icon>refresh</mat-icon>
+            Try Again
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- No Budget State -->
+  <div *ngIf="!(selectedBudget$ | async) && !(isLoading$ | async) && !(error$ | async)" class="no-budget-container">
+    <mat-card class="no-budget-card">
+      <mat-card-content>
+        <div class="no-budget-content">
+          <mat-icon class="no-budget-icon">account_balance_wallet</mat-icon>
+          <h3>No Active Budget</h3>
+          <p>You don't have an active budget set up. Create your first budget to start tracking your expenses.</p>
+          <button mat-raised-button color="primary" routerLink="/budgets/setup">
+            <mat-icon>add</mat-icon>
+            Create Budget
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Budget Content -->
+  <ng-container *ngIf="(selectedBudget$ | async) as currentBudget">
+    <div *ngIf="currentBudget && !(isLoading$ | async)" class="budget-content">
+      <!-- Budget Summary Card -->
+      <mat-card class="budget-summary-card">
+        <mat-card-header>
+          <mat-card-title>{{ currentBudget.name }}</mat-card-title>
+          <mat-card-subtitle>
+            {{ formatDate(currentBudget.startDate) }} - {{ formatDate(currentBudget.endDate) }}
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+        <div class="budget-summary-grid">
+          <!-- Total Budget -->
+          <div class="summary-item">
+            <div class="summary-label">Total Budget</div>
+            <div class="summary-value primary">{{ formatCurrency(budgetProgress?.totalBudget || 0) }}</div>
+          </div>
+
+            <!-- Total Spent -->
+            <div class="summary-item">
+              <div class="summary-label">Total Spent</div>
+              <div class="summary-value spent">{{ formatCurrency(budgetProgress?.totalSpent || 0) }}</div>
+            </div>
+
+            <!-- Remaining -->
+            <div class="summary-item">
+              <div class="summary-label">Remaining</div>
+              <div class="summary-value" 
+                   [ngClass]="budgetProgress?.totalRemaining >= 0 ? 'remaining-positive' : 'remaining-negative'">
+                {{ formatCurrency(budgetProgress?.totalRemaining || 0) }}
+              </div>
+            </div>
+
+            <!-- Progress Percentage -->
+            <div class="summary-item">
+              <div class="summary-label">Progress</div>
+              <div class="summary-value">{{ budgetProgress?.percentageSpent || 0 }}%</div>
+            </div>
+          </div>
+
+          <!-- Overall Progress Bar -->
+          <div class="overall-progress">
+            <div class="progress-header">
+              <span class="progress-label">Overall Budget Progress</span>
+              <span class="progress-percentage">{{ budgetProgress?.percentageSpent || 0 }}%</span>
+            </div>
+            <mat-progress-bar 
+              mode="determinate" 
+              [value]="budgetProgress?.percentageSpent || 0"
+              [color]="getOverallProgressColor()">
+            </mat-progress-bar>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Categories Breakdown -->
+      <mat-card class="categories-card">
+        <mat-card-header>
+          <mat-card-title>Categories Breakdown</mat-card-title>
+          <mat-card-subtitle>Budget allocation by category</mat-card-subtitle>
+        </mat-card-header>
+
+      <mat-card-content>
+        <div class="categories-list" *ngIf="currentBudget.categories">
+          <div *ngFor="let category of currentBudget.categories" 
+               class="category-item"
+               [ngClass]="getCategoryStatusClass(category)">
+            
+            <!-- Category Header -->            <div class="category-header">
+              <div class="category-info">
+                <div class="category-icon-container" [style.background-color]="getCategoryColor(category)">
+                  <mat-icon class="category-icon">{{ getCategoryIcon(category) }}</mat-icon>
+                </div>
+                <div class="category-details">
+                  <h4 class="category-name">{{ getCategoryDisplayName(category) }}</h4>
+                  <div class="category-amounts">
+                    <span class="spent-amount">{{ formatCurrency(category.spent) }}</span>
+                    <span class="separator">of</span>
+                    <span class="budget-amount">{{ formatCurrency(category.allocated) }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="category-remaining">
+                <div class="remaining-amount" 
+                     [ngClass]="category.remaining >= 0 ? 'positive' : 'negative'">
+                  {{ formatCurrency(category.remaining) }}
+                </div>
+                <div class="remaining-label">remaining</div>
+              </div>
+            </div>
+
+              <!-- Category Progress Bar -->
+              <div class="category-progress">
+                <mat-progress-bar 
+                  mode="determinate" 
+                  [value]="getCategoryProgressPercentage(category)"
+                  [color]="budgetService.getCategoryStatus(category) === 'over' ? 'warn' : 
+                           budgetService.getCategoryStatus(category) === 'warning' ? 'accent' : 'primary'">
+                </mat-progress-bar>
+                <div class="progress-percentage">
+                  {{ Math.round(getCategoryProgressPercentage(category)) }}%
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Quick Actions -->
+      <mat-card class="quick-actions-card">
+        <mat-card-header>
+          <mat-card-title>Quick Actions</mat-card-title>
+        </mat-card-header>
+
+      <mat-card-content>
+        <div class="quick-actions-grid">
+          <button mat-stroked-button routerLink="/transactions/new" class="quick-action-button"> <!-- Link to new transaction -->
+            <mat-icon>add</mat-icon>
+            <span>Add Transaction</span>
+          </button>
+
+          <button mat-stroked-button [routerLink]="['/budgets/setup', currentBudget._id]" class="quick-action-button"> <!-- Link to edit current budget -->
+            <mat-icon>edit</mat-icon>
+            <span>Edit Budget</span>
+          </button>
+
+          <button mat-stroked-button [routerLink]="['/budgets/analysis', currentBudget._id]" class="quick-action-button"> <!-- Link to analysis for current budget -->
+            <mat-icon>bar_chart</mat-icon>
+            <span>View Reports</span>
+          </button>
+
+          <button mat-stroked-button routerLink="/goals" class="quick-action-button">
+            <mat-icon>track_changes</mat-icon>
+            <span>Savings Goals</span>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    </div>
+  </ng-container>
+</div>

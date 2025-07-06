@@ -1,0 +1,241 @@
+<div class="data-export-dialog">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>
+      <mat-icon>download</mat-icon>
+      Export Your Data
+    </h2>
+    <p class="dialog-subtitle">
+      Download a copy of your personal data in compliance with GDPR regulations
+    </p>
+  </div>
+
+  <mat-dialog-content>
+    <form [formGroup]="exportForm" (ngSubmit)="onSubmit()">
+      <!-- Export Format Selection -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <mat-icon>description</mat-icon>
+          Export Format
+        </h3>
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>File Format</mat-label>
+          <mat-select formControlName="format" [attr.aria-describedby]="'format-help'">
+            <mat-option *ngFor="let format of exportFormats" [value]="format.value">
+              <div class="format-option">
+                <span class="format-name">{{ format.label }}</span>
+                <span class="format-description">{{ format.description }}</span>
+              </div>
+            </mat-option>
+          </mat-select>
+          <mat-hint id="format-help">
+            {{ getSelectedFormatDescription() }}
+          </mat-hint>
+        </mat-form-field>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Data Categories Selection -->
+      <div class="form-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <mat-icon>category</mat-icon>
+            Data Categories
+          </h3>
+          <div class="selection-controls">
+            <button type="button" 
+                    mat-button 
+                    (click)="selectAllDataTypes()"
+                    aria-label="Select all data categories">
+              Select All
+            </button>
+            <button type="button" 
+                    mat-button 
+                    (click)="selectNoneDataTypes()"
+                    aria-label="Deselect all data categories">
+              Select None
+            </button>
+          </div>
+        </div>        <div class="data-categories">
+          <div *ngFor="let category of exportCategories; let i = index" 
+               class="category-item">
+            <mat-checkbox [formControl]="getCategoryControl(i)"
+                         [attr.aria-describedby]="'category-' + category.id + '-help'">
+              <div class="category-content">
+                <span class="category-label">{{ category.name }}</span>
+                <span class="category-description" 
+                      [id]="'category-' + category.id + '-help'">
+                  {{ category.description }}
+                </span>
+              </div>
+            </mat-checkbox>
+          </div>
+        </div>
+
+        <div class="selection-summary" *ngIf="selectedDataTypes.length > 0">
+          <mat-icon>info</mat-icon>
+          <span>{{ selectedDataTypes.length }} of {{ exportCategories.length }} categories selected</span>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Date Range Filter -->
+      <div class="form-section" formGroupName="dateRange">
+        <h3 class="section-title">
+          <mat-icon>date_range</mat-icon>
+          Date Range Filter
+        </h3>
+
+        <div class="date-range-toggle">
+          <mat-checkbox formControlName="enabled"
+                       [attr.aria-describedby]="'date-range-help'">
+            Limit data to specific date range
+          </mat-checkbox>
+          <p id="date-range-help" class="help-text">
+            Only export data within the specified date range
+          </p>
+        </div>
+
+        <div class="date-range-inputs" *ngIf="exportForm.get('dateRange.enabled')?.value">
+          <mat-form-field appearance="outline">
+            <mat-label>Start Date</mat-label>
+            <input matInput 
+                   [matDatepicker]="startPicker" 
+                   formControlName="startDate"
+                   [max]="exportForm.get('dateRange.endDate')?.value"
+                   readonly>
+            <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+            <mat-error *ngIf="exportForm.get('dateRange.startDate')?.hasError('required')">
+              Start date is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>End Date</mat-label>            <input matInput 
+                   [matDatepicker]="endPicker" 
+                   formControlName="endDate"
+                   [min]="exportForm.get('dateRange.startDate')?.value"
+                   [max]="maxDate"
+                   readonly>
+            <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+            <mat-error *ngIf="exportForm.get('dateRange.endDate')?.hasError('required')">
+              End date is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Additional Options -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <mat-icon>settings</mat-icon>
+          Additional Options
+        </h3>
+
+        <div class="options-list">
+          <mat-checkbox formControlName="includeAttachments"
+                       [attr.aria-describedby]="'attachments-help'">
+            Include file attachments
+          </mat-checkbox>
+          <p id="attachments-help" class="help-text">
+            Include any uploaded files and documents (may increase file size significantly)
+          </p>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email Address</mat-label>
+          <input matInput 
+                 type="email" 
+                 formControlName="email"
+                 [attr.aria-describedby]="'email-help'">
+          <mat-icon matSuffix>email</mat-icon>
+          <mat-hint id="email-help">
+            We'll send you a download link when your export is ready
+          </mat-hint>
+          <mat-error *ngIf="exportForm.get('email')?.hasError('required')">
+            Email address is required
+          </mat-error>
+          <mat-error *ngIf="exportForm.get('email')?.hasError('email')">
+            Please enter a valid email address
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Export Summary -->
+      <div class="export-summary" *ngIf="selectedDataTypes.length > 0">
+        <div class="summary-header">
+          <mat-icon>summarize</mat-icon>
+          <h4>Export Summary</h4>
+        </div>
+        
+        <div class="summary-details">
+          <div class="summary-item">
+            <span class="label">Format:</span>
+            <span class="value">{{ exportForm.get('format')?.value?.toUpperCase() }}</span>
+          </div>
+          
+          <div class="summary-item">
+            <span class="label">Data Categories:</span>
+            <span class="value">{{ selectedDataTypes.length }} selected</span>
+          </div>
+          
+          <div class="summary-item" *ngIf="exportForm.get('dateRange.enabled')?.value">
+            <span class="label">Date Range:</span>
+            <span class="value">
+              {{ exportForm.get('dateRange.startDate')?.value | date:'shortDate' }} - 
+              {{ exportForm.get('dateRange.endDate')?.value | date:'shortDate' }}
+            </span>
+          </div>
+          
+          <div class="summary-item">
+            <span class="label">Estimated Size:</span>
+            <span class="value">{{ getEstimatedFileSize() }}</span>
+          </div>
+        </div>
+        
+        <div class="processing-notice">
+          <mat-icon class="warning-icon">schedule</mat-icon>
+          <p>
+            <strong>Processing Time:</strong> Depending on the amount of data, 
+            your export may take several minutes to complete. You'll receive an 
+            email notification when it's ready for download.
+          </p>
+        </div>
+      </div>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button 
+            type="button" 
+            (click)="onCancel()"
+            aria-label="Cancel data export">
+      Cancel
+    </button>
+    
+    <button mat-raised-button 
+            color="primary" 
+            type="submit"
+            [disabled]="exportForm.invalid || selectedDataTypes.length === 0"
+            (click)="onSubmit()"
+            aria-label="Start data export">
+      <mat-icon>download</mat-icon>
+      Export Data
+    </button>
+  </mat-dialog-actions>
+
+  <!-- Legal Notice -->
+  <div class="legal-notice">
+    <mat-icon class="info-icon">info</mat-icon>
+    <p>
+      This export is provided in compliance with GDPR Article 15 (Right of Access) and Article 20 (Right to Data Portability). 
+      The exported data will be available for download for 7 days, after which it will be automatically deleted from our servers.
+    </p>
+  </div>
+</div>
