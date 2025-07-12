@@ -5,12 +5,16 @@ import { map } from 'rxjs/operators';
 import { AuthUser, AuthTokens } from '../../store/state/auth.state';
 import { UserSession, PasswordStrengthResult } from '../../shared/models';
 import { environment } from '../../../environments/environment';
+import { TokenService } from './token.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthenticationService {
   private apiUrl = `${environment.apiUrl}/auth`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private tokenService: TokenService
+  ) {}
 
   register(email: string, password: string, firstName: string, lastName: string, username: string): Observable<{ user: AuthUser; tokens: AuthTokens; emailVerificationSent: boolean }> {
     return this.http.post<any>(`${this.apiUrl}/register`, { email, password, firstName, lastName, username }).pipe(
@@ -117,8 +121,15 @@ export class AuthenticationService {
   });
 
   public getToken(): string {
-    // Return a stub token; replace with real logic as needed
-    return 'stub-token';
+    // Use TokenService to get the access token
+    const token = this.tokenService.getAccessToken();
+    return token || '';
+  }
+
+  // Helper method to check if user is authenticated
+  public isAuthenticated(): boolean {
+    const token = this.getToken();
+    return !!token && token.length > 10; // Basic validation
   }
 
   // Add more methods as needed
