@@ -69,8 +69,17 @@ class ImportService {
     let importResult;
 
     try {
-      // Parse file based on format
-      const rawData = await this.parseFile(file, detectedFormat, options);
+      // Parse file based on format - handle both file paths and buffers
+      let rawData;
+      if (file.path) {
+        // File path provided
+        rawData = await this.parseFile(file, detectedFormat, options);
+      } else if (file.buffer) {
+        // File buffer provided
+        rawData = await this.parseFileFromBuffer(file.buffer, file.mimetype, file.originalname);
+      } else {
+        throw new ValidationError('Invalid file object provided');
+      }
       
       // Process data based on type
       switch (dataType) {
@@ -127,7 +136,7 @@ class ImportService {
         logger.warn('Failed to clean up uploaded file:', unlinkError.message);
       }
 
-      logger.info(`Import completed for user ${userId}: ${importResult.importedCount} records imported`);
+      logger.info(`Import completed for user ${userId}: ${importResult.recordsImported} records imported`);
       return importResult;
 
     } catch (error) {
@@ -292,6 +301,97 @@ class ImportService {
   }
 
   /**
+   * Parse file from buffer
+   * @param {Buffer} buffer - File buffer
+   * @param {string} mimetype - File mimetype
+   * @param {string} originalname - Original filename
+   * @returns {Promise<Array>} Parsed data
+   */
+  static async parseFileFromBuffer(buffer, mimetype, originalname) {
+    const format = this.detectFileFormat({ mimetype });
+    
+    switch (format) {
+      case 'csv':
+        return await this.parseCSVFromBuffer(buffer);
+      case 'excel':
+        return await this.parseExcelFromBuffer(buffer);
+      case 'json':
+        return await this.parseJSONFromBuffer(buffer);
+      default:
+        throw new ValidationError(`Unsupported file format: ${format}`);
+    }
+  }
+
+  /**
+   * Parse CSV from buffer
+   * @param {Buffer} buffer - File buffer
+   * @returns {Promise<Array>} Parsed data
+   */
+  static async parseCSVFromBuffer(buffer) {
+    return new Promise((resolve, reject) => {
+      const results = [];
+      const { Readable } = require('stream');
+      
+      const readable = new Readable();
+      readable.push(buffer);
+      readable.push(null);
+      
+      readable
+        .pipe(csv())
+        .on('data', (row) => {
+          results.push(row);
+        })
+        .on('end', () => {
+          resolve(results);
+        })
+        .on('error', (error) => {
+          reject(error);
+        });
+    });
+  }
+
+  /**
+   * Parse Excel from buffer
+   * @param {Buffer} buffer - File buffer
+   * @returns {Promise<Array>} Parsed data
+   */
+  static async parseExcelFromBuffer(buffer) {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer);
+    
+    const worksheet = workbook.getWorksheet(1); // Get first worksheet
+    const results = [];
+    
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return; // Skip header row
+      
+      const rowData = {};
+      row.eachCell((cell, colNumber) => {
+        const header = worksheet.getRow(1).getCell(colNumber).value;
+        rowData[header] = cell.value;
+      });
+      results.push(rowData);
+    });
+    
+    return results;
+  }
+
+  /**
+   * Parse JSON from buffer
+   * @param {Buffer} buffer - File buffer
+   * @returns {Promise<Array>} Parsed data
+   */
+  static async parseJSONFromBuffer(buffer) {
+    try {
+      const jsonString = buffer.toString('utf8');
+      const data = JSON.parse(jsonString);
+      return Array.isArray(data) ? data : [data];
+    } catch (error) {
+      throw new ValidationError('Invalid JSON format');
+    }
+  }
+
+  /**
    * Import transactions with validation and duplicate detection
    * @param {string} userId - User ID
    * @param {Array} rawData - Raw transaction data
@@ -319,6 +419,7 @@ class ImportService {
       type: ['type', 'Type', 'transaction_type', 'Transaction Type'],
       category: ['category', 'Category', 'category_name'],
       payee: ['payee', 'Payee', 'merchant', 'Merchant'],
+      paymentMethod: ['paymentMethod', 'payment_method', 'Payment Method', 'method'],
       notes: ['notes', 'Notes', 'memo', 'comment'],
       reference: ['reference', 'Reference', 'ref', 'transaction_id']
     };
@@ -409,11 +510,11 @@ class ImportService {
     }
 
     return {
-      importedCount: importedTransactions.length,
-      totalRows: rawData.length,
-      validationErrors,
-      duplicates,
-      importErrors,
+      recordsProcessed: rawData.length,
+      recordsImported: importedTransactions.length,
+      recordsSkipped: duplicates.length,
+      errors: validationErrors.concat(importErrors),
+      warnings: [],
       summary: {
         processed: rawData.length,
         validated: validatedTransactions.length,
@@ -544,6 +645,7 @@ class ImportService {
       user: userId,
       category: categoryId,
       payee: data.payee ? data.payee.toString().trim() : undefined,
+      paymentMethod: data.paymentMethod ? data.paymentMethod.toString().trim() : 'cash',
       notes: data.notes ? data.notes.toString().trim() : undefined,
       status: 'completed',
       referenceNumber: data.reference ? data.reference.toString().trim() : undefined
@@ -653,10 +755,11 @@ class ImportService {
     }
 
     return {
-      importedCount: importedBudgets.length,
-      totalRows: rawData.length,
-      validationErrors,
-      duplicates,
+      recordsProcessed: rawData.length,
+      recordsImported: importedBudgets.length,
+      recordsSkipped: duplicates.length,
+      errors: validationErrors,
+      warnings: [],
       summary: {
         processed: rawData.length,
         validated: validatedBudgets.length,
@@ -861,10 +964,11 @@ class ImportService {
     }
 
     return {
-      importedCount: importedGoals.length,
-      totalRows: rawData.length,
-      validationErrors,
-      duplicates,
+      recordsProcessed: rawData.length,
+      recordsImported: importedGoals.length,
+      recordsSkipped: duplicates.length,
+      errors: validationErrors,
+      warnings: [],
       summary: {
         processed: rawData.length,
         validated: validatedGoals.length,
@@ -1061,10 +1165,11 @@ class ImportService {
     }
 
     return {
-      importedCount: importedCategories.length,
-      totalRows: rawData.length,
-      validationErrors,
-      duplicates,
+      recordsProcessed: rawData.length,
+      recordsImported: importedCategories.length,
+      recordsSkipped: duplicates.length,
+      errors: validationErrors,
+      warnings: [],
       summary: {
         processed: rawData.length,
         validated: validatedCategories.length,
@@ -1284,14 +1389,24 @@ class ImportService {
 
   /**
    * Validate import file before processing
-   * @param {string} filePath - File path
+   * @param {string|Object} fileInput - File path or file object with buffer
    * @param {string} type - Data type
    * @returns {Promise<Object>} Validation result
    */
-  static async validateImportFile(filePath, type) {
+  static async validateImportFile(fileInput, type) {
     try {
-      // Parse file to check structure
-      const data = await this.parseFile({ path: filePath }, this.detectFileFormat({ mimetype: 'text/csv' }));
+      let data;
+      
+      // Handle both file path and file object with buffer
+      if (typeof fileInput === 'string') {
+        // File path provided
+        data = await this.parseFile({ path: fileInput }, this.detectFileFormat({ mimetype: 'text/csv' }));
+      } else if (fileInput && fileInput.buffer) {
+        // File object with buffer provided
+        data = await this.parseFileFromBuffer(fileInput.buffer, fileInput.mimetype, fileInput.originalname);
+      } else {
+        throw new ValidationError('Invalid file input provided');
+      }
       
       if (!Array.isArray(data) || data.length === 0) {
         throw new ValidationError('File appears to be empty or invalid format');

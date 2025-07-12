@@ -409,7 +409,10 @@ budgetSchema.methods.calculateSpentAmount = async function(categoryId = null) {
       matchStage.category = { $in: categoryIds };
     }
   }
-  
+
+  // Debug logging
+  console.log('[Budget.calculateSpentAmount] matchStage:', JSON.stringify(matchStage));
+
   const result = await Transaction.aggregate([
     { $match: matchStage },
     {
@@ -419,7 +422,10 @@ budgetSchema.methods.calculateSpentAmount = async function(categoryId = null) {
       }
     }
   ]);
-  
+
+  // Debug logging
+  console.log('[Budget.calculateSpentAmount] aggregation result:', JSON.stringify(result));
+
   if (categoryId) {
     // Return single category spending
     return result.length > 0 ? result[0].totalSpent : 0;
@@ -441,6 +447,7 @@ budgetSchema.methods.calculateSpentAmount = async function(categoryId = null) {
     return totalSpent;
   }
 };
+
 
 // Get budget performance with variance analysis
 budgetSchema.methods.getBudgetPerformance = async function() {
@@ -821,6 +828,15 @@ budgetSchema.statics.cleanupDeletedBudgets = function(olderThanDays = 90) {
     isDeleted: true,
     deletedAt: { $lt: cutoffDate }
   });
+};
+
+// Always get a fresh budget with up-to-date spent amounts
+budgetSchema.statics.getFreshBudgetById = async function(budgetId) {
+  const budget = await this.findById(budgetId).populate('categoryAllocations.category', 'name type color icon');
+  if (budget) {
+    await budget.calculateSpentAmount();
+  }
+  return budget;
 };
 
 // Export the model

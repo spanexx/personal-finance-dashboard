@@ -98,4 +98,33 @@ router.get('/spending-analysis', reportController.getSpendingAnalysis);
  */
 router.get('/dashboard-summary', reportController.getDashboardSummaryV2);
 
+/**
+ * @route   POST /api/reports/generate
+ * @desc    Generate a report based on type and parameters
+ * @access  Private
+ */
+router.post('/generate', reportController.generateReport);
+
+/**
+ * @route   GET /api/reports/recent
+ * @desc    Get recent reports for the authenticated user
+ * @access  Private
+ * @params  limit (optional)
+ */
+router.get('/recent', reportController.getRecentReports);
+
+/**
+ * @route   GET /api/reports/:id
+ * @desc    Get a single report by its UUID
+ * @access  Private
+ */
+router.get('/:id', reportController.getReportById);
+
+/**
+ * @route   GET /api/reports/:id/export/:format
+ * @desc    Export a report by its UUID in the specified format
+ * @access  Private
+ */
+router.get('/:id/export/:format', reportController.exportReportById);
+
 module.exports = router;

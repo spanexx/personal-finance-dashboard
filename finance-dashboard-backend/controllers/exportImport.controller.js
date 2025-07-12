@@ -86,12 +86,37 @@ class ExportImportController {
 
       const userId = req.user.id;
       const { type, options = {} } = req.body;
-      const filePath = req.file.path;
+      
+      // Get file path from upload results if available
+      let filePath = null;
+      if (req.uploadResults && req.uploadResults.length > 0) {
+        filePath = req.uploadResults[0].filePath;
+      }
+      
+      // Create file object for import service
+      const fileForImport = filePath ? { path: filePath } : {
+        buffer: req.file.buffer,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype
+      };
 
-      const importResult = await importService.importData(userId, {
-        filePath,
-        type,
-        options: JSON.parse(options)
+      // Parse options if it's a string
+      let parsedOptions = {};
+      if (typeof options === 'string') {
+        try {
+          parsedOptions = JSON.parse(options);
+        } catch (e) {
+          parsedOptions = {};
+        }
+      } else if (typeof options === 'object') {
+        parsedOptions = options;
+      }
+
+      const importResult = await importService.importData(userId, fileForImport, {
+        dataType: type,
+        format: req.file.mimetype.includes('csv') ? 'csv' : 
+                req.file.mimetype.includes('excel') || req.file.mimetype.includes('sheet') ? 'excel' : 'json',
+        ...parsedOptions
       });
 
       // Send notification email about import completion
@@ -285,6 +310,11 @@ class ExportImportController {
    */
   async validateImportFile(req, res) {
     try {
+      console.log('validateImportFile - req.file:', req.file);
+      console.log('validateImportFile - req.body:', req.body);
+      console.log('validateImportFile - req.user:', req.user);
+      console.log('validateImportFile - req.uploadResults:', req.uploadResults);
+      
       if (!req.file) {
         return res.status(400).json({
           success: false,
@@ -293,15 +323,39 @@ class ExportImportController {
       }
 
       const { type } = req.body;
-      const filePath = req.file.path;
+      
+      // Get file path from upload results if available, otherwise use buffer
+      let filePath = null;
+      if (req.uploadResults && req.uploadResults.length > 0) {
+        filePath = req.uploadResults[0].filePath;
+      }
+      
+      console.log('validateImportFile - filePath:', filePath);
 
-      const validation = await importService.validateImportFile(filePath, type);
+      // If we don't have a file path, we can work with the buffer directly
+      if (!filePath && !req.file.buffer) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid file upload'
+        });
+      }
+
+      // Use file path if available, otherwise pass file object with buffer
+      const fileToValidate = filePath ? filePath : {
+        buffer: req.file.buffer,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype
+      };
+
+      const validation = await importService.validateImportFile(fileToValidate, type);
 
       // Clean up uploaded file after validation
-      try {
-        await fs.unlink(filePath);
-      } catch (cleanupError) {
-        console.warn('Failed to cleanup validation file:', cleanupError);
+      if (filePath) {
+        try {
+          await fs.unlink(filePath);
+        } catch (cleanupError) {
+          console.warn('Failed to cleanup validation file:', cleanupError);
+        }
       }
 
       res.json({
@@ -322,7 +376,7 @@ class ExportImportController {
 
       res.status(500).json({
         success: false,
-        message: 'Validation failed',
+        message: 'File validation failed',
         error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
       });
     }

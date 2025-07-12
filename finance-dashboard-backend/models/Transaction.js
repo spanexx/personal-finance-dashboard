@@ -238,6 +238,17 @@ const transactionSchema = new mongoose.Schema({
     trim: true,
     maxlength: [100, 'Payee name cannot exceed 100 characters']
   },
+
+  paymentMethod: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Payment method cannot exceed 50 characters'],
+    enum: {
+      values: ['cash', 'credit_card', 'debit_card', 'bank_transfer', 'check', 'digital_wallet', 'other'],
+      message: 'Payment method must be one of: cash, credit_card, debit_card, bank_transfer, check, digital_wallet, other'
+    },
+    default: 'cash'
+  },
   
   location: locationSchema,
   

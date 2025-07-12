@@ -90,19 +90,19 @@
 .category-option {
   display: flex;
   align-items: center;
+  gap: 8px;
   
   .category-color {
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    margin-right: 8px;
+    display: inline-block;
   }
   
   mat-icon {
-    margin-right: 8px;
-    font-size: 18px;
-    height: 18px;
-    width: 18px;
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
   }
 }
 
@@ -376,5 +376,49 @@
   
   .file-upload-area {
     padding: 16px;
+  }
+}
+
+// Payment method and category selection with icons
+.payment-method-option, .category-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  mat-icon {
+    margin-right: 4px;
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    line-height: 18px;
+  }
+  
+  span {
+    line-height: 18px;
+  }
+}
+
+.category-color {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+// Make sure the select trigger properly displays icons
+.mat-mdc-select-trigger {
+  .payment-method-option, .category-option {
+    height: 24px;
+    display: flex;
+    align-items: center;
+    
+    mat-icon {
+      vertical-align: middle;
+    }
+    
+    .category-color {
+      vertical-align: middle;
+    }
   }
 }

@@ -30,9 +30,12 @@ export class GoalEffects {
       ofType(GoalActions.loadGoal),
       switchMap(({ id }) =>
         this.goalsService.getGoal(id).pipe(
-          map(goal => {
-            if (goal) {
-              return GoalActions.loadGoalSuccess({ goal });
+          map(response => {
+            console.log('Goal loaded:', response);
+            if (response && response.goal) {
+              // Merge all response fields into the goal object for easy access in the store/component
+              const mergedGoal = { ...response.goal, ...response };
+              return GoalActions.loadGoalSuccess({ goal: mergedGoal });
             } else {
               return GoalActions.loadGoalFailure({ error: 'Goal not found' });
             }

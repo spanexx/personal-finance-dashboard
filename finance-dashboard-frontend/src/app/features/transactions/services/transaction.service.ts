@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
 import { HttpClientService } from '../../../core/services/http-client.service';
 import { ApiResponse, PaginatedResponse } from '../../../core/models/api-response.models';
 
@@ -77,8 +77,19 @@ export class TransactionService {
 
   // Get a transaction by id
   getTransaction(id: string): Observable<Transaction> {
-    return this.httpClient.get<ApiResponse<Transaction>>(`transactions/${id}`).pipe(
-      map(response => response.data)
+    console.log('Service: Getting transaction with ID:', id); // Debug log
+    return this.httpClient.get<ApiResponse<{transaction: Transaction, attachments: any[]}>>(`transactions/${id}`).pipe(
+      map(response => {
+        console.log('Service: Raw API response:', response); // Debug log
+        // Extract transaction from the wrapped response
+        const transaction = response.data.transaction;
+        console.log('Service: Extracted transaction:', transaction); // Debug log
+        return transaction;
+      }),
+      catchError((error: any) => {
+        console.error('Service: Error getting transaction:', error); // Debug log
+        throw error;
+      })
     );
   }
 

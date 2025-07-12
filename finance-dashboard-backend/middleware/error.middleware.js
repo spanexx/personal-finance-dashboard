@@ -335,7 +335,26 @@ const globalErrorHandler = (err, req, res, next) => {
   // Transform and classify the error
   const transformedError = transformError(err);
 
-  // Log the error
+  // Log the error to the console for immediate visibility
+  console.error('Global error handler caught error:', {
+    error: {
+      type: transformedError.type,
+      message: transformedError.message,
+      stack: err.stack,
+      details: transformedError.details
+    },
+    request: {
+      id: requestId,
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip || req.connection.remoteAddress,
+      userAgent: req.get('User-Agent'),
+      userId: req.user?.id
+    },
+    timestamp: new Date().toISOString()
+  });
+
+  // Log the error (file/logger)
   logger.error('Global error handler caught error', {
     error: {
       type: transformedError.type,

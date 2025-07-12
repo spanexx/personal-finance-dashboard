@@ -789,18 +789,24 @@ class BudgetService {
       throw new ValidationError('Invalid budget ID format');
     }
 
-    const budget = await Budget.findOne({
-      _id: budgetId,
-      user: userId,
-      isDeleted: { $ne: true }
-    }).populate('categoryAllocations.category', 'name type color icon description');
-
-    console.log('[BudgetService] getBudgetDetails found budget:', budget ? budget.name : 'not found');
-
-    if (!budget) {
+    // Use the static method to get a fresh budget with up-to-date spent amounts
+    const budget = await Budget.getFreshBudgetById(budgetId);
+    if (!budget || budget.user.toString() !== userId.toString() || budget.isDeleted) {
       throw new NotFoundError('Budget not found');
     }
 
+    // Ensure spent amounts are recalculated before returning details
+    await budget.calculateSpentAmount();
+    // Debug: Log spent amounts after recalculation
+    console.log('[BudgetService] After calculateSpentAmount:', {
+      totalSpent: budget.totalSpent,
+      categoryAllocations: budget.categoryAllocations.map(a => ({
+        category: a.category && a.category.name ? a.category.name : a.category,
+        spentAmount: a.spentAmount,
+        allocatedAmount: a.allocatedAmount
+      }))
+    });
+    
     try {
       // Get comprehensive performance analysis
       const performance = await budget.getBudgetPerformance();

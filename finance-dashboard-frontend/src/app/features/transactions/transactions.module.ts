@@ -13,6 +13,12 @@ import { CategoryModalComponent } from './category-modal/category-modal.componen
 import { TransactionAnalyticsComponent } from './components/transaction-analytics.component';
 import { CategoryDetailsDialogComponent } from './components/category-details-dialog.component';
 import { CashFlowVisualizationComponent } from './components/cash-flow-visualization.component';
+import { ImportDialogComponent } from './components/import-dialog/import-dialog.component';
+import { TransactionFiltersComponent } from './components/transaction-filters/transaction-filters.component';
+import { TransactionTableComponent } from './components/transaction-table/transaction-table.component';
+import { TransactionBulkOperationsComponent } from './components/transaction-bulk-operations/transaction-bulk-operations.component';
+import { TransactionExportImportComponent } from './components/transaction-export-import/transaction-export-import.component';
+import { TransactionStatisticsComponent } from './components/transaction-statistics/transaction-statistics.component';
 
 // Shared Directives
 import { FocusTrapDirective } from '../../shared/directives/focus-trap.directive';
@@ -34,7 +40,13 @@ import { MaterialModule } from '../../shared/modules';
     CategoryDetailsDialogComponent,
     CashFlowVisualizationComponent,
     ChartDirective,
-    AccessibleChartDirective
+    AccessibleChartDirective,
+    ImportDialogComponent,
+    TransactionFiltersComponent,
+    TransactionTableComponent,
+    TransactionBulkOperationsComponent,
+    TransactionExportImportComponent,
+    TransactionStatisticsComponent
   ],
   imports: [
     CommonModule,

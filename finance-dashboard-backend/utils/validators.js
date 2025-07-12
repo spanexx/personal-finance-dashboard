@@ -253,7 +253,7 @@ class EntityValidators {
       CommonValidators.date('startDate'),
       CommonValidators.date('targetDate'),
       CommonValidators.enum('priority', ['low', 'medium', 'high']),
-      CommonValidators.enum('type', ['savings', 'debt_payoff', 'investment', 'purchase', 'emergency_fund', 'other']),
+      CommonValidators.enum('goalType', ['savings', 'debt_payoff', 'investment', 'purchase', 'emergency_fund', 'other']),
       CommonValidators.enum('status', ['active', 'completed', 'paused', 'cancelled']),
       body('category')
         .optional()
@@ -296,8 +296,8 @@ class QueryValidators {
         .toInt(),
       query('limit')
         .optional()
-        .isInt({ min: 1, max: 100 })
-        .withMessage('Limit must be between 1 and 100')
+        .isInt({ min: 1, max: 500 })
+        .withMessage('Limit must be between 1 and 500')
         .toInt()
     ];
   }

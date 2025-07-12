@@ -5,230 +5,49 @@
     <div class="actions">
       <button mat-raised-button color="primary" (click)="addTransaction()" aria-label="Add new transaction">
         <mat-icon aria-hidden="true">add</mat-icon> New Transaction
-      </button>      <button mat-button color="accent" (click)="manageCategories()" aria-label="Manage transaction categories">
+      </button>
+      <button mat-button color="accent" (click)="refreshTransactions()" aria-label="Refresh transaction list">
+        <mat-icon aria-hidden="true">refresh</mat-icon> Refresh
+      </button>
+      <button mat-button color="accent" (click)="manageCategories()" aria-label="Manage transaction categories">
         <mat-icon aria-hidden="true">category</mat-icon> Manage Categories
       </button>
       <button mat-button color="accent" routerLink="/transactions/analytics" aria-label="View transaction analytics">
         <mat-icon aria-hidden="true">insights</mat-icon> Analytics
       </button>
-      <!-- Export/Import Actions -->
-      <button mat-button [matMenuTriggerFor]="exportMenu" aria-label="Export transactions">
-        <mat-icon aria-hidden="true">download</mat-icon> Export
-      </button>
-      <mat-menu #exportMenu="matMenu">
-        <button mat-menu-item *ngFor="let format of exportFormats" (click)="exportTransactions(format.value)">
-          <mat-icon>{{ format.icon }}</mat-icon>
-          <span>{{ format.label }}</span>
-        </button>
-      </mat-menu>
-      <button mat-button (click)="openImportDialog()" aria-label="Import transactions">
-        <mat-icon aria-hidden="true">upload</mat-icon> Import
-      </button>
+      <!-- Export/Import Component -->
+      <app-transaction-export-import
+        [exportFormats]="exportFormats"
+        (exportRequested)="exportTransactions($event)"
+        (importRequested)="openImportDialog()">
+      </app-transaction-export-import>
     </div>
   </div>
 
   <!-- Skip to main content link -->
   <a href="#transactions-table" class="skip-link">Skip to transactions</a>
 
-  <!-- Transaction Statistics Summary -->
-  <mat-card class="stats-card" *ngIf="!(isLoading$ | async)">
-    <mat-card-content>
-      <div class="stats-grid">
-        <div class="stat-item">
-          <div class="stat-value">{{ transactionStats.total }}</div>
-          <div class="stat-label">Total Transactions</div>
-        </div>
-        <div class="stat-item income">
-          <div class="stat-value">{{ transactionStats.income | currency }}</div>
-          <div class="stat-label">Total Income</div>
-        </div>
-        <div class="stat-item expense">
-          <div class="stat-value">{{ transactionStats.expenses | currency }}</div>
-          <div class="stat-label">Total Expenses</div>
-        </div>
-        <div class="stat-item" [ngClass]="{ 'positive': transactionStats.netAmount >= 0, 'negative': transactionStats.netAmount < 0 }">
-          <div class="stat-value">{{ transactionStats.netAmount | currency }}</div>
-          <div class="stat-label">Net Amount</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">{{ transactionStats.avgTransaction | currency }}</div>
-          <div class="stat-label">Avg Transaction</div>
-        </div>
-      </div>
-    </mat-card-content>
-  </mat-card>
+  <!-- Transaction Statistics Component -->
+  <app-transaction-statistics
+    [transactions]="(transactions$ | async) || []"
+    [isLoading]="(isLoading$ | async) || false">
+  </app-transaction-statistics>
 
-  <!-- Advanced Filtering Section -->
-  <mat-card class="filter-card" #filterPanel>
-    <mat-card-content>
-      <form [formGroup]="filterForm" (ngSubmit)="applyAdvancedFilters()">
-        <div class="filter-row">
-          <!-- Search Input with Autocomplete -->
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-label>Search</mat-label>
-            <input 
-              matInput 
-              formControlName="searchTerm"
-              [matAutocomplete]="searchAuto"
-              (focus)="onFilterFocus()"
-              (blur)="onFilterBlur()"
-              placeholder="Search transactions..." 
-              #searchInput
-              aria-label="Search transactions">
-            <mat-icon matSuffix aria-hidden="true">search</mat-icon>
-            <mat-autocomplete #searchAuto="matAutocomplete">
-              <mat-option *ngFor="let suggestion of filteredSuggestions | async" [value]="suggestion">
-                {{ suggestion }}
-              </mat-option>
-            </mat-autocomplete>
-          </mat-form-field>
+  <!-- Transaction Filters Component -->
+  <app-transaction-filters
+    #filterPanel
+    [currentFilters]="currentFilters"
+    [showAdvancedFilters]="showAdvancedFilters"
+    (filtersChanged)="onFiltersChanged($event)"
+    (filtersCleared)="onFiltersCleared()"
+    (advancedFiltersToggled)="onAdvancedFiltersToggled($event)">
+  </app-transaction-filters>
 
-          <!-- Date Range Preset -->
-          <mat-form-field appearance="outline" class="date-preset-field">
-            <mat-label>Date Range</mat-label>
-            <mat-select formControlName="dateRange" (selectionChange)="onDateRangePresetChange($event)">
-              <mat-option *ngFor="let preset of dateRangePresets" [value]="preset.value">
-                {{ preset.label }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <!-- Toggle Advanced Filters -->
-          <button 
-            type="button"
-            mat-button 
-            (click)="toggleAdvancedFilters()"
-            [attr.aria-expanded]="showAdvancedFilters"
-            aria-controls="advanced-filters">
-            <mat-icon>{{ showAdvancedFilters ? 'expand_less' : 'expand_more' }}</mat-icon>
-            {{ showAdvancedFilters ? 'Hide' : 'Show' }} Advanced
-          </button>
-
-          <!-- Filter Actions -->
-          <button type="submit" mat-raised-button color="primary" [disabled]="isFiltering">
-            <mat-icon>filter_list</mat-icon>
-            {{ isFiltering ? 'Filtering...' : 'Apply Filters' }}
-          </button>
-          <button type="button" mat-button (click)="clearFilters()">
-            <mat-icon>clear</mat-icon>
-            Clear
-          </button>
-        </div>
-
-        <!-- Advanced Filters Panel -->
-        <div id="advanced-filters" class="advanced-filters" [class.expanded]="showAdvancedFilters">
-          <div class="filter-grid">
-            <!-- Date Range Pickers -->
-            <mat-form-field appearance="outline">
-              <mat-label>From Date</mat-label>
-              <input matInput [matDatepicker]="startPicker" formControlName="startDate">
-              <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-              <mat-datepicker #startPicker></mat-datepicker>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>To Date</mat-label>
-              <input matInput [matDatepicker]="endPicker" formControlName="endDate">
-              <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-              <mat-datepicker #endPicker></mat-datepicker>
-            </mat-form-field>
-
-            <!-- Categories Multi-Select -->
-            <mat-form-field appearance="outline">
-              <mat-label>Categories</mat-label>
-              <mat-select formControlName="categories" multiple>
-                <mat-option *ngFor="let category of categories" [value]="category.id">
-                  <mat-icon [style.color]="category.color">{{ category.icon }}</mat-icon>
-                  {{ category.name }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <!-- Transaction Types -->
-            <mat-form-field appearance="outline">
-              <mat-label>Transaction Types</mat-label>
-              <mat-select formControlName="types" multiple>
-                <ng-container *ngIf="transactionTypes && transactionTypes.length; else emptyTypes">
-                  <mat-option *ngFor="let type of transactionTypes" [value]="type.value">
-                    {{ type.label }}
-                  </mat-option>
-                </ng-container>
-                <ng-template #emptyTypes>
-                  <mat-option disabled>No types available</mat-option>
-                </ng-template>
-              </mat-select>
-            </mat-form-field>
-
-            <!-- Payment Methods -->
-            <mat-form-field appearance="outline">
-              <mat-label>Payment Methods</mat-label>
-              <mat-select formControlName="paymentMethods" multiple>
-                <mat-option *ngFor="let method of paymentMethods" [value]="method.value">
-                  {{ method.label }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <!-- Status -->
-            <mat-form-field appearance="outline">
-              <mat-label>Status</mat-label>
-              <mat-select formControlName="status" multiple>
-                <mat-option *ngFor="let status of statusOptions" [value]="status.value">
-                  {{ status.label }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <!-- Amount Range -->
-            <mat-form-field appearance="outline">
-              <mat-label>Min Amount</mat-label>
-              <input matInput type="number" formControlName="minAmount" placeholder="0.00">
-              <span matPrefix>$</span>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Max Amount</mat-label>
-              <input matInput type="number" formControlName="maxAmount" placeholder="0.00">
-              <span matPrefix>$</span>
-            </mat-form-field>
-
-            <!-- Tags -->
-            <mat-form-field appearance="outline">
-              <mat-label>Tags</mat-label>
-              <input matInput formControlName="tags" placeholder="tag1, tag2, tag3">
-              <mat-hint>Separate tags with commas</mat-hint>
-            </mat-form-field>
-
-            <!-- Additional Filters -->
-            <div class="checkbox-filters">
-              <mat-checkbox formControlName="hasAttachments">Has Attachments</mat-checkbox>
-              <mat-checkbox formControlName="isRecurring">Recurring Transactions</mat-checkbox>
-            </div>
-          </div>
-        </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Bulk Operations Bar -->
-  <mat-card class="bulk-operations-card" *ngIf="selection.selected.length > 0">
-    <mat-card-content>
-      <div class="bulk-operations-bar">
-        <span class="selection-count">{{ selection.selected.length }} transaction(s) selected</span>
-        <div class="bulk-actions">
-          <button 
-            mat-button 
-            *ngFor="let operation of bulkOperations" 
-            [color]="operation.color"
-            (click)="executeBulkOperation(operation.value)"
-            [attr.aria-label]="operation.label + ' for ' + selection.selected.length + ' transactions'">
-            <mat-icon>{{ operation.icon }}</mat-icon>
-            {{ operation.label }}
-          </button>
-        </div>
-      </div>
-    </mat-card-content>
-  </mat-card>
+  <!-- Bulk Operations Component -->
+  <app-transaction-bulk-operations
+    [selectedTransactions]="selectedTransactions"
+    (executeOperation)="executeBulkOperation($event)">
+  </app-transaction-bulk-operations>
 
   <!-- Loading State -->
   <div *ngIf="isLoading$ | async" class="loading-spinner" role="status" aria-live="polite">
@@ -243,143 +62,17 @@
     <button mat-button color="primary" (click)="dispatchLoadTransactions()">Retry</button>
   </div>
 
-  <!-- Table Container -->
-  <div *ngIf="!(isLoading$ | async) && !(error$ | async)" class="table-container">
-    <div *ngIf="isScrollLoading" class="scroll-loading-indicator" aria-live="polite"> <!-- isScrollLoading is a local component flag for virtual scroll, keep as is -->
-      <mat-progress-bar mode="indeterminate" aria-label="Loading more transactions"></mat-progress-bar>
-    </div>
-
-    <table id="transactions-table" mat-table [dataSource]="dataSource" matSort class="transactions-table" aria-labelledby="transactions-heading">
-      <!-- Selection Column -->
-      <ng-container matColumnDef="select">
-        <th mat-header-cell *matHeaderCellDef>
-          <mat-checkbox 
-            (change)="masterToggle()"
-            [checked]="isAllSelected()"
-            [indeterminate]="isIndeterminate()"
-            [attr.aria-label]="isAllSelected() ? 'Deselect all' : 'Select all'">
-          </mat-checkbox>
-        </th>
-        <td mat-cell *matCellDef="let transaction">
-          <mat-checkbox 
-            (click)="$event.stopPropagation()"
-            (change)="toggleSelection(transaction)"
-            [checked]="selection.isSelected(transaction)"
-            [attr.aria-label]="'Select transaction: ' + transaction.description">
-          </mat-checkbox>
-        </td>
-      </ng-container>
-
-      <!-- Date Column -->
-      <ng-container matColumnDef="date">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Date</th>
-        <td mat-cell *matCellDef="let transaction">
-          {{ transaction.date | date:'MMM d, y' }}
-        </td>
-      </ng-container>
-
-      <!-- Description Column -->
-      <ng-container matColumnDef="description">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Description</th>
-        <td mat-cell *matCellDef="let transaction">
-          <div class="description-cell">
-            <span class="description-text">{{ transaction.description }}</span>
-            <span class="payee-text" *ngIf="transaction.payee">{{ transaction.payee }}</span>
-            <div class="tags-container" *ngIf="transaction.tags && transaction.tags.length">
-              <mat-chip-set aria-label="Transaction tags">
-                <mat-chip *ngFor="let tag of transaction.tags" size="small">{{ tag }}</mat-chip>
-              </mat-chip-set>
-            </div>
-            <div class="attachments-indicator" *ngIf="transaction.attachments && transaction.attachments.length">
-              <mat-icon class="attachment-icon" matTooltip="{{ transaction.attachments.length }} attachment(s)">attach_file</mat-icon>
-            </div>
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- Category Column -->
-      <ng-container matColumnDef="category">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Category</th>
-        <td mat-cell *matCellDef="let transaction">
-          <div class="category-badge" [style.background-color]="transaction.categoryDetails?.color">
-            <mat-icon *ngIf="transaction.categoryDetails?.icon" aria-hidden="true">{{ transaction.categoryDetails?.icon }}</mat-icon>
-            <span>{{ transaction.categoryDetails?.name }}</span>
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- Type Column -->
-      <ng-container matColumnDef="type">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Type</th>
-        <td mat-cell *matCellDef="let transaction">
-          <span class="transaction-type" [ngClass]="transaction.type">
-            {{ transaction.type | titlecase }}
-          </span>
-        </td>
-      </ng-container>
-
-      <!-- Amount Column -->
-      <ng-container matColumnDef="amount">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Amount</th>
-        <td mat-cell *matCellDef="let transaction" [ngClass]="getTransactionTypeClass(transaction.type)">
-          {{ formatAmount(transaction) }}
-        </td>
-      </ng-container>
-
-      <!-- Status Column -->
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Status</th>
-        <td mat-cell *matCellDef="let transaction">
-          <span class="status-badge" [ngClass]="transaction.status || 'completed'">
-            {{ (transaction.status || 'completed') | titlecase }}
-          </span>
-        </td>
-      </ng-container>
-
-      <!-- Actions Column -->
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef scope="col">Actions</th>
-        <td mat-cell *matCellDef="let transaction">
-          <button mat-icon-button color="primary" (click)="editTransaction(transaction)" matTooltip="Edit transaction" aria-label="Edit transaction">
-            <mat-icon aria-hidden="true">edit</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="deleteTransaction(transaction)" matTooltip="Delete transaction" aria-label="Delete transaction">
-            <mat-icon aria-hidden="true">delete</mat-icon>
-          </button>
-          <button mat-icon-button *ngIf="transaction.attachments && transaction.attachments.length" matTooltip="View attachments" aria-label="View attachments">
-            <mat-icon aria-hidden="true">attachment</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-
-      <!-- Table Headers and Rows -->
-      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true" role="row"></tr>
-      <tr 
-        mat-row 
-        *matRowDef="let row; columns: displayedColumns;" 
-        [attr.data-transaction-id]="row._id" 
-        role="row"
-        tabindex="0"
-        [attr.aria-label]="'Transaction: ' + row.description + ', Amount: ' + formatAmount(row)"
-        [class.selected-row]="selection.isSelected(row)"></tr>
-
-      <!-- Row shown when there is no matching data -->
-      <tr class="mat-row" *matNoDataRow role="row">
-        <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-          <div class="no-data-message" role="alert">
-            <mat-icon aria-hidden="true">info</mat-icon>
-            <p *ngIf="filterForm.get('searchTerm')?.value">No transactions matching "{{ filterForm.get('searchTerm')?.value }}"</p>
-            <p *ngIf="!filterForm.get('searchTerm')?.value">No transactions found</p>
-            <button mat-raised-button color="primary" (click)="addTransaction()" aria-label="Add your first transaction">Add Your First Transaction</button>
-          </div>
-        </td>
-      </tr>
-    </table>
-
-    <mat-paginator 
-      [pageSizeOptions]="[10, 25, 50, 100]" 
-      showFirstLastButtons 
-      aria-label="Select page of transactions">
-    </mat-paginator>
-  </div>
+  <!-- Transaction Table Component -->
+  <app-transaction-table
+    *ngIf="!(isLoading$ | async) && !(error$ | async)"
+    [transactions]="(transactions$ | async) || []"
+    [isLoading]="false"
+    [error]="error$ | async"
+    [displayedColumns]="displayedColumns"
+    [isScrollLoading]="isScrollLoading"
+    (transactionEdit)="editTransaction($event)"
+    (transactionDelete)="deleteTransaction($event)"
+    (transactionSelected)="onTransactionsSelected($event)"
+    (addTransactionRequest)="addTransaction()">
+  </app-transaction-table>
 </div>

@@ -113,15 +113,32 @@ export class HttpClientService {  private readonly baseUrl = environment.apiUrl;
     // Patch for paginated responses: flatten pagination object to root if present
     return request$.pipe(
       map((response: any) => {
-        if (response && response.pagination) {
-          return {
-            ...response,
-            page: response.pagination.page,
-            limit: response.pagination.limit,
-            totalItems: response.pagination.total ?? response.pagination.totalItems,
-            totalPages: response.pagination.totalPages,
-          };
+        // Handle both direct pagination and meta.pagination structures
+        let paginationData = null;
+        
+        if (response && response.meta && response.meta.pagination) {
+          // Backend returns pagination under meta.pagination
+          paginationData = response.meta.pagination;
+        } else if (response && response.pagination) {
+          // Direct pagination structure
+          paginationData = response.pagination;
         }
+        
+        if (paginationData) {
+          const transformedResponse = {
+            ...response,
+            pagination: {
+              page: paginationData.page,
+              limit: paginationData.limit,
+              total: paginationData.total,
+              totalPages: paginationData.totalPages,
+              hasNext: paginationData.hasNext,
+              hasPrev: paginationData.hasPrev
+            }
+          };
+          return transformedResponse;
+        }
+        
         return response;
       })
     );
@@ -200,6 +217,22 @@ export class HttpClientService {  private readonly baseUrl = environment.apiUrl;
    * Download file
    */
   download(endpoint: string, filename?: string, options: HttpOptions = {}): Observable<Blob> {
+    const url = this.buildUrl(endpoint);
+    
+    return (this.http.get(url, {
+      ...this.buildHttpOptions(options),
+      responseType: 'blob',
+      observe: 'body'
+    }) as unknown as Observable<Blob>).pipe(
+      timeout(options.timeout || this.defaultTimeout * 2),
+      catchError(this.handleError.bind(this))
+    );
+  }
+
+  /**
+   * Download file as blob
+   */
+  getBlob(endpoint: string, options: HttpOptions = {}): Observable<Blob> {
     const url = this.buildUrl(endpoint);
     
     return (this.http.get(url, {

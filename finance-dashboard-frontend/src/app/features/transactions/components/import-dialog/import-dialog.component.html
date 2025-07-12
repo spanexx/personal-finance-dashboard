@@ -1,0 +1,181 @@
+<div class="import-dialog">
+  <h2 mat-dialog-title>Import Data</h2>
+  
+  <mat-dialog-content>
+    <div class="stepper-container">
+      <!-- Step indicator -->
+      <div class="step-indicators">
+        <div class="step" [class.active]="currentStep >= 1">1. Select File</div>
+        <div class="step-connector"></div>
+        <div class="step" [class.active]="currentStep >= 2">2. Validate</div>
+        <div class="step-connector"></div>
+        <div class="step" [class.active]="currentStep >= 3">3. Options</div>
+        <div class="step-connector"></div>
+        <div class="step" [class.active]="currentStep >= 4">4. Results</div>
+      </div>
+
+      <!-- Step 1: Select File -->
+      <div class="step-content" *ngIf="currentStep === 1">
+        <form [formGroup]="importForm">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Import Type</mat-label>
+            <mat-select formControlName="type">
+              <mat-option *ngFor="let type of importTypes" [value]="type.value">
+                {{ type.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          
+          <div class="file-upload">
+            <input type="file" style="display:none" (change)="onFileSelected($event)" accept=".csv,.xls,.xlsx,.json" #fileInput>
+            <div class="file-upload-button">
+              <button mat-stroked-button type="button" (click)="openFileDialog()">
+                <mat-icon>upload_file</mat-icon>
+                {{ fileInputLabel }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 2: Validating -->
+      <div class="step-content" *ngIf="currentStep === 2">
+        <div class="validating-spinner">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Validating file, please wait...</p>
+        </div>
+      </div>
+
+      <!-- Step 3: Import Options -->
+      <div class="step-content" *ngIf="currentStep === 3">
+        <div *ngIf="validationResult" class="validation-result">
+          <div class="summary-card">
+            <h3>File Validation Summary</h3>
+            <div class="summary-item">
+              <span>File Format:</span>
+              <span>{{ validationResult.format }}</span>
+            </div>
+            <div class="summary-item">
+              <span>Records Found:</span>
+              <span>{{ validationResult.recordsCount }}</span>
+            </div>
+            <div class="summary-item">
+              <span>Valid Records:</span>
+              <span>{{ validationResult.validRecords }}</span>
+            </div>
+            <div class="summary-item" *ngIf="validationResult.errors && validationResult.errors.length > 0">
+              <span>Errors:</span>
+              <span>{{ validationResult.errors.length }}</span>
+            </div>
+            <div class="summary-item" *ngIf="validationResult.warnings && validationResult.warnings.length > 0">
+              <span>Warnings:</span>
+              <span>{{ validationResult.warnings.length }}</span>
+            </div>
+          </div>
+
+          <div *ngIf="validationResult.errors && validationResult.errors.length > 0" class="errors-section">
+            <h4>Errors Found</h4>
+            <mat-list>
+              <mat-list-item *ngFor="let error of validationResult.errors">
+                <mat-icon mat-list-icon color="warn">error</mat-icon>
+                <div mat-line>{{ error.message }}</div>
+                <div mat-line *ngIf="error.row">Row {{ error.row }}</div>
+              </mat-list-item>
+            </mat-list>
+          </div>
+
+          <form [formGroup]="importForm" class="options-form">
+            <h3>Import Options</h3>
+            <mat-checkbox formControlName="updateExisting">Update existing records</mat-checkbox>
+            <mat-checkbox formControlName="skipErrors">Skip records with errors</mat-checkbox>
+            
+            <mat-form-field appearance="outline">
+              <mat-label>Date Format</mat-label>
+              <input matInput formControlName="dateFormat">
+              <mat-hint>E.g., YYYY-MM-DD, MM/DD/YYYY</mat-hint>
+            </mat-form-field>
+          </form>
+        </div>
+      </div>
+
+      <!-- Step 4: Results -->
+      <div class="step-content" *ngIf="currentStep === 4">
+        <div *ngIf="importResult" class="import-result">
+          <div class="result-summary">
+            <h3>Import Completed</h3>
+            <div class="result-card">
+              <div class="result-item">
+                <mat-icon>checklist</mat-icon>
+                <span>Records Processed</span>
+                <span>{{ importResult.recordsProcessed }}</span>
+              </div>
+              <div class="result-item">
+                <mat-icon>done_all</mat-icon>
+                <span>Records Imported</span>
+                <span>{{ importResult.recordsImported }}</span>
+              </div>
+              <div class="result-item" *ngIf="importResult.recordsSkipped > 0">
+                <mat-icon>skip_next</mat-icon>
+                <span>Records Skipped</span>
+                <span>{{ importResult.recordsSkipped }}</span>
+              </div>
+              <div class="result-item" *ngIf="importResult.errors && importResult.errors.length > 0">
+                <mat-icon color="warn">error</mat-icon>
+                <span>Errors</span>
+                <span>{{ importResult.errors.length }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="importResult.errors && importResult.errors.length > 0" class="errors-section">
+            <h4>Error Details</h4>
+            <mat-list>
+              <mat-list-item *ngFor="let error of importResult.errors">
+                <mat-icon mat-list-icon color="warn">error</mat-icon>
+                <div mat-line>{{ error.message }}</div>
+                <div mat-line *ngIf="error.row">Row {{ error.row }}</div>
+              </mat-list-item>
+            </mat-list>
+          </div>
+
+          <div *ngIf="importResult.summary" class="summary-section">
+            <h4>Summary</h4>
+            <div class="summary-cards">
+              <div *ngFor="let key of getObjectKeys(importResult.summary)" class="summary-card">
+                <h5>{{ key }}</h5>
+                <div *ngFor="let subKey of getObjectKeys(importResult.summary[key])" class="summary-item">
+                  <span>{{ subKey }}:</span>
+                  <span>{{ importResult.summary[key][subKey] }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">
+      <mat-icon color="warn">error</mat-icon>
+      <span>{{ errorMessage }}</span>
+    </div>
+  </mat-dialog-content>
+  
+  <mat-dialog-actions align="end">
+    <button 
+      mat-button 
+      [disabled]="currentStep === 2 || currentStep === 4 || isValidating || isImporting"
+      (click)="prevStep()" 
+      *ngIf="currentStep > 1 && currentStep < 4">
+      Previous
+    </button>
+    <button 
+      mat-button 
+      [disabled]="currentStep === 2 || isValidating || isImporting || 
+                (currentStep === 1 && (!importForm.get('type')?.valid || !selectedFile))"
+      (click)="nextStep()"
+      *ngIf="currentStep < 4">
+      {{ currentStep === 3 ? 'Import' : 'Next' }}
+    </button>
+    <button mat-button (click)="close()" *ngIf="currentStep === 4">Close</button>
+  </mat-dialog-actions>
+</div>

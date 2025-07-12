@@ -87,7 +87,7 @@
           <mat-select formControlName="paymentMethod" aria-label="Select payment method">
             <mat-option *ngFor="let method of paymentMethods" [value]="method.id">
               <div class="payment-method-option">
-                <mat-icon *ngIf="method.icon">{{ method.icon }}</mat-icon>
+                <!-- <mat-icon *ngIf="method.icon">{{ method.icon }}</mat-icon> -->
                 <span>{{ method.name }}</span>
               </div>
             </mat-option>

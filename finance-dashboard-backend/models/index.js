@@ -9,6 +9,7 @@ const Goal = require('./Goal');
 const Category = require('./Category');
 const Transaction = require('./Transaction');
 const File = require('./File');
+const Report = require('./Report');
 
 module.exports = {
   User,
@@ -17,4 +18,5 @@ module.exports = {
   Category,
   Transaction,
   File,
+  Report,
 };

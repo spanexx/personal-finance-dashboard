@@ -13,11 +13,22 @@ class ReportService {
      */
     async generateSpendingReport(userId, options = {}) {
         const {
-            startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-            endDate = new Date(),
+            startDate: customStartDate,
+            endDate: customEndDate,
             categories = [],
-            groupBy = 'month' // day, week, month, year
+            groupBy = 'month',
+            includeCharts = true,
+            includeTransactionDetails = false,
+            period
         } = options;
+
+        // Use provided dates or calculate from period
+        const { startDate, endDate } = period ? 
+            this._calculateDateRange(period) : 
+            { 
+                startDate: customStartDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+                endDate: customEndDate || new Date() 
+            };
 
         // Base query for transactions
         const baseQuery = {
@@ -64,40 +75,28 @@ class ReportService {
         ]);
 
         // Time-based spending patterns
-        const timeBasedAnalysis = await this._getTimeBasedAnalysis(baseQuery, groupBy);
+        const timeBasedAnalysis = includeCharts ? await this._getTimeBasedAnalysis(baseQuery, groupBy) : undefined;
 
-        // Spending trends
-        const trends = await this._calculateSpendingTrends(userId, startDate, endDate);
+        // Get totals using the period-aware calculation
+        const periodTotals = await this._calculateTotalAmountsForPeriod(userId, { startDate, endDate });
 
-        // Top merchants/payees
-        const topMerchants = await Transaction.aggregate([
-            { $match: baseQuery },
-            {
-                $group: {
-                    _id: '$description',
-                    totalAmount: { $sum: '$amount' },
-                    transactionCount: { $sum: 1 }
-                }
-            },
-            { $sort: { totalAmount: -1 } },
-            { $limit: 10 }
-        ]);
-
-        // Calculate totals and averages
-        const totalSpending = categoryAnalysis.reduce((sum, cat) => sum + cat.totalAmount, 0);
-        const averageDailySpending = await this._calculateAverageDailySpending(userId, startDate, endDate);
+        // Calculate averages based on the period
+        const daysInPeriod = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+        const averageDailySpending = periodTotals.totalExpenses / daysInPeriod;
 
         return {
             summary: {
-                totalSpending,
+                totalIncome: periodTotals.totalIncome,
+                totalExpenses: periodTotals.totalExpenses,
+                netFlow: periodTotals.netFlow,
+                savingsRate: periodTotals.savingsRate,
                 averageDailySpending,
-                transactionCount: categoryAnalysis.reduce((sum, cat) => sum + cat.transactionCount, 0),
-                categoriesCount: categoryAnalysis.length
+                transactionCount: count,
+                categoriesCount: categoryAnalysis.length,
+                period: { startDate, endDate, daysInPeriod }
             },
             categoryAnalysis,
-            timeBasedAnalysis,
-            trends,
-            topMerchants,
+            ...(includeCharts && { timeBasedAnalysis }),
             period: { startDate, endDate }
         };
     }
@@ -110,10 +109,19 @@ class ReportService {
      */
     async generateIncomeReport(userId, options = {}) {
         const {
-            startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-            endDate = new Date(),
-            groupBy = 'month'
+            startDate: customStartDate,
+            endDate: customEndDate,
+            groupBy = 'month',
+            includeCharts = true,
+            includeTransactionDetails = false,
+            period
         } = options;
+
+        // If period is specified, use it to calculate date range
+        let { startDate, endDate } = period ? 
+            this._calculateDateRange(period) : 
+            { startDate: customStartDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+              endDate: customEndDate || new Date() };
 
         const baseQuery = {
             user: new mongoose.Types.ObjectId(userId),
@@ -146,30 +154,27 @@ class ReportService {
             { $sort: { totalAmount: -1 } }
         ]);
 
-        // Calculate diversification metrics
-        const totalIncome = sourceAnalysis.reduce((sum, source) => sum + source.totalAmount, 0);
-        const diversificationScore = this._calculateDiversificationScore(sourceAnalysis, totalIncome);
+        // Get period-specific totals
+        const periodTotals = await this._calculateTotalAmountsForPeriod(userId, { startDate, endDate });
+        const daysInPeriod = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
 
-        // Time-based income patterns
-        const timeBasedAnalysis = await this._getTimeBasedAnalysis(baseQuery, groupBy);
-
-        // Income growth analysis
-        const growthAnalysis = await this._calculateIncomeGrowth(userId, startDate, endDate);
-
-        // Recurring income identification
-        const recurringIncome = await this._identifyRecurringIncome(sourceAnalysis);
+        // Calculate period-specific averages
+        const averageDailyIncome = periodTotals.totalIncome / daysInPeriod;
+        const averageMonthlyIncome = periodTotals.totalIncome / (daysInPeriod / 30);
 
         return {
             summary: {
-                totalIncome,
-                averageMonthlyIncome: totalIncome / this._getMonthsDifference(startDate, endDate),
+                totalIncome: periodTotals.totalIncome,
+                totalExpenses: periodTotals.totalExpenses,
+                netFlow: periodTotals.netFlow,
+                savingsRate: periodTotals.savingsRate,
+                averageDailyIncome,
+                averageMonthlyIncome,
                 sourceCount: sourceAnalysis.length,
-                diversificationScore
+                period: { startDate, endDate, daysInPeriod }
             },
             sourceAnalysis,
-            timeBasedAnalysis,
-            growthAnalysis,
-            recurringIncome,
+            ...(includeCharts && { timeBasedAnalysis: await this._getTimeBasedAnalysis(baseQuery, groupBy) }),
             period: { startDate, endDate }
         };
     }
@@ -182,12 +187,22 @@ class ReportService {
      */
     async generateCashFlowReport(userId, options = {}) {
         const {
-            startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-            endDate = new Date(),
-            projectionMonths = 6
+            startDate: customStartDate,
+            endDate: customEndDate,
+            projectionMonths = 6,
+            period
         } = options;
 
-        // Get income and expenses for the period
+        // If period is specified, use it to calculate date range
+        let { startDate, endDate } = period ? 
+            this._calculateDateRange(period) : 
+            { startDate: customStartDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+              endDate: customEndDate || new Date() };
+
+        // Get period-specific totals
+        const periodTotals = await this._calculateTotalAmountsForPeriod(userId, { startDate, endDate });
+        
+        // Get daily data for the period
         const [incomeData, expenseData] = await Promise.all([
             this._getMonthlyData(userId, 'income', startDate, endDate),
             this._getMonthlyData(userId, 'expense', startDate, endDate)
@@ -196,32 +211,29 @@ class ReportService {
         // Calculate monthly cash flow
         const monthlyCashFlow = this._calculateMonthlyCashFlow(incomeData, expenseData);
 
-        // Calculate savings rate
+        // Calculate savings rate for the period
         const savingsRate = this._calculateSavingsRate(monthlyCashFlow);
 
-        // Generate projections
+        // Generate projections based on current period's data
         const projections = await this._generateCashFlowProjections(userId, projectionMonths);
 
         // Identify cash flow patterns
         const patterns = this._identifyCashFlowPatterns(monthlyCashFlow);
 
-        // Calculate running balance (assuming starting balance)
-        const runningBalance = this._calculateRunningBalance(monthlyCashFlow);
-
         return {
             summary: {
-                totalIncome: incomeData.reduce((sum, item) => sum + item.amount, 0),
-                totalExpenses: expenseData.reduce((sum, item) => sum + item.amount, 0),
-                netCashFlow: monthlyCashFlow.reduce((sum, item) => sum + item.netFlow, 0),
-                averageSavingsRate: savingsRate.average,
+                totalIncome: periodTotals.totalIncome,
+                totalExpenses: periodTotals.totalExpenses,
+                netCashFlow: periodTotals.netFlow,
+                averageSavingsRate: periodTotals.savingsRate,
                 bestMonth: savingsRate.best,
-                worstMonth: savingsRate.worst
+                worstMonth: savingsRate.worst,
+                period: { startDate, endDate }
             },
             monthlyCashFlow,
             savingsRate,
             projections,
             patterns,
-            runningBalance,
             period: { startDate, endDate }
         };
     }
@@ -236,7 +248,10 @@ class ReportService {
         const {
             startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1),
             endDate = new Date(),
-            budgetIds = []
+            budgetIds = [],
+            groupBy = 'month',
+            includeCharts = true,
+            includeTransactionDetails = false
         } = options;
 
         let budgetQuery = { user: new mongoose.Types.ObjectId(userId) };
@@ -309,12 +324,26 @@ class ReportService {
         const overallPerformance = this._calculateOverallBudgetPerformance(budgetPerformance);
 
         // Historical trends
-        const historicalTrends = await this._getBudgetHistoricalTrends(userId, budgetIds);
+        const historicalTrends = includeCharts ? await this._getBudgetHistoricalTrends(userId, budgetIds) : undefined;
+
+        // Transaction details (if requested)
+        let transactionDetails;
+        if (includeTransactionDetails) {
+            // For all allocations, get all transactions in the period
+            const allCategoryIds = budgets.flatMap(b => b.categoryAllocations.map(a => a.category._id || a.category));
+            transactionDetails = await Transaction.find({
+                user: new mongoose.Types.ObjectId(userId),
+                category: { $in: allCategoryIds },
+                type: 'expense',
+                date: { $gte: startDate, $lte: endDate }
+            }).lean();
+        }
 
         return {
             summary: overallPerformance,
             budgetPerformance,
-            historicalTrends,
+            ...(includeCharts && { historicalTrends }),
+            ...(includeTransactionDetails && { transactionDetails }),
             period: { startDate, endDate }
         };
     }
@@ -453,6 +482,151 @@ class ReportService {
             projections,
             accountBreakdown: accountBalances
         };
+    }
+
+    /**
+     * Generate period trends report
+     * @param {string} userId - User ID
+     * @param {Object} options - Report options (startDate, endDate, period)
+     * @returns {Object} Period trends data
+     */
+    async generatePeriodTrends(userId, options) {
+        const { startDate, endDate, period } = options;
+
+        // Get transactions for the period
+        const transactions = await Transaction.aggregate([
+            {
+                $match: {
+                    user: new mongoose.Types.ObjectId(userId),
+                    date: { $gte: startDate, $lte: endDate }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: '$date' },
+                        month: { $month: '$date' },
+                        type: '$type'
+                    },
+                    amount: { $sum: '$amount' }
+                }
+            },
+            {
+                $sort: {
+                    '_id.year': 1,
+                    '_id.month': 1
+                }
+            }
+        ]);
+
+        // Create a map to store monthly data
+        const monthlyData = new Map();
+
+        // Process transactions into monthly summaries
+        transactions.forEach(item => {
+            const key = `${item._id.year}-${item._id.month}`;
+            if (!monthlyData.has(key)) {
+                monthlyData.set(key, {
+                    period: item._id.month,
+                    year: item._id.year,
+                    income: 0,
+                    expense: 0
+                });
+            }
+            
+            if (item._id.type.toLowerCase() === 'income') {
+                monthlyData.get(key).income += item.amount;
+            } else if (item._id.type.toLowerCase() === 'expense') {
+                monthlyData.get(key).expense += item.amount;
+            }
+        });
+
+        // Convert map to array and sort by date
+        const trends = Array.from(monthlyData.values())
+            .sort((a, b) => {
+                if (a.year !== b.year) return a.year - b.year;
+                return a.period - b.period;
+            });
+
+        return trends.length > 0 ? trends : ['insufficient-data'];
+    }
+
+    /**
+     * Get transaction trends for the specified period
+     * @param {string} userId - User ID
+     * @param {Object} options - Period options
+     * @returns {Array} Transaction trends 
+     */
+    async getTransactionTrendsForPeriod(userId, options) {
+        const { startDate, endDate, period } = options;
+        
+        // Get all transactions for the period
+        const transactions = await Transaction.find({
+            user: userId,
+            date: { $gte: startDate, $lte: endDate }
+        }).sort({ date: 1 });
+
+        if (transactions.length === 0) {
+            return ['insufficient-data'];
+        }
+
+        // Group transactions by day/week/month depending on period
+        const groupedData = new Map();
+        let formatString;
+        
+        switch(period) {
+            case 'week':
+                formatString = 'yyyy-MM-dd'; // daily for week view
+                break;
+            case 'month':
+                formatString = 'yyyy-MM-dd'; // daily for month view
+                break;
+            case 'quarter':
+                formatString = 'yyyy-MM'; // monthly for quarter view
+                break;
+            case 'year':
+                formatString = 'yyyy-MM'; // monthly for year view
+                break;
+            case 'all':
+            default:
+                formatString = 'yyyy-MM'; // monthly for all time
+        }
+
+        transactions.forEach(transaction => {
+            const date = new Date(transaction.date);
+            let key;
+            
+            if (formatString === 'yyyy-MM-dd') {
+                key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            } else {
+                key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            }
+            
+            if (!groupedData.has(key)) {
+                groupedData.set(key, { 
+                    period: formatString === 'yyyy-MM-dd' ? date.getDate() : date.getMonth() + 1,
+                    year: date.getFullYear(),
+                    income: 0, 
+                    expense: 0 
+                });
+            }
+            
+            const isIncome = transaction.type.toLowerCase() === 'income';
+            if (isIncome) {
+                groupedData.get(key).income += transaction.amount;
+            } else {
+                groupedData.get(key).expense += transaction.amount;
+            }
+        });
+        
+        // Convert map to array and sort by date
+        const trends = Array.from(groupedData.values())
+            .sort((a, b) => {
+                if (a.year !== b.year) return a.year - b.year;
+                return a.period - b.period;
+            });
+
+        return trends.length > 0 ? trends : ['insufficient-data'];
     }
 
     // Helper Methods
@@ -1102,6 +1276,100 @@ class ReportService {
         const months = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
                       (endDate.getMonth() - startDate.getMonth());
         return Math.max(1, months);
+    }
+
+    async _calculateTotalAmountsForPeriod(userId, dateRange) {
+        const { startDate, endDate } = dateRange;
+        
+        // Get income and expenses for the period
+        const [incomeData, expenseData] = await Promise.all([
+            Transaction.aggregate([
+                {
+                    $match: {
+                        user: new mongoose.Types.ObjectId(userId),
+                        type: 'income',
+                        date: { $gte: startDate, $lte: endDate }
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: '$amount' }
+                    }
+                }
+            ]),
+            Transaction.aggregate([
+                {
+                    $match: {
+                        user: new mongoose.Types.ObjectId(userId),
+                        type: 'expense',
+                        date: { $gte: startDate, $lte: endDate }
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: '$amount' }
+                    }
+                }
+            ])
+        ]);
+
+        const totalIncome = incomeData.length > 0 ? incomeData[0].total : 0;
+        const totalExpenses = expenseData.length > 0 ? expenseData[0].total : 0;
+        const netFlow = totalIncome - totalExpenses;
+        const savingsRate = totalIncome > 0 ? (netFlow / totalIncome) * 100 : 0;
+
+        return {
+            totalIncome,
+            totalExpenses,
+            netFlow,
+            savingsRate
+        };
+    }
+
+    _calculateDateRange(period) {
+        const endDate = new Date();
+        let startDate;
+
+        switch(period) {
+            case 'week': {
+                startDate = new Date(endDate);
+                startDate.setDate(endDate.getDate() - endDate.getDay()); // Start of week (Sunday)
+                startDate.setHours(0, 0, 0, 0);
+                break;
+            }
+            case 'month': {
+                startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+                startDate.setHours(0, 0, 0, 0);
+                break;
+            }
+            case 'quarter': {
+                const quarterMonth = Math.floor(endDate.getMonth() / 3) * 3;
+                startDate = new Date(endDate.getFullYear(), quarterMonth, 1);
+                startDate.setHours(0, 0, 0, 0);
+                break;
+            }
+            case 'year': {
+                startDate = new Date(endDate.getFullYear(), 0, 1);
+                startDate.setHours(0, 0, 0, 0);
+                break;
+            }
+            case 'all': {
+                startDate = new Date(2020, 0, 1); // Start from 2020 instead of 1970/1999
+                startDate.setHours(0, 0, 0, 0);
+                break;
+            }
+            default: {
+                startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+                startDate.setHours(0, 0, 0, 0);
+            }
+        }
+
+        // Ensure end date is set to end of day
+        endDate.setHours(23, 59, 59, 999);
+
+        return { startDate, endDate };
     }
 }
 

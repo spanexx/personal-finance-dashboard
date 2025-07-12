@@ -469,6 +469,7 @@ class GoalService {
    * @returns {Promise<Object>} Created goal
    */
   static async createGoal(goalData, userId) {
+    console.log('Creating goal with data:', goalData);
     try {
       // Validate goal data
       this.validateGoalData(goalData);
@@ -494,7 +495,8 @@ class GoalService {
           reminderFrequency: 'weekly',
           milestoneAlerts: true
         },
-        notes: goalData.notes?.trim()
+        notes: goalData.notes?.trim(),
+        category: goalData.category // <-- ensure category is saved
       });
       
       // Calculate initial progress percentage
@@ -519,6 +521,7 @@ class GoalService {
       await goal.save();
       return goal;
     } catch (error) {
+      console.error('Error creating goal:', error);
       if (error instanceof ValidationError) {
         throw error;
       }

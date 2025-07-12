@@ -12,6 +12,8 @@
     "test:watch": "jest --watchAll",
     "test:routes": "node test-routes.js",
     "test:api": "npm run test:routes",
+    "seed:categories": "node scripts/seed-categories.js",
+    "seed:transactions": "node scripts/seed-transactions.js",
     "lint": "eslint . --ext .js --ignore-path .gitignore",
     "format": "prettier --write .",
     "lint:fix": "eslint . --ext .js --fix --ignore-path .gitignore"

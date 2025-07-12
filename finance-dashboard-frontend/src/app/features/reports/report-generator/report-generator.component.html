@@ -1,0 +1,188 @@
+<div class="report-generator-container" role="main">
+    <!-- Skip Links for Keyboard Navigation -->
+    <div class="skip-links">
+    <a href="#report-config" class="skip-link">Skip to report configuration</a>
+    <a href="#recent-reports" class="skip-link">Skip to recent reports</a>
+    </div>
+
+    <div class="page-header">
+    <h1 id="page-title" class="page-title">Generate Report</h1>
+    <button mat-stroked-button routerLink="/dashboard" aria-label="Return to dashboard">
+        <mat-icon aria-hidden="true">dashboard</mat-icon>
+        Back to Dashboard
+    </button>
+    </div>
+
+    <mat-card class="generator-card" [appFocusTrap]="true">
+    <mat-card-header>
+        <mat-card-title id="report-config">Report Configuration</mat-card-title>
+        <mat-card-subtitle>Customize your financial report</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+        <form [formGroup]="reportForm" 
+            (ngSubmit)="generateReport()" 
+            role="form"
+            aria-labelledby="report-config"
+            aria-describedby="form-instructions">
+        
+        <div id="form-instructions" class="sr-only">
+            Configure your report by selecting the report type, date range, and additional options. All fields marked with asterisk are required.
+        </div>
+
+        <div class="form-row">
+            <mat-form-field appearance="outline">
+            <mat-label>Report Type *</mat-label>
+            <mat-select #firstField
+                        formControlName="reportType"
+                        aria-required="true"
+                        aria-describedby="report-type-help"
+                        [attr.aria-invalid]="reportForm.get('reportType')?.invalid && reportForm.get('reportType')?.touched">
+                <mat-option *ngFor="let type of reportTypes; let i = index" 
+                            [value]="type.value"
+                            [attr.aria-label]="type.label + ': ' + type.description">
+                <div class="report-type-option">
+                    <div class="type-label">{{ type.label }}</div>
+                    <!-- <div class="type-description">{{ type.description }}</div> -->
+                </div>
+                </mat-option>
+            </mat-select>
+            <mat-hint id="report-type-help">Select the type of financial report to generate</mat-hint>
+            <mat-error *ngIf="reportForm.get('reportType')?.hasError('required')">Report type is required</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class="form-row date-range" role="group" aria-labelledby="date-range-label">
+            <div id="date-range-label" class="section-label">Date Range *</div>
+            <mat-form-field appearance="outline">
+            <mat-label>Start Date</mat-label>
+            <input matInput 
+                    [matDatepicker]="startPicker" 
+                    formControlName="startDate"
+                    aria-required="true"
+                    aria-describedby="start-date-help"
+                    [attr.aria-invalid]="reportForm.get('startDate')?.invalid && reportForm.get('startDate')?.touched">
+            <mat-datepicker-toggle matIconSuffix [for]="startPicker" aria-label="Open start date calendar"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+            <mat-hint id="start-date-help">Select the beginning date for the report period</mat-hint>
+            <mat-error *ngIf="reportForm.get('startDate')?.hasError('required')">Start date is required</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+            <mat-label>End Date</mat-label>
+            <input matInput 
+                    [matDatepicker]="endPicker" 
+                    formControlName="endDate"
+                    aria-required="true"
+                    aria-describedby="end-date-help"
+                    [attr.aria-invalid]="reportForm.get('endDate')?.invalid && reportForm.get('endDate')?.touched">
+            <mat-datepicker-toggle matIconSuffix [for]="endPicker" aria-label="Open end date calendar"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+            <mat-hint id="end-date-help">Select the ending date for the report period</mat-hint>
+            <mat-error *ngIf="reportForm.get('endDate')?.hasError('required')">End date is required</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class="form-row">
+            <mat-form-field appearance="outline">
+            <mat-label>Group By *</mat-label>
+            <mat-select formControlName="groupBy"
+                        aria-required="true"
+                        aria-describedby="group-by-help"
+                        [attr.aria-invalid]="reportForm.get('groupBy')?.invalid && reportForm.get('groupBy')?.touched">
+                <mat-option value="daily" aria-label="Group data by daily periods">Daily</mat-option>
+                <mat-option value="weekly" aria-label="Group data by weekly periods">Weekly</mat-option>
+                <mat-option value="monthly" aria-label="Group data by monthly periods">Monthly</mat-option>
+                <mat-option value="yearly" aria-label="Group data by yearly periods">Yearly</mat-option>
+            </mat-select>
+            <mat-hint id="group-by-help">Choose how to group the data in your report</mat-hint>
+            <mat-error *ngIf="reportForm.get('groupBy')?.hasError('required')">Grouping option is required</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class="form-row checkbox-row" role="group" aria-labelledby="options-label">
+            <div id="options-label" class="section-label">Report Options</div>
+            <mat-checkbox formControlName="includeCharts" 
+                        aria-describedby="charts-help">
+            Include Charts
+            </mat-checkbox>
+            <div id="charts-help" class="sr-only">Add visual charts and graphs to the report</div>
+            
+            <mat-checkbox formControlName="includeTransactionDetails" 
+                        aria-describedby="transactions-help">
+            Include Transaction Details
+            </mat-checkbox>
+            <div id="transactions-help" class="sr-only">Include detailed transaction listings in the report</div>
+        </div>
+
+        <div class="form-actions">
+            <button mat-stroked-button 
+                    type="button" 
+                    (click)="resetForm()"
+                    aria-label="Reset form to default values">
+            <mat-icon aria-hidden="true">refresh</mat-icon>
+            Reset
+            </button>
+            <button mat-raised-button 
+                    color="primary" 
+                    type="submit" 
+                    [disabled]="!reportForm.valid || generating"
+                    [attr.aria-describedby]="'generate-help'"
+                    aria-live="polite">
+            @if (generating) {
+                <mat-spinner diameter="20" aria-label="Generating report"></mat-spinner>
+            } @else {
+                <mat-icon aria-hidden="true">assessment</mat-icon>
+            }
+            {{ generating ? 'Generating...' : 'Generate Report' }}
+            </button>
+            <div id="generate-help" class="sr-only">
+            {{ generating ? 'Report generation in progress. Please wait.' : 'Generate the report with the selected configuration' }}
+            </div>
+        </div>
+        </form>
+    </mat-card-content>
+    </mat-card>
+
+    <div class="recent-reports">
+    <h2 id="recent-reports">Recent Reports</h2>
+    <div class="reports-grid" 
+            role="list" 
+            aria-labelledby="recent-reports"
+            [attr.aria-label]="'Recent reports list with ' + recentReports.length + ' items'">
+        <mat-card *ngFor="let report of recentReports; let i = index" 
+                class="report-card" 
+                role="listitem"
+                [attr.aria-label]="'Report ' + (i + 1) + ' of ' + recentReports.length + ': ' + report.type + ' report from ' + formatDate(report.createdAt)">
+        <mat-card-header>
+            <mat-icon mat-card-avatar aria-hidden="true">description</mat-icon>
+            <mat-card-title>{{ report.type }} Report</mat-card-title>
+            <mat-card-subtitle>{{ formatDate(report.createdAt) }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-actions role="group" [attr.aria-label]="'Actions for ' + report.type + ' report'">
+            <button mat-button 
+                    [routerLink]="['view', report.id]"
+                    [attr.aria-label]="'View ' + report.type + ' report from ' + formatDate(report.createdAt)">
+            <mat-icon aria-hidden="true">visibility</mat-icon>
+            View
+            </button>
+            <button mat-button 
+                    (click)="downloadReport(report)"
+                    [attr.aria-label]="'Download ' + report.type + ' report from ' + formatDate(report.createdAt)">
+            <mat-icon aria-hidden="true">download</mat-icon>
+            Download
+            </button>
+        </mat-card-actions>
+        </mat-card>
+        
+        <div *ngIf="recentReports.length === 0" 
+            class="empty-state" 
+            role="status"
+            aria-live="polite">
+        <mat-icon aria-hidden="true">description</mat-icon>
+        <p>No recent reports found</p>
+        <p class="empty-description">Generate your first report using the form above</p>
+        </div>
+    </div>
+    </div>
+</div>

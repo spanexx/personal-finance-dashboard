@@ -93,6 +93,7 @@ app.use('/api/reports', require('./routes/report.routes'));
 app.use('/api/uploads', require('./routes/upload.routes'));
 app.use('/api/export-import', require('./routes/exportImport.routes'));
 app.use('/api/socket', require('./routes/socket.routes'));
+app.use('/api/cashflow', require('./routes/cashflow'));
 
 // 404 handler (must be before error handler)
 app.use(notFoundHandler);

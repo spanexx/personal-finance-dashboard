@@ -14,6 +14,7 @@ const emailVerificationController = require('./emailVerification.controller');
 const emailPreferencesController = require('./emailPreferences.controller');
 const uploadController = require('./upload.controller');
 const exportImportController = require('./exportImport.controller');
+const cashflowController = require('./cashflow.controller');
 
 module.exports = {
   authController,
@@ -27,5 +28,6 @@ module.exports = {
   emailPreferencesController,
   uploadController,
   exportImportController,
+  cashflowController,
 };
 

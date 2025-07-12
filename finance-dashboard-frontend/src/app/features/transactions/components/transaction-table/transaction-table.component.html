@@ -1,0 +1,140 @@
+<div class="table-container">
+  <div *ngIf="isScrollLoading" class="scroll-loading-indicator" aria-live="polite">
+    <mat-progress-bar mode="indeterminate" aria-label="Loading more transactions"></mat-progress-bar>
+  </div>
+
+  <table id="transactions-table" mat-table [dataSource]="dataSource" matSort class="transactions-table" aria-labelledby="transactions-heading">
+    <!-- Selection Column -->
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef>
+        <mat-checkbox 
+          (change)="masterToggle()"
+          [checked]="isAllSelected()"
+          [indeterminate]="isIndeterminate()"
+          [attr.aria-label]="isAllSelected() ? 'Deselect all' : 'Select all'">
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let transaction">
+        <mat-checkbox 
+          (click)="$event.stopPropagation()"
+          (change)="toggleSelection(transaction)"
+          [checked]="selection.isSelected(transaction)"
+          [attr.aria-label]="'Select transaction: ' + transaction.description">
+        </mat-checkbox>
+      </td>
+    </ng-container>
+
+    <!-- Date Column -->
+    <ng-container matColumnDef="date">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Date</th>
+      <td mat-cell *matCellDef="let transaction">
+        {{ transaction.date | date:'MMM d, y' }}
+      </td>
+    </ng-container>
+
+    <!-- Description Column -->
+    <ng-container matColumnDef="description">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Description</th>
+      <td mat-cell *matCellDef="let transaction">
+        <div class="description-cell">
+          <span class="description-text">{{ transaction.description }}</span>
+          <span class="payee-text" *ngIf="transaction.payee">{{ transaction.payee }}</span>
+          <div class="tags-container" *ngIf="transaction.tags && transaction.tags.length">
+            <mat-chip-set aria-label="Transaction tags">
+              <mat-chip *ngFor="let tag of transaction.tags" size="small">{{ tag }}</mat-chip>
+            </mat-chip-set>
+          </div>
+          <div class="attachments-indicator" *ngIf="transaction.attachments && transaction.attachments.length">
+            <mat-icon class="attachment-icon" matTooltip="{{ transaction.attachments.length }} attachment(s)">attach_file</mat-icon>
+          </div>
+        </div>
+      </td>
+    </ng-container>
+
+    <!-- Category Column -->
+    <ng-container matColumnDef="category">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Category</th>
+      <td mat-cell *matCellDef="let transaction">
+        <div class="category-badge" 
+             [style.background-color]="getCategoryColor(transaction.category)">
+          <mat-icon *ngIf="getCategoryIcon(transaction.category)" aria-hidden="true">
+            {{ getCategoryIcon(transaction.category) }}
+          </mat-icon>
+          <span>{{ getCategoryName(transaction.category) }}</span>
+        </div>
+      </td>
+    </ng-container>
+
+    <!-- Type Column -->
+    <ng-container matColumnDef="type">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Type</th>
+      <td mat-cell *matCellDef="let transaction">
+        <span class="transaction-type" [ngClass]="transaction.type">
+          {{ transaction.type | titlecase }}
+        </span>
+      </td>
+    </ng-container>
+
+    <!-- Amount Column -->
+    <ng-container matColumnDef="amount">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Amount</th>
+      <td mat-cell *matCellDef="let transaction" [ngClass]="getTransactionTypeClass(transaction.type)">
+        {{ formatAmount(transaction) }}
+      </td>
+    </ng-container>
+
+    <!-- Status Column -->
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Status</th>
+      <td mat-cell *matCellDef="let transaction">
+        <span class="status-badge" [ngClass]="transaction.status || 'completed'">
+          {{ (transaction.status || 'completed') | titlecase }}
+        </span>
+      </td>
+    </ng-container>
+
+    <!-- Actions Column -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef scope="col">Actions</th>
+      <td mat-cell *matCellDef="let transaction">
+        <button mat-icon-button color="primary" (click)="editTransaction(transaction)" matTooltip="Edit transaction" aria-label="Edit transaction">
+          <mat-icon aria-hidden="true">edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteTransaction(transaction)" matTooltip="Delete transaction" aria-label="Delete transaction">
+          <mat-icon aria-hidden="true">delete</mat-icon>
+        </button>
+        <button mat-icon-button *ngIf="transaction.attachments && transaction.attachments.length" matTooltip="View attachments" aria-label="View attachments">
+          <mat-icon aria-hidden="true">attachment</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <!-- Table Headers and Rows -->
+    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true" role="row"></tr>
+    <tr 
+      mat-row 
+      *matRowDef="let row; columns: displayedColumns;" 
+      [attr.data-transaction-id]="row._id" 
+      role="row"
+      tabindex="0"
+      [attr.aria-label]="'Transaction: ' + row.description + ', Amount: ' + formatAmount(row)"
+      [class.selected-row]="selection.isSelected(row)"></tr>
+
+    <!-- Row shown when there is no matching data -->
+    <tr class="mat-row" *matNoDataRow role="row">
+      <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+        <div class="no-data-message" role="alert">
+          <mat-icon aria-hidden="true">info</mat-icon>
+          <p>No transactions found</p>
+          <button mat-raised-button color="primary" (click)="addTransaction()" aria-label="Add your first transaction">Add Your First Transaction</button>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <mat-paginator 
+    [pageSizeOptions]="[10, 25, 50, 100]" 
+    showFirstLastButtons 
+    aria-label="Select page of transactions">
+  </mat-paginator>
+</div>

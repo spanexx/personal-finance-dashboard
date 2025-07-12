@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,8 +10,13 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
 import { LiveAnnouncer } from '@angular/cdk/a11y'; // Import LiveAnnouncer
-import { GoalsService } from '../../../core/services/goals.service';
-import { CreateGoalRequest } from '../../../shared/models';
+import { Store } from '@ngrx/store';
+import * as GoalActions from '../../../store/actions/goal.actions';
+import { selectGoalLoading, selectGoalError } from '../../../store/selectors/goal.selectors';
+import { CategoryService } from '../../../core/services/category.service';
+import { Category } from '../../../shared/models';
+import { Actions, ofType } from '@ngrx/effects';
+import { filter, take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-goal-form',
@@ -26,114 +31,53 @@ import { CreateGoalRequest } from '../../../shared/models';
     MatNativeDateModule,
     MatSelectModule
   ],
-  template: `
-    <div class="form-container">
-      <mat-card>
-        <mat-card-header>
-          <mat-card-title>Create New Financial Goal</mat-card-title>
-        </mat-card-header>
-        
-        <mat-card-content>
-          <form [formGroup]="goalForm" (ngSubmit)="onSubmit()">            <mat-form-field appearance="outline">
-              <mat-label>Title</mat-label>
-              <input matInput formControlName="name" placeholder="e.g., Emergency Fund">
-              @if (goalForm.get('name')?.hasError('required') && goalForm.get('name')?.touched) {
-                <mat-error>Title is required</mat-error>
-              }
-            </mat-form-field>
+  templateUrl: './goal-form.component.html',
+  styleUrls: ['./goal-form.component.scss'],
 
-            <mat-form-field appearance="outline">
-              <mat-label>Category</mat-label>
-              <mat-select formControlName="category">
-                <mat-option value="Savings">Savings</mat-option>
-                <mat-option value="Investment">Investment</mat-option>
-                <mat-option value="Housing">Housing</mat-option>
-                <mat-option value="Education">Education</mat-option>
-                <mat-option value="Other">Other</mat-option>
-              </mat-select>
-              @if (goalForm.get('category')?.hasError('required') && goalForm.get('category')?.touched) {
-                <mat-error>Category is required</mat-error>
-              }
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Target Amount</mat-label>
-              <input matInput type="number" formControlName="targetAmount">
-              <span matPrefix>$&nbsp;</span>
-              @if (goalForm.get('targetAmount')?.hasError('required') && goalForm.get('targetAmount')?.touched) {
-                <mat-error>Target amount is required</mat-error>
-              }
-              @if (goalForm.get('targetAmount')?.hasError('min')) {
-                <mat-error>Amount must be greater than 0</mat-error>
-              }
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Current Amount</mat-label>
-              <input matInput type="number" formControlName="currentAmount">
-              <span matPrefix>$&nbsp;</span>
-              @if (goalForm.get('currentAmount')?.hasError('min')) {
-                <mat-error>Amount cannot be negative</mat-error>
-              }
-            </mat-form-field>            <mat-form-field appearance="outline">
-              <mat-label>Target Date</mat-label>
-              <input matInput [matDatepicker]="picker" formControlName="targetDate">
-              <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-              <mat-datepicker #picker></mat-datepicker>
-              @if (goalForm.get('targetDate')?.hasError('required') && goalForm.get('targetDate')?.touched) {
-                <mat-error>Target date is required</mat-error>
-              }
-            </mat-form-field>
-
-            <div class="actions">
-              <button mat-button type="button" (click)="onCancel()">Cancel</button>
-              <button mat-raised-button color="primary" type="submit" [disabled]="!goalForm.valid">
-                Create Goal
-              </button>
-            </div>
-          </form>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  `,
-  styles: [`
-    .form-container {
-      padding: 24px;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-top: 16px;
-    }
-
-    .actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 16px;
-      margin-top: 16px;
-    }
-  `]
 })
-export class GoalFormComponent {
+export class GoalFormComponent implements OnInit {
   goalForm: FormGroup;
   submitting = false;
+  categories: Category[] = [];
+  backendError: string | null = null;
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private goalsService: GoalsService,
-    private liveAnnouncer: LiveAnnouncer // Inject LiveAnnouncer
+    private liveAnnouncer: LiveAnnouncer,
+    private store: Store,
+    private categoryService: CategoryService,
+    private actions$: Actions
   ) {
     this.goalForm = this.fb.group({
-      name: ['', Validators.required],
+      name: ['', [Validators.required, Validators.minLength(2)]],
+      targetAmount: [null, [Validators.required, Validators.min(0.01)]],
       category: ['', Validators.required],
-      targetAmount: ['', [Validators.required, Validators.min(1)]],
       currentAmount: [0, [Validators.min(0)]],
-      targetDate: ['', Validators.required],
+      startDate: [null, Validators.required],
+      targetDate: [null, Validators.required],
+      priority: ['medium', Validators.required],
+      goalType: ['savings', Validators.required],
+      status: ['active', Validators.required], // <-- Added status field
       description: ['']
+    });
+  }
+
+  ngOnInit(): void {
+    this.categoryService.getCategories().subscribe({
+      next: (categories: any) => {
+        console.log('Categories:', categories); // Debugging log
+        if (Array.isArray(categories)) {
+          this.categories = categories;
+        } else if (categories && Array.isArray((categories as { categories?: Category[] }).categories)) {
+          this.categories = (categories as { categories: Category[] }).categories;
+        } else {
+          this.categories = [];
+        }
+      },
+      error: (err) => {
+        this.categories = [];
+      }
     });
   }
 
@@ -152,27 +96,37 @@ export class GoalFormComponent {
 
     if (!this.submitting) {
       this.submitting = true;
+      this.backendError = null;
       this.liveAnnouncer.announce('Creating goal...', 'polite');
-      const goalRequest: CreateGoalRequest = {
-        name: this.goalForm.value.name,
-        category: this.goalForm.value.category,
-        targetAmount: Number(this.goalForm.value.targetAmount),
-        priority: this.goalForm.value.priority, // Ensure 'priority' is in formGroup if used
-        targetDate: this.goalForm.value.targetDate,
-        description: this.goalForm.value.description || ''
+      const formValue = this.goalForm.value;
+      console.log('Form Value:', formValue); // Debugging log
+      const goalRequest: any = {
+        name: formValue.name,
+        category: formValue.category,
+        targetAmount: Number(formValue.targetAmount),
+        currentAmount: Number(formValue.currentAmount) || 0,
+        startDate: formValue.startDate ? new Date(formValue.startDate).toISOString() : undefined,
+        targetDate: formValue.targetDate ? new Date(formValue.targetDate).toISOString() : undefined,
+        priority: formValue.priority,
+        goalType: formValue.goalType, // Use goalType as required by backend
+        status: formValue.status, // <-- Include status in payload
+        description: formValue.description || ''
       };
-      this.goalsService.createGoal(goalRequest).subscribe({
-        next: (goal) => {
-          this.liveAnnouncer.announce('Goal created successfully!', 'polite');
-          console.log('Goal created successfully:', goal);
-          this.router.navigate(['/goals']);
-          // No need to set submitting = false if navigating away
-        },
-        error: (error) => {
-          const errorMessage = error?.message || 'An unknown error occurred. Please try again.';
-          this.liveAnnouncer.announce(`Error creating goal: ${errorMessage}`, 'assertive');
-          console.error('Error creating goal:', error);
-          // alert('Error creating goal. Please try again.'); // Replaced by announcer
+      console.log('Goal Request Payload:', goalRequest); // Debugging log
+      this.store.dispatch(GoalActions.createGoal({ goal: goalRequest }));
+      // Listen for createGoalSuccess action
+      this.actions$.pipe(
+        ofType(GoalActions.createGoalSuccess),
+        take(1)
+      ).subscribe(() => {
+        this.store.dispatch(GoalActions.loadGoals());
+        this.router.navigateByUrl('/goals');
+      });
+      this.store.select(selectGoalError).subscribe(error => {
+        // Only handle if error is an object and has an 'error' property
+        if (error && typeof error === 'object' && 'error' in error && (error as any).error && (error as any).error.type === 'ValidationError') {
+          this.backendError = (error as any).error.message || 'Validation error occurred.';
+          this.liveAnnouncer.announce(this.backendError ?? '', 'assertive');
           this.submitting = false;
         }
       });

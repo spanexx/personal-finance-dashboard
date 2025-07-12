@@ -1,0 +1,126 @@
+<div class="form-container">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Create New Financial Goal</mat-card-title>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <div *ngIf="backendError" class="backend-error">
+            <mat-error>{{ backendError }}</mat-error>
+          </div>
+          <form [formGroup]="goalForm" (ngSubmit)="onSubmit()">
+            <mat-form-field appearance="outline">
+              <mat-label>Title</mat-label>
+              <input matInput formControlName="name" placeholder="e.g., Emergency Fund">
+              @if (goalForm.get('name')?.hasError('required') && goalForm.get('name')?.touched) {
+                <mat-error>Title is required</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Category</mat-label>
+              <mat-select formControlName="category">
+                <mat-option *ngFor="let cat of categories" [value]="cat._id">{{ cat.name }} ({{ cat.type }})</mat-option>
+              </mat-select>
+              @if (goalForm.get('category')?.hasError('required') && goalForm.get('category')?.touched) {
+                <mat-error>Category is required</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Target Amount</mat-label>
+              <input matInput type="number" formControlName="targetAmount">
+              <span matPrefix>$&nbsp;</span>
+              @if (goalForm.get('targetAmount')?.hasError('required') && goalForm.get('targetAmount')?.touched) {
+                <mat-error>Target amount is required</mat-error>
+              }
+              @if (goalForm.get('targetAmount')?.hasError('min')) {
+                <mat-error>Amount must be greater than 0</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Current Amount</mat-label>
+              <input matInput type="number" formControlName="currentAmount">
+              <span matPrefix>$&nbsp;</span>
+              @if (goalForm.get('currentAmount')?.hasError('min')) {
+                <mat-error>Amount cannot be negative</mat-error>
+              }
+              @if ((goalForm.get('currentAmount')?.value == 0 || goalForm.get('currentAmount')?.value === '0') && goalForm.get('currentAmount')?.touched) {
+                <mat-error>Amount cannot be zero</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Start Date</mat-label>
+              <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+              <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+              <mat-datepicker #startPicker></mat-datepicker>
+              @if (goalForm.get('startDate')?.hasError('required') && goalForm.get('startDate')?.touched) {
+                <mat-error>Start date is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Target Date</mat-label>
+              <input matInput [matDatepicker]="picker" formControlName="targetDate">
+              <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+              @if (goalForm.get('targetDate')?.hasError('required') && goalForm.get('targetDate')?.touched) {
+                <mat-error>Target date is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Priority</mat-label>
+              <mat-select formControlName="priority">
+                <mat-option value="low">Low</mat-option>
+                <mat-option value="medium">Medium</mat-option>
+                <mat-option value="high">High</mat-option>
+              </mat-select>
+              @if (goalForm.get('priority')?.hasError('required') && goalForm.get('priority')?.touched) {
+                <mat-error>Priority is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Goal Type</mat-label>
+              <mat-select formControlName="goalType">
+                <mat-option value="savings">Savings</mat-option>
+                <mat-option value="debt_payoff">Debt Payoff</mat-option>
+                <mat-option value="investment">Investment</mat-option>
+                <mat-option value="purchase">Purchase</mat-option>
+                <mat-option value="emergency_fund">Emergency Fund</mat-option>
+                <mat-option value="other">Other</mat-option>
+              </mat-select>
+              @if (goalForm.get('goalType')?.hasError('required') && goalForm.get('goalType')?.touched) {
+                <mat-error>Goal type is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Description</mat-label>
+              <textarea matInput formControlName="description" rows="2" placeholder="Optional"></textarea>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Status</mat-label>
+              <mat-select formControlName="status">
+                <mat-option value="active">Active</mat-option>
+                <mat-option value="completed">Completed</mat-option>
+                <mat-option value="paused">Paused</mat-option>
+                <mat-option value="cancelled">Cancelled</mat-option>
+              </mat-select>
+              @if (goalForm.get('status')?.hasError('required') && goalForm.get('status')?.touched) {
+                <mat-error>Status is required</mat-error>
+              }
+            </mat-form-field>
+
+            <div class="actions">
+              <button mat-button type="button" (click)="onCancel()">Cancel</button>
+              <button mat-raised-button color="primary" type="submit" [disabled]="!goalForm.valid">
+                Create Goal
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </div>

@@ -181,14 +181,18 @@ export class ReportService extends ApiService {
   }
 
   /**
+   * Download file helper (copied from ApiService for Blob downloads)
+   */
+  private download(endpoint: string, filename?: string, options: any = {}): Observable<Blob> {
+    // @ts-ignore
+    return (this['httpClient'].download(endpoint, filename, options) as Observable<Blob>);
+  }
+
+  /**
    * Export report in specified format
    */
   exportReport(reportId: string, format: 'pdf' | 'excel' | 'csv'): Observable<Blob> {
-    return this.extractData(
-      this.get<Blob>(`${this.endpoint}/${reportId}/export/${format}`, {}, {
-        responseType: 'blob'
-      })
-    );
+    return this.download(`${this.endpoint}/${reportId}/export/${format}`);
   }
 
   /**
@@ -235,31 +239,42 @@ export class ReportService extends ApiService {
   /**
    * Get financial dashboard summary
    */
-  getDashboardSummary(period?: 'monthly' | 'quarterly' | 'yearly'): Observable<{
-    netWorth: number;
+  getDashboardSummary(period?: 'week' | 'monthly' | 'quarterly' | 'yearly' | 'all'): Observable<{
     monthlyIncome: number;
     monthlyExpenses: number;
+    netWorth: number;
     savingsRate: number;
     budgetUtilization: number;
     goalProgress: number;
     topExpenseCategories: {
-      category: string;
-      amount: number;
+      categoryName: string;
+      totalAmount: number;
       percentage: number;
     }[];
-    recentTrends: {
-      income: 'up' | 'down' | 'stable';
-      expenses: 'up' | 'down' | 'stable';
-      savings: 'up' | 'down' | 'stable';
-    };
-    alerts: {
-      type: 'budget' | 'goal' | 'unusual_spending' | 'low_balance';
-      severity: 'info' | 'warning' | 'error';
-      message: string;
-    }[];
+    recentTrends: any[];
   }> {
+    // Note: Using the endpoint name that matches the backend controller method name
     return this.extractData(
       this.get<any>(`${this.endpoint}/dashboard-summary`, { period })
+    );
+  }
+
+  /**
+   * Get recent reports for the current user
+   * @param limit Number of reports to fetch (default 5)
+   */
+  getRecentReports(limit: number = 5): Observable<FinancialReport[]> {
+    return this.extractData(
+      this.get<FinancialReport[]>(`${this.endpoint}/recent`, { limit })
+    );
+  }
+
+  /**
+   * Get cashflow chart data
+   */
+  getCashflowChartData(): Observable<any> {
+    return this.extractData(
+      this.get<any>('/cashflow/chart')
     );
   }
 }

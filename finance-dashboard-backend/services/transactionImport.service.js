@@ -108,9 +108,11 @@ class TransactionImportService {
     const savedTransactions = await Transaction.insertMany(processedTransactions);
 
     return {
-      importedCount: savedTransactions.length,
-      totalRows: transactions.length,
-      skippedRows: transactions.length - savedTransactions.length,
+      recordsProcessed: transactions.length,
+      recordsImported: savedTransactions.length,
+      recordsSkipped: transactions.length - savedTransactions.length,
+      errors: [],
+      warnings: [],
       transactions: savedTransactions.slice(0, 10) // Return first 10 for preview
     };
   }

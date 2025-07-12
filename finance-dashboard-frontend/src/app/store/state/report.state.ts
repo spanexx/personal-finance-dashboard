@@ -1,7 +1,7 @@
-import { ReportData } from '../../core/services/reports.service';
+import { FinancialReport } from '../../core/services/report.service';
 
 export interface ReportState {
-  currentReport: ReportData | null;
+  currentReport: FinancialReport | null;
   loading: boolean;
   error: string | null;
   exporting: boolean;

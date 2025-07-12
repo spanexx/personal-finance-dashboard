@@ -171,7 +171,7 @@ describe('ImportService', () => {
       const result = await ImportService.importData(mockUserId, mockFile, options);
 
       expect(result).toEqual({
-        importedCount: 1,
+        recordsImported: 1,
         totalRows: 1,
         validationErrors: [],
         duplicates: [],
@@ -255,7 +255,7 @@ describe('ImportService', () => {
 
       const result = await ImportService.importData(mockUserId, mockFile, options);
 
-      expect(result.importedCount).toBe(1);
+      expect(result.recordsImported).toBe(1);
       expect(logger.warn).toHaveBeenCalledWith(
         'Failed to clean up uploaded file:',
         'Cleanup failed'
@@ -278,7 +278,7 @@ describe('ImportService', () => {
 
       const result = await ImportService.importData(mockUserId, mockFile, options);
 
-      expect(result.importedCount).toBe(1);
+      expect(result.recordsImported).toBe(1);
       expect(Budget.insertMany).toHaveBeenCalled();
     });
 
@@ -297,7 +297,7 @@ describe('ImportService', () => {
 
       const result = await ImportService.importData(mockUserId, mockFile, options);
 
-      expect(result.importedCount).toBe(1);
+      expect(result.recordsImported).toBe(1);
       expect(Goal.insertMany).toHaveBeenCalled();
     });
 
@@ -316,7 +316,7 @@ describe('ImportService', () => {
 
       const result = await ImportService.importData(mockUserId, mockFile, options);
 
-      expect(result.importedCount).toBe(1);
+      expect(result.recordsImported).toBe(1);
       expect(Category.insertMany).toHaveBeenCalled();
     });
 
@@ -336,7 +336,7 @@ describe('ImportService', () => {
 
       const result = await ImportService.importData(mockUserId, mockFile, options);
 
-      expect(result.importedCount).toBe(1);
+      expect(result.recordsImported).toBe(1);
       expect(Transaction.insertMany).toHaveBeenCalled();
     });
   });
@@ -1140,11 +1140,11 @@ describe('ImportService', () => {
 
       jest.spyOn(ImportService, 'parseFile').mockResolvedValue(mockRawData);
       jest.spyOn(ImportService, 'importTransactions').mockResolvedValue({
-        importedCount: 2,
-        totalRows: 2,
-        validationErrors: [],
-        duplicates: [],
-        importErrors: [],
+        recordsProcessed: 2,
+        recordsImported: 2,
+        recordsSkipped: 0,
+        errors: [],
+        warnings: [],
         summary: { processed: 2, validated: 2, imported: 2, skipped: 0, errors: 0 }
       });
 
@@ -1165,7 +1165,7 @@ describe('ImportService', () => {
         expect.any(Object)
       );
 
-      expect(result.importedCount).toBe(2);
+      expect(result.recordsImported).toBe(2);
     });
   });
 
@@ -1358,9 +1358,9 @@ describe('ImportService', () => {
 
       const result = await ImportService.importData(mockUserId, mockFile, options);
 
-      expect(result.importedCount).toBe(1);
-      expect(result.importErrors).toHaveLength(1);
-      expect(result.importErrors[0]).toEqual({
+      expect(result.recordsImported).toBe(1);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]).toEqual({
         row: 3,
         error: 'Duplicate key error',
         data: expect.any(Object)
@@ -1438,8 +1438,8 @@ describe('ImportService', () => {
       const options = { dataType: 'transactions', skipDuplicates: true };
       const result = await ImportService.importData(mockUserId, mockFile, options);
 
-      expect(result.duplicates).toHaveLength(1);
-      expect(result.importedCount).toBe(0);
+      expect(result.recordsSkipped).toBeGreaterThan(0);
+      expect(result.recordsImported).toBe(0);
     });
   });
 });

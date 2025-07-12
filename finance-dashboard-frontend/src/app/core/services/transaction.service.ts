@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { ApiService, PaginationParams, FilterParams, PaginatedResponse } from './api.service';
 import { ApiResponse } from './http-client.service';
 import {
@@ -103,8 +104,18 @@ export class TransactionService extends ApiService {
    * Get a single transaction by ID
    */
   getTransaction(id: string): Observable<Transaction> {
+    console.log('Service: Getting transaction with ID:', id); // Debug log
     return this.extractData(
       this.get<Transaction>(`${this.endpoint}/${id}`)
+    ).pipe(
+      map(transaction => {
+        console.log('Service: Transaction retrieved:', transaction); // Debug log
+        return transaction;
+      }),
+      catchError(error => {
+        console.error('Service: Error getting transaction:', error); // Debug log
+        throw error;
+      })
     );
   }
 

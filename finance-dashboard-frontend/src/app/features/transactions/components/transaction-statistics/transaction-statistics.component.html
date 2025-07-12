@@ -1,0 +1,26 @@
+<mat-card class="stats-card" *ngIf="!isLoading">
+  <mat-card-content>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value">{{ stats.total }}</div>
+        <div class="stat-label">Total Transactions</div>
+      </div>
+      <div class="stat-item income">
+        <div class="stat-value">{{ stats.income | currency }}</div>
+        <div class="stat-label">Total Income</div>
+      </div>
+      <div class="stat-item expense">
+        <div class="stat-value">{{ stats.expenses | currency }}</div>
+        <div class="stat-label">Total Expenses</div>
+      </div>
+      <div class="stat-item" [ngClass]="{ 'positive': stats.netAmount >= 0, 'negative': stats.netAmount < 0 }">
+        <div class="stat-value">{{ stats.netAmount | currency }}</div>
+        <div class="stat-label">Net Amount</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ stats.avgTransaction | currency }}</div>
+        <div class="stat-label">Avg Transaction</div>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

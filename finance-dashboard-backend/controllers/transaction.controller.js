@@ -90,8 +90,8 @@ class TransactionController {
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
     
-    if (pageNum < 1 || limitNum < 1 || limitNum > 100) {
-      throw new ValidationError('Invalid pagination parameters. Page must be >= 1, limit must be 1-100');
+    if (pageNum < 1 || limitNum < 1 || limitNum > 500) {
+      throw new ValidationError('Invalid pagination parameters. Page must be >= 1, limit must be 1-500');
     }
 
     // Prepare filters and pagination for service
@@ -231,6 +231,28 @@ class TransactionController {
 
     // Use service to create transaction
     const transaction = await transactionService.createTransaction(req.user.id, transactionData);
+
+    // After creating a transaction, recalculate spent amounts for the relevant budget (if expense and has category)
+    if (type === 'expense' && category) {
+      try {
+        const Budget = require('../models/Budget');
+        // Find all budgets that include this category and cover the transaction date
+        const budgets = await Budget.find({
+          user: req.user.id,
+          isDeleted: { $ne: true },
+          isActive: true,
+          startDate: { $lte: transaction.date },
+          endDate: { $gte: transaction.date },
+          'categoryAllocations.category': category
+        });
+        for (const budget of budgets) {
+          await budget.calculateSpentAmount();
+          await budget.save(); // Persist recalculated values
+        }
+      } catch (err) {
+        console.error('[TransactionController] Error recalculating budget spent amounts after transaction creation:', err);
+      }
+    }
 
     // Handle transfer transactions (create corresponding transaction) - keeping original logic
     let relatedTransaction = null;

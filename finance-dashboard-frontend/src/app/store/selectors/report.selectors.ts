@@ -25,13 +25,13 @@ export const selectReportExporting = createSelector(
 
 export const selectReportSummary = createSelector(
   selectCurrentReport,
-  (report) => report?.summary
+  (report) => report?.data?.summary
 );
 
 export const selectReportCharts = createSelector(
   selectCurrentReport,
   (report) => ({
-    categoryBreakdown: report?.categoryBreakdown,
-    chartData: report?.chartData
+    categoryBreakdown: report?.data?.categoryBreakdown,
+    chartData: report?.data?.chartData
   })
 );

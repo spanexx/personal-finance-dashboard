@@ -4,67 +4,48 @@ import { Observable, of, throwError } from 'rxjs';
 import { cold, hot } from 'jasmine-marbles';
 
 import { ReportEffects } from './report.effects';
-import { ReportsService, ReportConfig, ReportData } from '../../core/services/reports.service';
+import { ReportService, GenerateReportRequest, FinancialReport } from '../../core/services/report.service';
 import * as ReportActions from '../actions/report.actions';
 
 describe('ReportEffects', () => {
   let actions$: Observable<any>;
   let effects: ReportEffects;
-  let reportsService: jasmine.SpyObj<ReportsService>;
+  let reportService: jasmine.SpyObj<ReportService>;
 
-  const mockReportConfig: ReportConfig = {
-    reportType: 'expense',
-    startDate: new Date('2024-01-01'),
-    endDate: new Date('2024-01-31'),
-    includeCharts: true,
-    includeTransactions: true,
-    groupBy: 'monthly'
+  const mockReportConfig: GenerateReportRequest = {
+    name: 'Monthly Expense Report',
+    type: 'expense',
+    period: 'monthly',
+    startDate: '2024-01-01T00:00:00.000Z',
+    endDate: '2024-01-31T00:00:00.000Z',
+    format: 'pdf',
+    options: {
+      includeCharts: true,
+      includeTransactionDetails: true,
+      groupBy: 'date'
+    }
   };
 
-  const mockReport: ReportData = {
+  const mockReport: FinancialReport = {
     id: 'report_123',
-    title: 'Monthly Expense Report',
+    userId: '',
+    name: 'Monthly Expense Report',
     type: 'expense',
-    dateRange: {
-      startDate: '2024-01-01T00:00:00.000Z',
-      endDate: '2024-01-31T00:00:00.000Z'
-    },
-    summary: {
-      totalIncome: 5000,
-      totalExpenses: 3250,
-      netSavings: 1750,
-      transactionCount: 45
-    },
-    chartData: {
-      labels: ['Food', 'Transport', 'Bills'],
-      datasets: [{
-        label: 'Expenses',
-        data: [800, 400, 1200],
-        backgroundColor: ['#ff6384', '#36a2eb', '#ffce56']
-      }]
-    },
-    categoryBreakdown: [
-      { category: 'Food', amount: 800, percentage: 24.6, color: '#ff6384' },
-      { category: 'Transport', amount: 400, percentage: 12.3, color: '#36a2eb' },
-      { category: 'Bills', amount: 1200, percentage: 36.9, color: '#ffce56' }
-    ],
-    transactions: [
-      {
-        id: 'txn_1',
-        date: '2024-01-15',
-        description: 'Grocery shopping',
-        category: 'Food',
-        amount: 120.50,
-        type: 'expense'
-      }
-    ],
-    generatedAt: '2024-01-31T12:00:00.000Z'
+    period: 'monthly',
+    startDate: '2024-01-01T00:00:00.000Z',
+    endDate: '2024-01-31T00:00:00.000Z',
+    status: 'completed',
+    format: 'pdf',
+    data: {},
+    metadata: { totalRecords: 1, generationTime: 0 },
+    createdAt: '2024-01-31T12:00:00.000Z',
+    updatedAt: '2024-01-31T12:00:00.000Z'
   };
 
   const mockBlob = new Blob(['test content'], { type: 'application/pdf' });
 
   beforeEach(() => {
-    const spy = jasmine.createSpyObj('ReportsService', [
+    const spy = jasmine.createSpyObj('ReportService', [
       'generateReport',
       'exportReport'
     ]);
@@ -73,12 +54,12 @@ describe('ReportEffects', () => {
       providers: [
         ReportEffects,
         provideMockActions(() => actions$),
-        { provide: ReportsService, useValue: spy }
+        { provide: ReportService, useValue: spy }
       ]
     });
 
     effects = TestBed.inject(ReportEffects);
-    reportsService = TestBed.inject(ReportsService) as jasmine.SpyObj<ReportsService>;
+    reportService = TestBed.inject(ReportService) as jasmine.SpyObj<ReportService>;
   });
 
   describe('generateReport$', () => {
@@ -89,7 +70,7 @@ describe('ReportEffects', () => {
       actions$ = hot('-a', { a: action });
       const response = cold('-b|', { b: mockReport });
       const expected = cold('--c', { c: completion });
-      reportsService.generateReport.and.returnValue(response);
+      reportService.generateReport.and.returnValue(response);
 
       expect(effects.generateReport$).toBeObservable(expected);
     });
@@ -102,7 +83,7 @@ describe('ReportEffects', () => {
       actions$ = hot('-a', { a: action });
       const response = cold('-#|', {}, error);
       const expected = cold('--c', { c: completion });
-      reportsService.generateReport.and.returnValue(response);
+      reportService.generateReport.and.returnValue(response);
 
       expect(effects.generateReport$).toBeObservable(expected);
     });
@@ -115,7 +96,7 @@ describe('ReportEffects', () => {
       actions$ = hot('-a', { a: action });
       const response = cold('-#|', {}, error);
       const expected = cold('--c', { c: completion });
-      reportsService.generateReport.and.returnValue(response);
+      reportService.generateReport.and.returnValue(response);
 
       expect(effects.generateReport$).toBeObservable(expected);
     });
@@ -131,16 +112,21 @@ describe('ReportEffects', () => {
       actions$ = hot('-a', { a: action });
       const response = cold('-b|', { b: mockReport });
       const expected = cold('--c', { c: completion });
-      reportsService.generateReport.and.returnValue(response);
+      reportService.generateReport.and.returnValue(response);
 
       expect(effects.loadReport$).toBeObservable(expected);
-      expect(reportsService.generateReport).toHaveBeenCalledWith({
-        reportType: 'spending',
-        startDate: jasmine.any(Date),
-        endDate: jasmine.any(Date),
-        groupBy: 'monthly',
-        includeCharts: true,
-        includeTransactions: true
+      expect(reportService.generateReport).toHaveBeenCalledWith({
+        name: 'Spending Report',
+        type: 'expense',
+        period: 'monthly',
+        startDate: jasmine.any(String),
+        endDate: jasmine.any(String),
+        format: 'pdf',
+        options: {
+          includeCharts: true,
+          includeTransactionDetails: true,
+          groupBy: 'date'
+        }
       });
     });
 
@@ -153,7 +139,7 @@ describe('ReportEffects', () => {
       actions$ = hot('-a', { a: action });
       const response = cold('-#|', {}, error);
       const expected = cold('--c', { c: completion });
-      reportsService.generateReport.and.returnValue(response);
+      reportService.generateReport.and.returnValue(response);
 
       expect(effects.loadReport$).toBeObservable(expected);
     });
@@ -167,7 +153,7 @@ describe('ReportEffects', () => {
       actions$ = hot('-a', { a: action });
       const response = cold('-#|', {}, error);
       const expected = cold('--c', { c: completion });
-      reportsService.generateReport.and.returnValue(response);
+      reportService.generateReport.and.returnValue(response);
 
       expect(effects.loadReport$).toBeObservable(expected);
     });
@@ -183,10 +169,10 @@ describe('ReportEffects', () => {
       actions$ = hot('-a', { a: action });
       const response = cold('-b|', { b: mockBlob });
       const expected = cold('--c', { c: completion });
-      reportsService.exportReport.and.returnValue(response);
+      reportService.exportReport.and.returnValue(response);
 
       expect(effects.exportReport$).toBeObservable(expected);
-      expect(reportsService.exportReport).toHaveBeenCalledWith(mockReport, format);
+      expect(reportService.exportReport).toHaveBeenCalledWith(mockReport.id, format);
     });
 
     it('should return exportReportFailure action on error', () => {
@@ -198,7 +184,7 @@ describe('ReportEffects', () => {
       actions$ = hot('-a', { a: action });
       const response = cold('-#|', {}, error);
       const expected = cold('--c', { c: completion });
-      reportsService.exportReport.and.returnValue(response);
+      reportService.exportReport.and.returnValue(response);
 
       expect(effects.exportReport$).toBeObservable(expected);
     });
@@ -212,7 +198,7 @@ describe('ReportEffects', () => {
       actions$ = hot('-a', { a: action });
       const response = cold('-#|', {}, error);
       const expected = cold('--c', { c: completion });
-      reportsService.exportReport.and.returnValue(response);
+      reportService.exportReport.and.returnValue(response);
 
       expect(effects.exportReport$).toBeObservable(expected);
     });
@@ -222,7 +208,7 @@ describe('ReportEffects', () => {
       
       formats.forEach(format => {
         const action = ReportActions.exportReport({ report: mockReport, format });
-        const expectedFilename = `${mockReport.title}.${format}`;
+        const expectedFilename = `${mockReport.name}.${format}`;
         const completion = ReportActions.exportReportSuccess({ 
           blob: mockBlob, 
           filename: expectedFilename 
@@ -231,7 +217,7 @@ describe('ReportEffects', () => {
         actions$ = hot('-a', { a: action });
         const response = hot('-b|', { b: mockBlob });
         const expected = cold('--c', { c: completion });
-        reportsService.exportReport.and.returnValue(response);
+        reportService.exportReport.and.returnValue(response);
 
         expect(effects.exportReport$).toBeObservable(expected);
       });

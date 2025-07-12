@@ -1,0 +1,66 @@
+.stats-card {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  background-color: #f7f9fc;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 12px;
+  border-radius: 6px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  }
+  
+  &.income {
+    border-left: 4px solid #4caf50;
+  }
+  
+  &.expense {
+    border-left: 4px solid #f44336;
+  }
+  
+  &.positive {
+    border-left: 4px solid #4caf50;
+  }
+  
+  &.negative {
+    border-left: 4px solid #f44336;
+  }
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

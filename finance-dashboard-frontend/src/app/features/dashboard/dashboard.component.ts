@@ -19,43 +19,9 @@ import { TransactionService } from '../../core/services/transaction.service';
 import { BudgetService } from '../../core/services/budget.service';
 import { GoalsService } from '../../core/services/goals.service';
 import { CategoryService } from '../../core/services/category.service';
+import { TimePeriod, BudgetItem, SavingsGoal, CategoryExpense, PeriodCashflow } from './interfaces';
+import { MaterialModule } from '../../shared/modules';
 
-interface TimePeriod {
-  value: string;
-  label: string;
-}
-
-interface BudgetItem {
-  category: string;
-  limit: number;
-  spent: number;
-  color?: string;
-}
-
-interface SavingsGoal {
-  id: string;
-  name: string;
-  targetAmount: number;
-  currentAmount: number;
-  targetDate: string;
-}
-
-interface CategoryExpense {
-  category: {
-    id: string;
-    name: string;
-    color: string;
-  };
-  amount: number;
-  percentage: number;
-}
-
-interface PeriodCashflow {
-  period: string;
-  income: number;
-  expenses: number;
-  net: number;
-}
 
 @Component({
   selector: 'app-dashboard',
@@ -63,13 +29,7 @@ interface PeriodCashflow {
   imports: [
     CommonModule,
     RouterLink,
-    MatCardModule,
-    MatIconModule,
-    MatButtonModule,
-    MatListModule,
-    MatProgressBarModule,
-    MatSelectModule,
-    MatFormFieldModule,
+    MaterialModule,
     FormsModule,
     NgChartsModule
   ],
@@ -157,6 +117,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
   };
+  // Add this property to store top expense categories from summary
+  public topExpenseCategories: any[] = [];
+
   constructor(
     private reportService: ReportService,
     private transactionService: TransactionService,
@@ -197,35 +160,58 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.announceLoadingStart();
 
     // Map dashboard period to allowed values for getDashboardSummary
-    let summaryPeriod: 'monthly' | 'quarterly' | 'yearly' | undefined;
+    let summaryPeriod: 'week' | 'all' | 'monthly' | 'quarterly' | 'yearly';
     switch (this.selectedTimePeriod) {
+      case 'week': summaryPeriod = 'week'; break;
       case 'month': summaryPeriod = 'monthly'; break;
       case 'quarter': summaryPeriod = 'quarterly'; break;
       case 'year': summaryPeriod = 'yearly'; break;
-      default: summaryPeriod = undefined;
+      case 'all': summaryPeriod = 'all'; break;
+      default: summaryPeriod = 'monthly';
     }
     const destroy$ = this.destroy$;
 
-    // 1. Financial summary & income vs expenses
+    // 1. Financial summary (set all summary fields from period-aware summary API)
     this.reportService.getDashboardSummary(summaryPeriod).pipe(takeUntil(destroy$)).subscribe(summary => {
-      console.log('Dashboard summary:', summary);
+      // Log the summary for debugging
+      console.log('DashboardSummary:', summary);
       if (summary) {
         this.totalIncome = summary.monthlyIncome ?? 0;
         this.totalExpenses = summary.monthlyExpenses ?? 0;
-        // netBalance: use netWorth if available, else income - expenses
         this.netBalance = typeof summary.netWorth === 'number' ? summary.netWorth : (this.totalIncome - this.totalExpenses);
-        this.savingsRate = typeof summary.savingsRate === 'number' ? summary.savingsRate : 0; // Add this line
-        // Optionally, you can use summary.recentTrends for chart data if available
-        if (summary.recentTrends && Array.isArray(summary.recentTrends)) {
-          // Map recentTrends to PeriodCashflow[] for the chart
-          const cashflowData = summary.recentTrends.map((trend: any) => ({
-            period: trend.period,
-            income: trend.income,
-            expenses: trend.expenses,
-            net: trend.income - trend.expenses
+        this.savingsRate = typeof summary.savingsRate === 'number' ? summary.savingsRate : 0;
+        
+        // Extract top expense categories
+        if (Array.isArray(summary.topExpenseCategories) && summary.topExpenseCategories.length > 0) {
+          this.topExpenseCategories = summary.topExpenseCategories.map(cat => ({
+            category: cat.categoryName || 'Unknown',
+            amount: cat.totalAmount || 0,
+            percentage: cat.percentage || 0
           }));
-          this.prepareIncomeExpenseChartData(cashflowData);
         }
+        
+        // Process transaction trends for income/expense chart if available
+        if (Array.isArray(summary.recentTrends) && 
+            summary.recentTrends.length > 0 && 
+            summary.recentTrends[0] !== 'insufficient-data') {
+          // Convert the API response to our PeriodCashflow interface
+          const trendData: PeriodCashflow[] = summary.recentTrends.map(item => ({
+            year: typeof item.year === 'number' ? item.year : undefined,
+            period: typeof item.period === 'number' ? item.period : undefined,
+            income: typeof item.income === 'number' ? item.income : 0,
+            expense: typeof item.expense === 'number' ? item.expense : 0
+          }));
+          this.prepareIncomeExpenseChartData(trendData);
+        } else {
+          // If no trend data available, fetch from separate cashflow API as fallback
+          this.reportService.getCashflowChartData().pipe(takeUntil(destroy$)).subscribe(result => {
+            if (result && Array.isArray(result.cashflow)) {
+              this.prepareIncomeExpenseChartData(result.cashflow);
+            }
+            this.cdr.detectChanges();
+          });
+        }
+        
         this.cdr.detectChanges();
       }
     });
@@ -239,12 +225,15 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     // 3. Budget progress (getBudgets returns paginated)
     this.budgetService.getBudgets({}).pipe(takeUntil(destroy$)).subscribe(result => {
       if (result && result.data) {
-        this.budgetItems = result.data.map((cat: any) => ({
-          category: cat.categoryDetails?.name || cat.category,
-          limit: cat.amount,
-          spent: cat.spent,
-          color: cat.categoryDetails?.color || '#cccccc'
-        }));
+        // Flatten all categoryAllocations from all budgets
+        this.budgetItems = result.data.flatMap((budget: any) =>
+          (budget.categoryAllocations || []).map((alloc: any) => ({
+            category: alloc.category?.name || 'Unknown',
+            limit: alloc.allocatedAmount ?? alloc.adjustedAmount ?? 0,
+            spent: alloc.spentAmount ?? 0,
+            color: alloc.category?.color || '#cccccc'
+          }))
+        );
         this.cdr.detectChanges();
       }
     });
@@ -262,27 +251,42 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     // 5. Expense breakdown by category (getSpendingAnalysis)
-    // Use current month as default range for demo; adjust as needed
-    const now = new Date();
-    const startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+    // Use selected time period for date range
+    const { startDate, endDate } = this.getDateRangeForPeriod(this.selectedTimePeriod);
+    
     this.reportService.getSpendingAnalysis({
-      startDate,
-      endDate,
+      startDate: startDate.toISOString().slice(0, 10),
+      endDate: endDate.toISOString().slice(0, 10),
       groupBy: 'category'
     }).pipe(takeUntil(destroy$)).subscribe(spending => {
       if (spending && spending.categoryBreakdown) {
-        // Map categoryBreakdown to CategoryExpense[]
-        const categoryExpenses = spending.categoryBreakdown.map((cat: any) => ({
-          category: {
-            id: cat.categoryId,
-            name: cat.categoryName,
-            color: cat.color || '#cccccc'
-          },
-          amount: cat.amount,
-          percentage: cat.percentage
-        }));
-        this.prepareExpenseChartData(categoryExpenses);
+        // Use topExpenseCategories if available, otherwise fall back to category breakdown
+        if (this.topExpenseCategories.length > 0) {
+          const categoryExpenses: CategoryExpense[] = this.topExpenseCategories.map((cat: any, idx: number) => ({
+            category: {
+              id: String(idx),
+              name: cat.category || `Category ${idx + 1}`,
+              color: this.getFallbackColor(idx)
+            },
+            amount: cat.amount ?? 0,
+            percentage: cat.percentage ?? 0
+          }));
+          this.prepareExpenseChartData(categoryExpenses);
+        } else {
+          const categoryExpenses: CategoryExpense[] = spending.categoryBreakdown.map((cat: any, idx: number) => {
+            const categoryObj = cat.category || {};
+            return {
+              category: {
+                id: categoryObj.id ?? String(idx),
+                name: categoryObj.name || `Category ${idx + 1}`,
+                color: categoryObj.color || this.getFallbackColor(idx)
+              },
+              amount: cat.amount ?? 0,
+              percentage: cat.percentage ?? 0
+            };
+          });
+          this.prepareExpenseChartData(categoryExpenses);
+        }
         this.cdr.detectChanges();
       }
       this.isLoading = false;
@@ -432,6 +436,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Prepare data for income vs expense chart
+   * Handles both legacy format and new transaction trends format
    */
   prepareIncomeExpenseChartData(cashflowData: PeriodCashflow[]): void {
     if (!cashflowData || cashflowData.length === 0) {
@@ -442,9 +447,60 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    this.incomeExpenseChartData.labels = cashflowData.map(item => item.period);
-    this.incomeExpenseChartData.datasets[0].data = cashflowData.map(item => item.income);
-    this.incomeExpenseChartData.datasets[1].data = cashflowData.map(item => item.expenses);
+    // Determine if we're using new format based on presence of 'year' field
+    const isNewFormat = typeof cashflowData[0].year === 'number';
+    
+    if (isNewFormat) {
+      // New format from transaction trends
+      // Sort data by date if needed
+      const sortedData = [...cashflowData].sort((a, b) => {
+        const yearA = typeof a.year === 'number' ? a.year : 0;
+        const yearB = typeof b.year === 'number' ? b.year : 0;
+        
+        if (yearA !== yearB) return yearA - yearB;
+        
+        const periodA = typeof a.period === 'number' ? a.period : 0;
+        const periodB = typeof b.period === 'number' ? b.period : 0;
+        return periodA - periodB;
+      });
+      
+      // Generate labels based on period type (day or month number)
+      this.incomeExpenseChartData.labels = sortedData.map(item => {
+        const year = typeof item.year === 'number' ? item.year : new Date().getFullYear();
+        const periodNum = typeof item.period === 'number' ? item.period : 0;
+        
+        // Determine if this is a day (1-31) or month (1-12)
+        if (periodNum > 12) {
+          // Day format
+          return `${periodNum}/${year}`;
+        } else {
+          // Month format - use month name
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const index = Math.max(0, Math.min(periodNum - 1, 11));
+          return `${monthNames[index]} ${year}`;
+        }
+      });
+      
+      this.incomeExpenseChartData.datasets[0].data = sortedData.map(item => typeof item.income === 'number' ? item.income : 0);
+      this.incomeExpenseChartData.datasets[1].data = sortedData.map(item => {
+        if (typeof item.expense === 'number') return item.expense;
+        if (typeof item.expenses === 'number') return item.expenses;
+        return 0;
+      });
+    } else {
+      // Old format from cashflow API
+      this.incomeExpenseChartData.labels = cashflowData.map(item => {
+        if (item.periodLabel) return item.periodLabel;
+        if (typeof item.period === 'string') return item.period;
+        return '';
+      });
+      this.incomeExpenseChartData.datasets[0].data = cashflowData.map(item => typeof item.income === 'number' ? item.income : 0);
+      this.incomeExpenseChartData.datasets[1].data = cashflowData.map(item => {
+        if (typeof item.expenses === 'number') return item.expenses;
+        if (typeof item.expense === 'number') return item.expense;
+        return 0;
+      });
+    }
     
     this.cdr.detectChanges();
   }
@@ -595,5 +651,68 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       this.accessibilityService.announce(message);
       this.lastAnnouncementTime = now;
     }
+  }
+
+  /**
+   * Get a fallback color for chart segments
+   */
+  private getFallbackColor(index: number): string {
+    // Use a palette of visually distinct colors
+    const palette = [
+      '#4caf50', '#f44336', '#2196f3', '#ff9800', '#9c27b0',
+      '#00bcd4', '#e91e63', '#8bc34a', '#ffc107', '#3f51b5',
+      '#ff5722', '#607d8b', '#cddc39', '#795548', '#673ab7'
+    ];
+    return palette[index % palette.length];
+  }
+
+  /**
+   * Get date range for the selected period
+   */
+  private getDateRangeForPeriod(period: string): { startDate: Date, endDate: Date } {
+    const endDate = new Date();
+    let startDate = new Date();
+    
+    switch(period) {
+      case 'week': {
+        // Start of week (Sunday)
+        const day = startDate.getDay();
+        startDate.setDate(startDate.getDate() - day);
+        break;
+      }
+      case 'month': {
+        // Start of month
+        startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+        break;
+      }
+      case 'quarter': {
+        // Start of quarter
+        const quarterMonth = Math.floor(endDate.getMonth() / 3) * 3;
+        startDate = new Date(endDate.getFullYear(), quarterMonth, 1);
+        break;
+      }
+      case 'year': {
+        // Start of year
+        startDate = new Date(endDate.getFullYear(), 0, 1);
+        break;
+      }
+      case 'all': {
+        // Start from 2020 as default for "all time"
+        startDate = new Date(2020, 0, 1);
+        break;
+      }
+      default: {
+        // Default to month
+        startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+      }
+    }
+    
+    // Set start date to beginning of day
+    startDate.setHours(0, 0, 0, 0);
+    
+    // Set end date to end of day
+    endDate.setHours(23, 59, 59, 999);
+    
+    return { startDate, endDate };
   }
 }

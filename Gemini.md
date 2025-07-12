@@ -90,3 +90,15 @@ I will use task lists to manage my work on the project. Each task list will be s
 *   [ ] Pending: Create authentication routes
 *   [ ] Pending: Write unit tests for authentication service
 *   [ ] Pending: Write integration tests for authentication flow
+
+### Task List for Flexible Report Generation Options
+
+*   [ ] Pending: Review frontend report generation options (`includeCharts`, `includeTransactionDetails`, `groupBy`, `startDate`, `endDate`, `type`, etc.) and document all possible options sent to the backend.
+*   [ ] Pending: Update backend controller (`report.controller.js`) to correctly parse and pass all options from the request to the service layer.
+*   [ ] Pending: Refactor backend service (`report.service.js`) to:
+    *   [ ] Pending: Only include charts if `includeCharts` is true.
+    *   [ ] Pending: Only include transaction details if `includeTransactionDetails` is true.
+    *   [ ] Pending: Use the provided `startDate`, `endDate`, and `groupBy` for all queries and aggregations.
+    *   [ ] Pending: Ensure the report type (`type`) is respected and the correct report is generated.
+*   [ ] Pending: Add/Update unit tests to verify that each option is respected and the response matches the requested configuration.
+*   [ ] Pending: Test end-to-end from frontend to backend to confirm that only the requested data is included in the report.

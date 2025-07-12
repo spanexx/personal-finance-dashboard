@@ -9,6 +9,9 @@ const {
   NotFoundError,
   DatabaseError 
 } = require('../utils/errorHandler');
+const { v4: uuidv4 } = require('uuid');
+const { Report } = require('../models');
+const { generateReportPDF } = require('../utils/pdfExport');
 
 /**
  * Reports and Analytics Controller
@@ -22,6 +25,7 @@ class ReportController {
    * @param {Object} res - Express response object
    */
   static getSpendingReport = ErrorHandler.asyncHandler(async (req, res) => {
+    logger.info(`[report Req Body]:  ${JSON.stringify(req.body)}`);
     logger.info(`Generating spending report for user ${req.user.id}`);
 
     const { 
@@ -29,7 +33,9 @@ class ReportController {
       endDate, 
       categoryId, 
       timeGroupBy = 'month',
-      limit = 10 
+      limit = 10,
+      includeCharts = 'true',
+      includeTransactionDetails = 'false'
     } = req.query;
     
     const userId = req.user.id;
@@ -51,11 +57,20 @@ class ReportController {
       startDate: startDate ? new Date(startDate) : undefined,
       endDate: endDate ? new Date(endDate) : undefined,
       categories: categoryId ? [categoryId] : [],
-      groupBy: timeGroupBy
+      groupBy: timeGroupBy,
+      includeCharts: includeCharts === 'true' || includeCharts === true,
+      includeTransactionDetails: includeTransactionDetails === 'true' || includeTransactionDetails === true
     };
+
+    logger.info(`[REPORT] Incoming request data:`, {
+      userId,
+      query: req.query,
+      options
+    });
 
     const report = await ReportService.generateSpendingReport(userId, options);
 
+    logger.info(`[REPORT] Outgoing response data:`, report);
     logger.info(`Spending report generated successfully for user ${userId}`);
     
     return ApiResponse.success(res, report, 'Spending report generated successfully');
@@ -72,7 +87,9 @@ class ReportController {
     const { 
       startDate, 
       endDate, 
-      timeGroupBy = 'month' 
+      timeGroupBy = 'month',
+      includeCharts = 'true',
+      includeTransactionDetails = 'false'
     } = req.query;
     
     const userId = req.user.id;
@@ -93,7 +110,9 @@ class ReportController {
     const options = {
       startDate: startDate ? new Date(startDate) : undefined,
       endDate: endDate ? new Date(endDate) : undefined,
-      groupBy: timeGroupBy
+      groupBy: timeGroupBy,
+      includeCharts: includeCharts === 'true' || includeCharts === true,
+      includeTransactionDetails: includeTransactionDetails === 'true' || includeTransactionDetails === true
     };
 
     const report = await ReportService.generateIncomeReport(userId, options);
@@ -156,7 +175,10 @@ class ReportController {
     const { 
       startDate, 
       endDate, 
-      budgetId 
+      budgetId,
+      includeCharts = 'true',
+      includeTransactionDetails = 'false',
+      groupBy = 'month'
     } = req.query;
     
     const userId = req.user.id;
@@ -177,7 +199,10 @@ class ReportController {
     const options = {
       startDate: startDate ? new Date(startDate) : undefined,
       endDate: endDate ? new Date(endDate) : undefined,
-      budgetId
+      budgetId,
+      groupBy,
+      includeCharts: includeCharts === 'true' || includeCharts === true,
+      includeTransactionDetails: includeTransactionDetails === 'true' || includeTransactionDetails === true
     };
 
     const report = await ReportService.generateBudgetPerformanceReport(userId, options);
@@ -263,9 +288,14 @@ class ReportController {
 
     // Calculate date range based on period
     const endDate = new Date();
-    const startDate = new Date();
-    
+    let startDate = new Date();
     switch (period) {
+      case 'week': {
+        // Set to start of current week (Sunday)
+        const day = startDate.getDay();
+        startDate.setDate(startDate.getDate() - day);
+        break;
+      }
       case 'month':
         startDate.setMonth(startDate.getMonth() - 1);
         break;
@@ -274,6 +304,9 @@ class ReportController {
         break;
       case 'year':
         startDate.setFullYear(startDate.getFullYear() - 1);
+        break;
+      case 'all':
+        startDate = new Date('1970-01-01T00:00:00Z');
         break;
       default:
         startDate.setMonth(startDate.getMonth() - 1);
@@ -296,41 +329,22 @@ class ReportController {
       ReportService.calculateNetWorth(userId, { ...options, projectionMonths: 6 })
     ]);
 
+    // Build dashboard summary with only period-aware fields
+    const totalIncome = incomeReport.summary?.totalIncome || 0;
+    const totalExpenses = spendingReport.summary?.totalExpenses || 0;
+    // Calculate savings rate properly - allowing negative values
+    const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
+    
     const dashboardSummary = {
       period,
       dateRange: { startDate, endDate },
-      spending: {
-        totalAmount: spendingReport.summary?.totalSpending || 0,
-        topCategories: spendingReport.categoryAnalysis?.slice(0, 3) || [],
-        trend: spendingReport.trends?.length > 0 ? spendingReport.trends[spendingReport.trends.length - 1] : null
-      },
-      income: {
-        totalAmount: incomeReport.summary?.totalIncome || 0,
-        growthRate: incomeReport.analysis?.growthRate || 0,
-        diversificationScore: incomeReport.analysis?.diversificationScore || 0
-      },
-      cashFlow: {
-        netCashFlow: cashFlowReport.summary?.averageNetCashFlow || 0,
-        savingsRate: cashFlowReport.summary?.averageSavingsRate || 0,
-        trend: cashFlowReport.patterns?.trend || 'stable'
-      },
-      budget: {
-        overallPerformance: budgetReport.summary?.overallPerformance || 0,
-        categoriesOverBudget: budgetReport.summary?.categoriesOverBudget || 0,
-        totalVariance: budgetReport.summary?.totalVariance || 0
-      },
-      goals: {
-        totalGoals: goalReport.summary?.totalGoals || 0,
-        onTrackGoals: goalReport.summary?.onTrackGoals || 0,
-        averageProgress: goalReport.summary?.averageProgress || 0
-      },
-      netWorth: {
-        current: netWorthReport.current || 0,
-        change: netWorthReport.trends?.length > 1 ?
-          netWorthReport.current - netWorthReport.trends[netWorthReport.trends.length - 2].netWorth : 0,
-        projectedGrowth: netWorthReport.projections?.length > 0 ?
-          netWorthReport.projections[netWorthReport.projections.length - 1].projected - netWorthReport.current : 0
-      }
+      totalIncome: totalIncome,
+      totalExpenses: totalExpenses,
+      netWorth: netWorthReport.current || 0,
+      savingsRate: parseFloat(savingsRate.toFixed(2)), // Allow negative savings rate
+      budgetUtilization: budgetReport.summary?.overallPerformance || 0,
+      goalProgress: goalReport.summary?.averageProgress || 0,
+      topExpenseCategories: spendingReport.categoryAnalysis?.slice(0, 3) || []
     };
 
     logger.info(`Dashboard summary generated successfully for user ${userId}`);
@@ -671,11 +685,11 @@ class ReportController {
     // Map to frontend expected structure
     const categoryBreakdown = (report.categoryAnalysis || []).map(cat => ({
       category: {
-        id: cat.categoryId?.toString() || '',
-        name: cat.categoryName || '',
-        color: cat.color || '#cccccc'
+        id: cat._id?.toString() || '',
+        name: cat.categoryName || 'Unnamed Category',
+        color: cat.categoryColor || '#cccccc'
       },
-      amount: cat.totalSpent || 0,
+      amount: cat.totalAmount || 0,
       percentage: cat.percentage || 0
     }));
     return ApiResponse.success(res, { categoryBreakdown }, 'Spending analysis breakdown generated');
@@ -688,31 +702,55 @@ class ReportController {
    * @param {Object} res - Express response object
    */
   static getDashboardSummaryV2 = ErrorHandler.asyncHandler(async (req, res) => {
-    logger.info(`Generating dashboard summary (frontend format) for user ${req.user.id}`);
     const { period = 'monthly' } = req.query;
-    // Map period to backend period
-    let backendPeriod = 'month';
-    if (period === 'quarterly') backendPeriod = 'quarter';
-    else if (period === 'yearly') backendPeriod = 'year';
+    const userId = req.user.id;
 
-    // Calculate date range based on period
-    const endDate = new Date();
-    const startDate = new Date();
-    switch (backendPeriod) {
+    console.log('\n=== DASHBOARD SUMMARY REQUEST ===');
+    console.log(`Period Selected: ${period}`);
+
+    // Map frontend period to backend period
+    let backendPeriod;
+    switch (period) {
+      case 'week':
+      case 'weekly':
+        backendPeriod = 'week';
+        break;
       case 'month':
-        startDate.setMonth(startDate.getMonth() - 1);
+      case 'monthly':
+        backendPeriod = 'month';
         break;
       case 'quarter':
-        startDate.setMonth(startDate.getMonth() - 3);
+      case 'quarterly':
+        backendPeriod = 'quarter';
         break;
       case 'year':
-        startDate.setFullYear(startDate.getFullYear() - 1);
+      case 'yearly':
+        backendPeriod = 'year';
+        break;
+      case 'all':
+      case 'allTime':
+        backendPeriod = 'all';
         break;
       default:
-        startDate.setMonth(startDate.getMonth() - 1);
+        backendPeriod = 'month';
     }
-    const userId = req.user.id;
-    const options = { startDate, endDate };
+
+    console.log('\n=== DATE RANGE ===');
+    console.log('Period:', backendPeriod);
+
+    // Use ReportService's date calculation method
+    const dateRange = ReportService._calculateDateRange(backendPeriod);
+    const { startDate, endDate } = dateRange;
+    
+    console.log('Start Date:', startDate.toISOString());
+    console.log('End Date:', endDate.toISOString());
+
+    const options = { 
+      startDate, 
+      endDate,
+      period: backendPeriod
+    };
+
     // Generate all reports in parallel for dashboard
     const [
       spendingReport,
@@ -720,64 +758,275 @@ class ReportController {
       cashFlowReport,
       budgetReport,
       goalReport,
-      netWorthReport
+      netWorthReport,
+      transactionTrends
     ] = await Promise.all([
       ReportService.generateSpendingReport(userId, { ...options, limit: 5 }),
       ReportService.generateIncomeReport(userId, options),
-      ReportService.generateCashFlowReport(userId, { ...options, projectionMonths: 3 }),
+      ReportService.generateCashFlowReport(userId, options),
       ReportService.generateBudgetPerformanceReport(userId, options),
       ReportService.generateGoalProgressReport(userId, {}),
-      ReportService.calculateNetWorth(userId, { ...options, projectionMonths: 6 })
+      ReportService.calculateNetWorth(userId, { ...options, projectionMonths: 6 }),
+      ReportService.getTransactionTrendsForPeriod(userId, options)
     ]);
-    // Compose backend summary
-    const dashboardSummary = {
-      period: backendPeriod,
-      dateRange: { startDate, endDate },
-      spending: {
-        totalAmount: spendingReport.summary?.totalSpending || 0,
-        topCategories: spendingReport.categoryAnalysis?.slice(0, 3) || [],
-        trend: spendingReport.trends?.length > 0 ? spendingReport.trends[spendingReport.trends.length - 1] : null
-      },
-      income: {
-        totalAmount: incomeReport.summary?.totalIncome || 0,
-        growthRate: incomeReport.analysis?.growthRate || 0,
-        diversificationScore: incomeReport.analysis?.diversificationScore || 0
-      },
-      cashFlow: {
-        netCashFlow: cashFlowReport.summary?.averageNetCashFlow || 0,
-        savingsRate: cashFlowReport.summary?.averageSavingsRate || 0,
-        trend: cashFlowReport.patterns?.trend || 'stable'
-      },
-      budget: {
-        overallPerformance: budgetReport.summary?.overallPerformance || 0,
-        categoriesOverBudget: budgetReport.summary?.categoriesOverBudget || 0,
-        totalVariance: budgetReport.summary?.totalVariance || 0
-      },
-      goals: {
-        totalGoals: goalReport.summary?.totalGoals || 0,
-        onTrackGoals: goalReport.summary?.onTrackGoals || 0,
-        averageProgress: goalReport.summary?.averageProgress || 0
-      },
-      netWorth: {
-        current: netWorthReport.current || 0,
-        change: netWorthReport.trends?.length > 1 ? 
-          netWorthReport.current - netWorthReport.trends[netWorthReport.trends.length - 2].netWorth : 0,
-        projectedGrowth: netWorthReport.projections?.length > 0 ? 
-          netWorthReport.projections[netWorthReport.projections.length - 1].projected - netWorthReport.current : 0
-      }
-    };
-    // Map backend keys to frontend expected keys
+
+    console.log('\n=== RAW REPORT DATA ===');
+    console.log('Spending Report Summary:', {
+        totalExpenses: spendingReport.summary?.totalExpenses,
+        categoriesCount: spendingReport.categoryAnalysis?.length
+    });
+    console.log('Income Report Summary:', {
+        totalIncome: incomeReport.summary?.totalIncome,
+        sourceCount: incomeReport.sourceAnalysis?.length
+    });
+    console.log('Cash Flow Summary:', {
+        netCashFlow: cashFlowReport.summary?.netCashFlow,
+        savingsRate: cashFlowReport.summary?.savingsRate
+    });
+    console.log('Transaction Trends:', {
+        trendsDataAvailable: Array.isArray(transactionTrends) && transactionTrends !== 'insufficient-data',
+        trendsCount: Array.isArray(transactionTrends) ? transactionTrends.length : 0
+    });
+
+    // Calculate savings rate properly - allowing negative values
+    const totalIncome = incomeReport.summary?.totalIncome || 0;
+    const totalExpenses = spendingReport.summary?.totalExpenses || 0;
+    const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
+
+    // Build final response with correct field names and period-specific data
     const result = {
-      monthlyIncome: dashboardSummary.income?.totalAmount || 0,
-      monthlyExpenses: dashboardSummary.spending?.totalAmount || 0,
-      netWorth: dashboardSummary.netWorth?.current || 0,
-      savingsRate: dashboardSummary.cashFlow?.savingsRate || 0,
-      budgetUtilization: dashboardSummary.budget?.overallPerformance || 0,
-      goalProgress: dashboardSummary.goals?.averageProgress || 0,
-      topExpenseCategories: dashboardSummary.spending?.topCategories || [],
-      recentTrends: dashboardSummary.cashFlow?.trend ? [dashboardSummary.cashFlow.trend] : []
+      monthlyIncome: totalIncome,
+      monthlyExpenses: totalExpenses,
+      netWorth: netWorthReport.current?.netWorth || 0,
+      savingsRate: parseFloat(savingsRate.toFixed(2)), // Allow negative savings rate
+      budgetUtilization: budgetReport.summary?.overallPerformancePercentage || 0,
+      goalProgress: goalReport.summary?.averageProgress || 0,
+      topExpenseCategories: spendingReport.categoryAnalysis?.slice(0, 3) || [],
+      recentTrends: transactionTrends
     };
+
+    console.log('\n=== FINAL API RESPONSE ===');
+    console.log(JSON.stringify({
+      period: backendPeriod,
+      income: result.monthlyIncome,
+      expenses: result.monthlyExpenses,
+      netWorth: result.netWorth,
+      savingsRate: result.savingsRate
+    }, null, 2));
+    console.log('\n===============================\n');
+
     return ApiResponse.success(res, result, 'Dashboard summary (frontend) generated');
+  });
+  /**
+   * Generate a new report (POST /api/reports/generate)
+   * @route POST /api/reports/generate
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  static generateReport = ErrorHandler.asyncHandler(async (req, res) => {
+    logger.info(`[report Req Body]:  ${JSON.stringify(req.body)}`);
+    logger.info(`Generating report (POST /generate) for user ${req.user.id}`);
+
+    // Validate request body
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ValidationError('Invalid request data', errors.array());
+    }
+
+    const userId = req.user.id;
+    const {
+      name,
+      type,
+      period,
+      startDate,
+      endDate,
+      format = 'json',
+      options = {}
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !type || !period || !startDate || !endDate) {
+      throw new ValidationError('Missing required fields', [
+        { field: 'name', message: 'Name is required' },
+        { field: 'type', message: 'Type is required' },
+        { field: 'period', message: 'Period is required' },
+        { field: 'startDate', message: 'Start date is required' },
+        { field: 'endDate', message: 'End date is required' }
+      ]);
+    }
+
+    // Prepare options for report generation
+    logger.info('[REPORT] Received options from frontend:', JSON.stringify(options));
+    const reportOptions = {
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      ...options
+    };
+    logger.info('[REPORT] Final reportOptions used for service:', JSON.stringify(reportOptions));
+
+    let reportData;
+    switch (type) {
+      case 'income':
+        reportData = await ReportService.generateIncomeReport(userId, reportOptions);
+        break;
+      case 'expense':
+        reportData = await ReportService.generateSpendingReport(userId, reportOptions);
+        break;
+      case 'budget':
+        reportData = await ReportService.generateBudgetPerformanceReport(userId, reportOptions);
+        break;
+      case 'goal':
+        reportData = await ReportService.generateGoalProgressReport(userId, reportOptions);
+        break;
+      case 'net_worth':
+        reportData = await ReportService.calculateNetWorth(userId, reportOptions);
+        break;
+      case 'cash_flow':
+        reportData = await ReportService.generateCashFlowReport(userId, reportOptions);
+        break;
+      case 'tax':
+        // Implement tax report logic if available
+        reportData = { message: 'Tax report not implemented yet.' };
+        break;
+      case 'investment':
+        // Implement investment report logic if available
+        reportData = { message: 'Investment report not implemented yet.' };
+        break;
+      default:
+        throw new ValidationError('Invalid report type', [
+          { field: 'type', message: 'Invalid report type' }
+        ]);
+    }
+
+    // --- ENFORCE OPTIONS STRICTLY ON RESPONSE ---
+    // Remove charts and transaction details if not requested, for all report types
+    const { includeCharts = true, includeTransactionDetails = false } = options;
+    if (reportData) {
+      if (!includeCharts) {
+        // Remove known chart-related fields
+        delete reportData.timeBasedAnalysis;
+        delete reportData.trends;
+        delete reportData.topMerchants;
+        delete reportData.growthAnalysis;
+        delete reportData.recurringIncome;
+        delete reportData.historicalTrends;
+      }
+      if (!includeTransactionDetails) {
+        delete reportData.transactionDetails;
+      }
+    }
+
+    // Compose FinancialReport structure for frontend
+    const now = new Date();
+    const financialReport = {
+      id: uuidv4(), // Generate a unique ID for each report
+      userId,
+      name,
+      type,
+      period,
+      startDate,
+      endDate,
+      status: 'completed',
+      format,
+      fileUrl: undefined, // If you implement file export
+      data: reportData,
+      metadata: {
+        totalRecords: Array.isArray(reportData?.categoryAnalysis) ? reportData.categoryAnalysis.length : 0,
+        generationTime: 0, // Optionally measure/report generation time
+        fileSize: undefined,
+        categories: options.categories || [],
+        accounts: options.accounts || []
+      },
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString()
+    };
+
+    logger.info(`Report generated successfully for user ${userId}, type: ${type}, options: ${JSON.stringify(options)}`);
+    logger.info(`Report response data: ${JSON.stringify(financialReport)}`);
+
+    // --- PERSIST REPORT TO DB ---
+    try {
+      await Report.create({
+        id: financialReport.id,
+        userId: userId,
+        name,
+        type,
+        period,
+        startDate,
+        endDate,
+        status: 'completed',
+        format,
+        fileUrl: undefined,
+        data: reportData,
+        metadata: financialReport.metadata,
+        createdAt: now,
+        updatedAt: now
+      });
+      logger.info(`[REPORT] Report persisted to DB for user ${userId}, id: ${financialReport.id}`);
+    } catch (err) {
+      logger.error(`[REPORT] Failed to persist report to DB: ${err.message}`);
+    }
+
+    return ApiResponse.success(res, financialReport, 'Report generated successfully');
+  });
+  /**
+   * Get recent reports for a user
+   * @route GET /api/reports/recent
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  static getRecentReports = ErrorHandler.asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    const limit = parseInt(req.query.limit) || 5;
+    logger.info(`[REPORT] Fetching recent reports for user ${userId}`);
+    const reports = await Report.find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+    logger.info(`[REPORT] Recent reports for user ${userId}: ${reports.length}`);
+    return ApiResponse.success(res, reports, 'Recent reports fetched successfully');
+  });
+  /**
+   * Get a single report by its UUID
+   * @route GET /api/reports/:id
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  static getReportById = ErrorHandler.asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    const { id } = req.params;
+    const report = await Report.findOne({ id, userId });
+    if (!report) {
+      throw new NotFoundError(`Report not found with id: ${id}`);
+    }
+    return ApiResponse.success(res, report, 'Report fetched successfully');
+  });
+  /**
+   * Export a report by its UUID in the specified format
+   * @route GET /api/reports/:id/export/:format
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  static exportReportById = ErrorHandler.asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    const { id, format } = req.params;
+    const report = await Report.findOne({ id, userId });
+    if (!report) {
+      throw new NotFoundError(`Report not found with id: ${id}`);
+    }
+    if (format === 'json') {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${report.name || 'report'}-${id}.json"`);
+      return res.json(report);
+    } else if (format === 'pdf') {
+      // PDF export
+      const pdfBuffer = await generateReportPDF(report);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${report.name || 'report'}-${id}.pdf"`);
+      return res.end(pdfBuffer);
+    } else {
+      res.status(501).json({ error: 'Export format not implemented yet.' });
+    }
   });
 }
 

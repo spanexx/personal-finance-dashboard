@@ -1,0 +1,20 @@
+<mat-card class="bulk-operations-card" *ngIf="selectedTransactions && selectedTransactions.length > 0">
+  <mat-card-content>
+    <div class="bulk-operations-bar">
+      <span class="selection-count" id="selection-count" aria-live="polite">
+        {{ selectedTransactions.length }} transaction<span *ngIf="selectedTransactions.length !== 1">s</span> selected
+      </span>
+      <div class="bulk-actions">
+        <button 
+          mat-button 
+          *ngFor="let operation of bulkOperations" 
+          [color]="operation.color"
+          (click)="executeBulkOperation(operation.value)"
+          [attr.aria-label]="operation.label + ' for ' + selectedTransactions.length + ' transactions'">
+          <mat-icon>{{ operation.icon }}</mat-icon>
+          {{ operation.label }}
+        </button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

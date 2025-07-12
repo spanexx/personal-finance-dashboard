@@ -560,7 +560,7 @@ class ValidationMiddleware {  /**
       query('includeExpired').optional().isBoolean(),
       query('includeInactive').optional().isBoolean(),
       query('page').optional().isInt({ min: 1 }),
-      query('limit').optional().isInt({ min: 1, max: 100 }),
+      query('limit').optional().isInt({ min: 1, max: 500 }),
       query('sortBy').optional().isIn(['name', 'startDate', 'endDate', 'totalAmount', 'createdAt']),
       query('sortOrder').optional().isIn(['asc', 'desc']),
       query('search').optional().isLength({ min: 1, max: 100 }),

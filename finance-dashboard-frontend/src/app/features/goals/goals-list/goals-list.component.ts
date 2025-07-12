@@ -10,10 +10,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 
-import { Goal } from '../../../shared/models';
+import { Goal, Category } from '../../../shared/models';
 import { AppState } from '../../../store/state/app.state';
 import * as GoalActions from '../../../store/actions/goal.actions';
 import * as GoalSelectors from '../../../store/selectors/goal.selectors';
+import { CategoryService } from '../../../core/services/category.service';
 
 @Component({
   selector: 'app-goals-list',
@@ -26,63 +27,7 @@ import * as GoalSelectors from '../../../store/selectors/goal.selectors';
     MatProgressBarModule,
     MatDialogModule
   ],
-  template: `
-    <div class="goals-container">
-      <div class="goals-header">
-        <h1 class="page-title">Financial Goals</h1>
-        <button mat-raised-button color="primary" routerLink="create">
-          <mat-icon>add</mat-icon>
-          Create New Goal
-        </button>
-      </div>      <!-- Goals List -->
-      <div class="goals-grid">        <mat-card class="goal-card" *ngFor="let goal of goals$ | async">
-          <mat-card-header>
-            <div mat-card-avatar class="goal-avatar">
-              <mat-icon [style.color]="goal.color">{{ goal.icon }}</mat-icon>
-            </div>
-            <mat-card-title>{{ goal.name }}</mat-card-title>
-            <mat-card-subtitle>Target: {{ formatCurrency(goal.targetAmount) }}</mat-card-subtitle>
-          </mat-card-header>
-          
-          <mat-card-content>
-            <div class="goal-progress">
-              <mat-progress-bar
-                mode="determinate"
-                [value]="goal.progressPercentage"
-                [color]="getProgressColor(goal)">
-              </mat-progress-bar>
-              <div class="progress-label">
-                {{ formatCurrency(goal.currentAmount) }} of {{ formatCurrency(goal.targetAmount) }}
-              </div>
-            </div>
-
-            <div class="goal-details">
-              <p class="completion-date">
-                Target Date: {{ goal.targetDate | date:'shortDate' }}
-              </p>
-              <p class="remaining-amount">
-                Remaining: {{ formatCurrency(goal.targetAmount - goal.currentAmount) }}
-              </p>
-              <p class="category">
-                Category: {{ goal.category }}
-              </p>
-            </div>
-          </mat-card-content>
-
-          <mat-card-actions>
-            <button mat-button [routerLink]="['detail', goal._id]">
-              <mat-icon>visibility</mat-icon>
-              View Details
-            </button>
-            <button mat-button color="primary" (click)="openAddFundsDialog(goal)">
-              <mat-icon>add</mat-icon>
-              Add Funds
-            </button>
-          </mat-card-actions>
-        </mat-card>
-      </div>
-    </div>
-  `,
+  templateUrl: './goal-list.component.html',
   styles: [`
     .goals-container {
       padding: 24px;
@@ -162,9 +107,12 @@ export class GoalsListComponent implements OnInit {
   loading$: Observable<boolean>;
   error$: Observable<string | null>;
 
+  categoriesMap: { [id: string]: string } = {};
+
   constructor(
     private store: Store<AppState>,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private categoryService: CategoryService
   ) {
     this.goals$ = this.store.select(GoalSelectors.selectAllGoals);
     this.loading$ = this.store.select(GoalSelectors.selectGoalLoading);
@@ -173,6 +121,16 @@ export class GoalsListComponent implements OnInit {
 
   ngOnInit(): void {
     this.store.dispatch(GoalActions.loadGoals());
+    this.categoryService.getCategories().subscribe(categories => {
+      this.categoriesMap = {};
+      categories.forEach(cat => {
+        this.categoriesMap[cat._id] = cat.name;
+      });
+    });
+  }
+
+  getCategoryName(categoryId: string): string {
+    return this.categoriesMap[categoryId] || categoryId;
   }
 
   openAddFundsDialog(goal: Goal): void {

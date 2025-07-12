@@ -1,0 +1,255 @@
+<div class="report-viewer-container" role="main">
+    <!-- Skip Links for Keyboard Navigation -->
+    <div class="skip-links">
+    <a href="#report-summary" class="skip-link">Skip to report summary</a>
+    <a href="#report-charts" class="skip-link">Skip to charts</a>
+    <a href="#report-details" class="skip-link">Skip to detailed data</a>
+    </div>
+
+    @if (loading$ | async) {
+    <div class="loading-container" role="status" aria-live="polite">
+        <mat-spinner diameter="50" aria-label="Loading report data"></mat-spinner>
+        <p>Loading report...</p>
+    </div>
+    }
+    
+    @if (report$ | async; as report) {
+    <div class="page-header">
+        <div class="header-content">
+        <h1 #pageTitle 
+            class="page-title" 
+            tabindex="-1"
+            [attr.aria-label]="'Report: ' + report.name">{{ report.name }}</h1>
+        <div class="header-actions" role="group" aria-label="Report actions">
+            <button mat-stroked-button 
+                    routerLink="/reports"
+                    aria-label="Return to reports list">
+            <mat-icon aria-hidden="true">arrow_back</mat-icon>
+            Back to Reports
+            </button>              
+            <button mat-raised-button 
+                    color="primary" 
+                    (click)="downloadReport(report)"
+                    [attr.aria-describedby]="'download-help'"
+                    [disabled]="exporting$ | async">
+            @if (exporting$ | async) {
+                <mat-spinner diameter="16" aria-label="Downloading report"></mat-spinner>
+            } @else {
+                <mat-icon aria-hidden="true">download</mat-icon>
+            }
+            {{ (exporting$ | async) ? 'Downloading...' : 'Download Report' }}
+            </button>
+            <div id="download-help" class="sr-only">Download this report as a PDF file</div>
+        </div>
+        </div>
+        <p class="report-date">Generated on {{ formatDate(report.createdAt) }}</p>
+    </div>
+    <div class="report-content">
+        <!-- Summary Card -->
+        <mat-card id="report-summary" class="summary-card">
+        <mat-card-header>
+            <mat-card-title>Report Summary</mat-card-title>
+            <mat-card-subtitle>Key financial metrics for the selected period</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+            <div class="summary-grid" role="grid" aria-label="Financial summary metrics">
+            <div class="summary-item" role="gridcell">
+                <div class="label" aria-describedby="total-income-value">Total Income</div>
+                <div id="total-income-value" class="value income" [attr.aria-label]="'Total income: ' + formatCurrency(report.data.summary?.totalIncome ?? 0)">
+                {{ formatCurrency(report.data.summary?.totalIncome ?? 0) }}
+                </div>
+            </div>
+            <div class="summary-item" role="gridcell">
+                <div class="label" aria-describedby="total-expenses-value">Total Expenses</div>
+                <div id="total-expenses-value" class="value expense" [attr.aria-label]="'Total expenses: ' + formatCurrency(report.data.summary?.totalExpenses ?? report.data.summary?.totalSpending ?? 0)">
+                {{ formatCurrency(report.data.summary?.totalExpenses ?? report.data.summary?.totalSpending ?? 0) }}
+                </div>
+            </div>
+            <div class="summary-item" role="gridcell">
+                <div class="label" aria-describedby="net-savings-value">Net Savings</div>
+                <div id="net-savings-value" class="value savings" [attr.aria-label]="'Net savings: ' + formatCurrency((report.data.summary?.totalIncome ?? 0) - (report.data.summary?.totalExpenses ?? report.data.summary?.totalSpending ?? 0))">
+                {{ formatCurrency((report.data.summary?.totalIncome ?? 0) - (report.data.summary?.totalExpenses ?? report.data.summary?.totalSpending ?? 0)) }}
+                </div>
+            </div>
+            <div class="summary-item" role="gridcell">
+                <div class="label" aria-describedby="transaction-count-value">Total Transactions</div>
+                <div id="transaction-count-value" class="value" [attr.aria-label]="'Total transactions: ' + (report.data.summary?.transactionCount ?? 0)">
+                {{ report.data.summary?.transactionCount ?? 0 }}
+                </div>
+            </div>
+            <div class="summary-item" role="gridcell">
+                <div class="label" aria-describedby="period-value">Period</div>
+                <div id="period-value" class="value" [attr.aria-label]="'Report period: ' + formatDateRange(dateRange)">
+                {{ formatDateRange(dateRange) }}
+                </div>
+            </div>
+            </div>
+        </mat-card-content>
+        </mat-card>
+
+        <!-- Charts and Analysis -->
+        <div id="report-charts" class="charts-grid" *ngIf="categoryChartData || trendChartData">
+        <mat-card class="chart-card" *ngIf="categoryChartData">
+            <mat-card-header>
+            <mat-card-title>Category Breakdown</mat-card-title>
+            <mat-card-subtitle>Visual breakdown of spending by category</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+            <div class="chart-container" role="img" [attr.aria-label]="getChartDescription('category')">
+                <app-chart 
+                type="pie" 
+                [data]="categoryChartData"
+                [options]="chartOptions">
+                </app-chart>
+            </div>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="chart-card" *ngIf="trendChartData">
+            <mat-card-header>
+            <mat-card-title>Trend Analysis</mat-card-title>
+            <mat-card-subtitle>Financial trends over the selected period</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+            <div class="chart-container" role="img" [attr.aria-label]="getChartDescription('trend')">
+                <app-chart 
+                type="line" 
+                [data]="trendChartData"
+                [options]="trendChartOptions">
+                </app-chart>
+            </div>
+            </mat-card-content>
+        </mat-card>
+        </div>
+
+        <!-- Category Breakdown Table -->
+        <mat-card id="report-details" class="details-card" *ngIf="categoryBreakdown && categoryBreakdown.length > 0">
+        <mat-card-header>
+            <mat-card-title>Category Breakdown</mat-card-title>
+            <mat-card-subtitle>Detailed breakdown of expenses by category</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+            <table mat-table 
+                    [dataSource]="categoryBreakdown" 
+                    class="category-table"
+                    role="table"
+                    aria-label="Category breakdown data"
+                    [attr.aria-rowcount]="(categoryBreakdown.length || 0) + 1">
+            <ng-container matColumnDef="category">
+                <th mat-header-cell *matHeaderCellDef role="columnheader" scope="col">Category</th>
+                <td mat-cell *matCellDef="let item; let i = index" role="gridcell" [attr.aria-rowindex]="i + 2">
+                <div class="category-cell">
+                    <div class="category-color" 
+                        [style.background-color]="item.color"
+                        [attr.aria-label]="'Color indicator for ' + item.category"
+                        role="img"></div>
+                    {{ item.category }}
+                </div>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="amount">
+                <th mat-header-cell *matHeaderCellDef role="columnheader" scope="col">Amount</th>
+                <td mat-cell *matCellDef="let item; let i = index" role="gridcell" [attr.aria-rowindex]="i + 2">
+                <span [attr.aria-label]="'Amount for ' + item.category + ': ' + formatCurrency(item.amount)">
+                    {{ formatCurrency(item.amount) }}
+                </span>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="percentage">
+                <th mat-header-cell *matHeaderCellDef role="columnheader" scope="col">% of Total</th>
+                <td mat-cell *matCellDef="let item; let i = index" role="gridcell" [attr.aria-rowindex]="i + 2">
+                <div class="percentage-cell">
+                    <span [attr.aria-label]="'Percentage for ' + item.category + ': ' + formatPercentage(item.percentage)">
+                    {{ formatPercentage(item.percentage) }}
+                    </span>
+                    <mat-progress-bar 
+                    mode="determinate" 
+                    [value]="item.percentage"
+                    [color]="'primary'"
+                    [attr.aria-label]="'Progress bar showing ' + formatPercentage(item.percentage) + ' for ' + item.category"
+                    role="progressbar"
+                    [attr.aria-valuenow]="item.percentage"
+                    aria-valuemin="0"
+                    aria-valuemax="100">
+                    </mat-progress-bar>
+                </div>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns" role="row"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" role="row"></tr>
+            </table>
+        </mat-card-content>
+        </mat-card>
+
+        <!-- Transactions Table (if included) -->
+        <mat-card class="transactions-card" *ngIf="report.data.transactionDetails && report.data.transactionDetails.length > 0">
+            <mat-card-header>
+            <mat-card-title>Recent Transactions</mat-card-title>
+            <mat-card-subtitle>{{ report.data.transactionDetails.length }} transactions included in this report</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+            <table mat-table 
+                    [dataSource]="report.data.transactionDetails" 
+                    class="transactions-table"
+                    role="table"
+                    aria-label="Transaction details"
+                    [attr.aria-rowcount]="report.data.transactionDetails.length + 1">
+                <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef role="columnheader" scope="col">Date</th>
+                <td mat-cell *matCellDef="let txn; let i = index" role="gridcell" [attr.aria-rowindex]="i + 2">
+                    <span [attr.aria-label]="'Transaction date: ' + formatDate(txn.date)">
+                    {{ formatDate(txn.date) }}
+                    </span>
+                </td>
+                </ng-container>
+
+                <ng-container matColumnDef="description">
+                <th mat-header-cell *matHeaderCellDef role="columnheader" scope="col">Description</th>
+                <td mat-cell *matCellDef="let txn; let i = index" role="gridcell" [attr.aria-rowindex]="i + 2">
+                    {{ txn.description }}
+                </td>
+                </ng-container>
+
+                <ng-container matColumnDef="category">
+                <th mat-header-cell *matHeaderCellDef role="columnheader" scope="col">Category</th>
+                <td mat-cell *matCellDef="let txn; let i = index" role="gridcell" [attr.aria-rowindex]="i + 2">
+                    {{ txn.category }}
+                </td>
+                </ng-container>
+
+                <ng-container matColumnDef="amount">
+                <th mat-header-cell *matHeaderCellDef role="columnheader" scope="col">Amount</th>
+                <td mat-cell *matCellDef="let txn; let i = index" role="gridcell" [attr.aria-rowindex]="i + 2">
+                    <span [class]="txn.type === 'income' ? 'income' : 'expense'"
+                        [attr.aria-label]="txn.type + ' of ' + formatCurrency(txn.amount)">
+                    {{ (txn.type === 'income' ? '+' : '-') + formatCurrency(txn.amount) }}
+                    </span>
+                </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="transactionColumns" role="row"></tr>
+                <tr mat-row *matRowDef="let row; columns: transactionColumns;" role="row"></tr>
+            </table>
+            </mat-card-content>            
+        </mat-card>
+    </div>
+    }
+    
+    @if (error$ | async; as error) {
+    <div class="error-container" role="alert" aria-live="assertive">
+        <mat-icon aria-hidden="true">error_outline</mat-icon>
+        <h2>Error Loading Report</h2>
+        <p>{{ error }}</p>
+        <button mat-raised-button 
+                color="primary" 
+                routerLink="/reports"
+                aria-label="Return to reports list after error">
+        <mat-icon aria-hidden="true">arrow_back</mat-icon>
+        Back to Reports
+        </button>
+    </div>
+    }
+</div>

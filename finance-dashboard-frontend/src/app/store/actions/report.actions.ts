@@ -1,14 +1,14 @@
 import { createAction, props } from '@ngrx/store';
-import { ReportData, ReportConfig } from '../../core/services/reports.service';
+import { FinancialReport, GenerateReportRequest } from '../../core/services/report.service';
 
 // Generate Report Actions
 export const generateReport = createAction(
   '[Report] Generate Report',
-  props<{ config: ReportConfig }>()
+  props<{ config: GenerateReportRequest }>()
 );
 export const generateReportSuccess = createAction(
   '[Report] Generate Report Success',
-  props<{ report: ReportData }>()
+  props<{ report: FinancialReport }>()
 );
 export const generateReportFailure = createAction(
   '[Report] Generate Report Failure',
@@ -22,7 +22,7 @@ export const loadReport = createAction(
 );
 export const loadReportSuccess = createAction(
   '[Report] Load Report Success',
-  props<{ report: ReportData }>()
+  props<{ report: FinancialReport }>()
 );
 export const loadReportFailure = createAction(
   '[Report] Load Report Failure',
@@ -32,7 +32,7 @@ export const loadReportFailure = createAction(
 // Export Report Actions
 export const exportReport = createAction(
   '[Report] Export Report',
-  props<{ report: ReportData; format: 'pdf' | 'csv' | 'excel' }>()
+  props<{ report: FinancialReport; format: 'pdf' | 'csv' | 'excel' }>()
 );
 export const exportReportSuccess = createAction(
   '[Report] Export Report Success',

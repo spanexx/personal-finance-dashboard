@@ -1,0 +1,12 @@
+.export-import-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto; /* Pushes these buttons to the right if in a flex container */
+}
+
+@media (max-width: 768px) {
+  .export-import-actions {
+    margin-top: 8px;
+    margin-left: 0;
+  }
+}

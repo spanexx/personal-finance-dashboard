@@ -70,6 +70,12 @@
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Payment Method</mat-label>
             <mat-select formControlName="paymentMethod" aria-label="Select payment method">
+              <mat-select-trigger>
+                <div class="payment-method-option">
+                  <mat-icon *ngIf="getSelectedPaymentMethodIcon()" aria-hidden="true">{{ getSelectedPaymentMethodIcon() }}</mat-icon>
+                  <span>{{ getSelectedPaymentMethodName() }}</span>
+                </div>
+              </mat-select-trigger>
               <mat-option *ngFor="let method of paymentMethods" [value]="method.id">
                 <div class="payment-method-option">
                   <mat-icon *ngIf="method.icon" aria-hidden="true">{{ method.icon }}</mat-icon>
@@ -82,6 +88,13 @@
         </div>        <div class="form-row category-row">
           <mat-form-field appearance="outline" class="category-field">
             <mat-label>Category</mat-label>            <mat-select formControlName="category" role="combobox" [attr.aria-label]="'Select a ' + (transactionForm.get('type')?.value || 'transaction') + ' category'">
+              <mat-select-trigger>
+                <div class="category-option">
+                  <span class="category-color" [style.background-color]="getSelectedCategoryColor()" aria-hidden="true"></span>
+                  <mat-icon *ngIf="getSelectedCategoryIcon()" aria-hidden="true">{{ getSelectedCategoryIcon() }}</mat-icon>
+                  <span>{{ getSelectedCategoryName() }}</span>
+                </div>
+              </mat-select-trigger>
               <ng-container *ngIf="transactionForm.get('type')?.value === 'expense'">
                 <mat-option *ngFor="let category of expenseCategories; trackBy: trackByCategoryId" [value]="category._id">
                   <div class="category-option">
@@ -209,6 +222,13 @@
             <mat-form-field appearance="outline">
               <mat-label>Category</mat-label>
               <mat-select formControlName="categoryId">
+                <mat-select-trigger>
+                  <div class="category-option">
+                    <span class="category-color" [style.background-color]="getSplitCategoryColor(i)" aria-hidden="true"></span>
+                    <mat-icon *ngIf="getSplitCategoryIcon(i)" aria-hidden="true">{{ getSplitCategoryIcon(i) }}</mat-icon>
+                    <span>{{ getSplitCategoryName(i) }}</span>
+                  </div>
+                </mat-select-trigger>
                 <ng-container *ngIf="transactionForm.get('type')?.value === 'expense'">
                   <mat-option *ngFor="let category of expenseCategories" [value]="category._id">
                     <div class="category-option">

@@ -33,9 +33,9 @@ export class GoalsService extends ApiService {
   /**
    * Get a single goal by ID
    */
-  getGoal(id: string): Observable<Goal> {
+  getGoal(id: string): Observable<{ goal: Goal; metrics?: any; probability?: number; milestones?: any[]; recentContributions?: any[]; contributionTrends?: any[] }> {
     return this.extractData(
-      this.get<Goal>(`${this.endpoint}/${id}`)
+      this.get<{ goal: Goal; metrics?: any; probability?: number; milestones?: any[]; recentContributions?: any[]; contributionTrends?: any[] }>(`${this.endpoint}/${id}`)
     );
   }
 

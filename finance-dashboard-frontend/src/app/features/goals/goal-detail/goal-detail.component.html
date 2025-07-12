@@ -1,0 +1,104 @@
+<div class="detail-container">
+    @if (goal$ | async; as goal) {        <mat-card>
+        <mat-card-header>
+        <div mat-card-avatar class="goal-avatar">
+            <mat-icon [style.color]="goal.color">{{ goal.icon }}</mat-icon>
+        </div>
+        <mat-card-title>{{ goal.name }}</mat-card-title>
+        <mat-card-subtitle>{{ goal.priority | titlecase }} Priority</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+        <div class="description-section" *ngIf="goal.description">
+            <p>{{ goal.description }}</p>
+        </div>            <div class="progress-section">
+            <h3>Progress</h3>
+            <mat-progress-bar
+            [value]="goal.progressPercentage"
+            [color]="getProgressColor(goal)"
+            ></mat-progress-bar>
+            <div class="progress-details">
+            <div class="amount-info">
+                <div class="label">Current Amount</div>
+                <div class="value">{{ goal.currentAmount | currency }}</div>
+            </div>
+            <div class="amount-info">
+                <div class="label">Target Amount</div>
+                <div class="value">{{ goal.targetAmount | currency }}</div>
+            </div>
+            <div class="amount-info">
+                <div class="label">Progress</div>
+                <div class="value">{{ goal.progressPercentage != null ? goal.progressPercentage.toFixed(1) : '0.0' }}%</div>
+            </div>
+            </div>
+            
+            <!-- Progress Chart -->
+            <div class="progress-chart" *ngIf="progressChartData">
+            <h4>Progress Visualization</h4>
+            <div class="chart-wrapper">
+                <app-chart 
+                type="doughnut" 
+                [data]="progressChartData"
+                [options]="chartOptions">
+                </app-chart>
+            </div>
+            </div>
+        </div>
+
+        <div class="timeline-section">
+            <h3>Timeline</h3>
+            <div class="timeline-details">
+            <div class="label">Target Date</div>
+            <div class="value">{{ goal.targetDate | date:'mediumDate' }}</div>
+            </div>              <div class="timeline-details">
+            <div class="label">Days Remaining</div>
+            <div class="value">{{ getDaysRemaining(goal) }} days</div>
+            </div>
+            <div class="timeline-details">
+            <div class="label">Created</div>
+            <div class="value">{{ goal.createdAt | date:'mediumDate' }}</div>
+            </div>
+        </div>            <div class="stats-section">
+            <h3>Statistics</h3>
+            <div class="stats-grid">
+            <div class="stat-item">
+                <div class="label">Amount Needed</div>
+                <div class="value">{{ goal.targetAmount - goal.currentAmount | currency }}</div>
+            </div>
+            <div class="stat-item">
+                <div class="label">Monthly Required</div>
+                <div class="value">{{ getMonthlyContributionNeeded(goal) | currency }}</div>
+            </div>
+            <div class="stat-item">
+                <div class="label">Total Contributions</div>
+                <div class="value">{{ (goal.contributions || []).length }}</div>
+            </div>
+            </div>
+        </div>
+
+        <div class="contributions-section" *ngIf="(goal.contributions || []).length > 0">
+            <h3>Recent Contributions</h3>
+            <div class="contributions-list">
+            <div class="contribution-item" *ngFor="let contribution of (goal.contributions || []).slice(-5)">
+                <div class="contribution-amount">{{ contribution.amount | currency }}</div>
+                <div class="contribution-date">{{ contribution.date | date:'shortDate' }}</div>
+                <div class="contribution-notes">{{ contribution.note }}</div>
+            </div>
+            </div>
+        </div>
+        </mat-card-content>
+
+        <mat-card-actions>
+        <button mat-button (click)="goBack()">
+            <mat-icon>arrow_back</mat-icon>
+            Back
+        </button>            <button mat-raised-button color="primary" (click)="updateProgress(goal)">
+            Update Progress
+        </button>
+        <button mat-button color="warn" (click)="deleteGoal(goal)">
+            Delete Goal
+        </button>
+        </mat-card-actions>
+    </mat-card>
+    }
+</div>

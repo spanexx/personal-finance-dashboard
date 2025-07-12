@@ -72,10 +72,12 @@ exports.createGoal = ErrorHandler.asyncHandler(async (req, res) => {
   }
 
   logger.debug('Creating new goal', { userId: req.user.id });
+  console.log('Request Body:', req.body);
   
   // Use service to create goal
   const goal = await GoalService.createGoal(req.body, req.user.id);
-  
+  console.log('req  body:', goal);
+
   logger.info('New goal created', { goalId: goal._id, userId: req.user.id });
   
   // Calculate feasibility analysis
@@ -92,6 +94,7 @@ exports.createGoal = ErrorHandler.asyncHandler(async (req, res) => {
       achievementProbability: goal.achievementProbability
     }
   };
+  console.log('Response Data:', responseData);
   
   return ApiResponse.created(res, responseData, 'Goal created successfully');
 });

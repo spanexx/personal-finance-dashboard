@@ -45,16 +45,24 @@ export class TransactionEffects {
         // Use PaginatedResponse<Transaction> as the expected return type
         return this.transactionService.getTransactions(filters || undefined, { page, limit }).pipe(
           map((response: PaginatedResponse<Transaction>) => {
-            // Defensive: Only map the expected pagination properties
-            const p = response.pagination || {};
+            // Handle pagination from the transformed response (HttpClientService already processed it)
+            let p = response.pagination;
+            
+            // Fallback to meta.pagination if transformation didn't work
+            if (!p && (response as any).meta && (response as any).meta.pagination) {
+              p = (response as any).meta.pagination;
+            }
+            
+            const resultPagination = {
+              page: p?.page || (p as any)?.currentPage || 1,
+              limit: p?.limit || limit, // Use requested limit if response doesn't have it
+              total: p?.total || (p as any)?.totalCount || 0,
+              totalPages: p?.totalPages || 1,
+            };
+            
             return TransactionActions.loadTransactionsSuccess({
               transactions: response.data,
-              pagination: {
-                page: typeof p.page === 'number' ? p.page : 1,
-                limit: typeof p.limit === 'number' ? p.limit : 20,
-                total: typeof p.total === 'number' ? p.total : 0,
-                totalPages: typeof p.totalPages === 'number' ? p.totalPages : 1,
-              },
+              pagination: resultPagination,
             });
           }),
           catchError((error) =>
@@ -68,16 +76,22 @@ export class TransactionEffects {
   loadTransaction$ = createEffect(() =>
     this.actions$.pipe(
       ofType(TransactionActions.loadTransaction),
-      mergeMap(({ transactionId }) => // transactionId comes from the action payload
-        this.transactionService.getTransaction(transactionId).pipe( // Changed to getTransaction
-          map((transaction: Transaction) =>
-            TransactionActions.loadTransactionSuccess({ transaction })
-          ),
-          catchError((error) =>
-            of(TransactionActions.loadTransactionFailure({ error: error.error || error }))
-          )
-        )
-      )
+      mergeMap(({ transactionId }) => {// transactionId comes from the action payload
+        console.log('Effect: Loading transaction with ID:', transactionId); // Debug log
+        return this.transactionService.getTransaction(transactionId).pipe( // Changed to getTransaction
+          map((transactionData: any) => {
+            console.log('Effect: Transaction data received from service:', transactionData); // Debug log
+            // Handle both wrapped and unwrapped transaction data from service
+            const actualTransaction = transactionData?.transaction || transactionData;
+            console.log('Effect: Extracted transaction for state:', actualTransaction); // Debug log
+            return TransactionActions.loadTransactionSuccess({ transaction: actualTransaction });
+          }),
+          catchError((error) => {
+            console.error('Effect: Error loading transaction:', error); // Debug log
+            return of(TransactionActions.loadTransactionFailure({ error: error.error || error }));
+          })
+        );
+      })
     )
   );
 

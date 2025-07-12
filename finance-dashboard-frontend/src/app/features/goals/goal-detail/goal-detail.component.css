@@ -1,0 +1,120 @@
+
+.detail-container {
+    padding: 24px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.progress-section,
+.timeline-section,
+.stats-section {
+    margin: 24px 0;
+}
+
+.progress-details,
+.timeline-details {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+.amount-info {
+    text-align: center;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+}    .stat-item {
+    text-align: center;
+    padding: 16px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
+
+.contributions-section {
+    margin-top: 24px;
+
+    .contributions-list {
+    margin-top: 16px;
+    }
+
+    .contribution-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e0e0e0;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    .contribution-amount {
+        font-weight: 500;
+        color: #2e7d32;
+    }
+
+    .contribution-date {
+        color: rgba(0, 0, 0, 0.6);
+        font-size: 0.875rem;
+    }
+
+    .contribution-notes {
+        color: rgba(0, 0, 0, 0.8);
+        font-size: 0.875rem;
+        flex: 1;
+        margin: 0 16px;
+    }
+    }
+}
+
+.goal-avatar {
+    background-color: #f5f5f5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.description-section {
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+}
+
+.label {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 0.9em;
+    margin-bottom: 4px;
+}
+
+.value {
+    font-size: 1.2em;
+    font-weight: 500;
+}    mat-card-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px;
+}
+
+.progress-chart {
+    margin-top: 24px;
+    
+    h4 {
+    margin-bottom: 16px;
+    color: rgba(0, 0, 0, 0.8);
+    }
+    
+    .chart-wrapper {
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    }
+}

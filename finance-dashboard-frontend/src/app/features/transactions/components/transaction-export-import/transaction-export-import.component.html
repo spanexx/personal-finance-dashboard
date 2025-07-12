@@ -1,0 +1,16 @@
+<div class="export-import-actions">
+  <button mat-button [matMenuTriggerFor]="exportMenu" aria-label="Export transactions">
+    <mat-icon aria-hidden="true">download</mat-icon> Export
+  </button>
+  
+  <mat-menu #exportMenu="matMenu">
+    <button mat-menu-item *ngFor="let format of exportFormats" (click)="exportTransactions(format.value)">
+      <mat-icon>{{ format.icon }}</mat-icon>
+      <span>{{ format.label }}</span>
+    </button>
+  </mat-menu>
+  
+  <button mat-button (click)="openImportDialog()" aria-label="Import transactions">
+    <mat-icon aria-hidden="true">upload</mat-icon> Import
+  </button>
+</div>

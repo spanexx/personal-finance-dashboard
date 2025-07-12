@@ -1,0 +1,79 @@
+.transaction-filters {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.filter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  
+  mat-form-field {
+    flex: 1;
+    min-width: 200px;
+  }
+}
+
+.search-field {
+  flex: 2;
+}
+
+.tags-field {
+  flex: 2;
+}
+
+.date-filters {
+  mat-form-field {
+    flex: 1;
+    min-width: 150px;
+  }
+}
+
+.toggle-filters-btn {
+  height: 56px;
+  align-self: flex-end;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.advanced-filters {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 16px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .filter-row {
+    flex-direction: column;
+    
+    mat-form-field {
+      width: 100%;
+    }
+  }
+}

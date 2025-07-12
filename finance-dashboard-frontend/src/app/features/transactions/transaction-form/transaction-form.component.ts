@@ -159,10 +159,68 @@ export class TransactionFormComponent implements OnInit, AfterViewInit, OnDestro
   ngOnInit(): void {
     this.loadCategories(); // Keep for now, can be refactored to NgRx later
 
-    this.selectedTransaction$.pipe(takeUntil(this.destroy$)).subscribe(transaction => {
-      if (transaction && this.isEditMode && this.transactionId === transaction._id) {
-        this.patchFormWithTransaction(transaction);
+    // Handle route parameter changes first to set edit mode correctly
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      const id = params.get('id');
+      console.log('Route parameter changed. ID:', id); // Debug log
+      if (id) {
+        this.transactionId = id;
+        this.isEditMode = true;
+        this.pageTitle = 'Edit Transaction';
+        console.log('Dispatching loadTransaction action for ID:', id); // Debug log
+        this.store.dispatch(TransactionActions.loadTransaction({ transactionId: id }));
+      } else {
+        this.isEditMode = false;
+        this.pageTitle = 'Add Transaction';
+        this.transactionForm.reset(this.initialFormValues()); // Reset to defaults for new transaction
+        this.store.dispatch(TransactionActions.clearSelectedTransaction());
       }
+    });
+
+    // Add separate subscription to debug transaction loading
+    this.selectedTransaction$.pipe(takeUntil(this.destroy$)).subscribe(transactionData => {
+      // Handle both wrapped and unwrapped transaction data
+      const actualTransaction = (transactionData as any)?.transaction || transactionData;
+      console.log('Selected transaction changed:', { 
+        rawData: transactionData, 
+        actualTransaction 
+      }); // Debug log
+    });
+
+    // Add subscription to debug loading state
+    this.isLoading$.pipe(takeUntil(this.destroy$)).subscribe(loading => {
+      console.log('Loading state changed:', loading); // Debug log
+    });
+
+    // Add subscription to debug errors
+    this.error$.pipe(takeUntil(this.destroy$)).subscribe(error => {
+      console.log('Error state changed:', error); // Debug log
+    });
+
+    // Use combineLatest to ensure both conditions are met before patching form
+    combineLatest([
+      this.selectedTransaction$,
+      this.route.paramMap
+    ]).pipe(
+      takeUntil(this.destroy$),
+      filter(([transactionData, params]) => {
+        const id = params.get('id');
+        // Handle both wrapped and unwrapped transaction data
+        const actualTransaction = (transactionData as any)?.transaction || transactionData;
+        console.log('CombineLatest filter check:', { 
+          transactionData, 
+          actualTransaction, 
+          id, 
+          isEditMode: this.isEditMode, 
+          transactionId: actualTransaction?._id 
+        }); // Debug log
+        return !!(actualTransaction && id && this.isEditMode && actualTransaction._id === id);
+      })
+    ).subscribe(([transactionData, params]) => {
+      // Handle both wrapped and unwrapped transaction data
+      const actualTransaction = (transactionData as any)?.transaction || transactionData;
+      console.log('Transaction loaded for form patching:', actualTransaction); // Debug log
+      this.patchFormWithTransaction(actualTransaction);
     });
     
     this.isLoading$.pipe(takeUntil(this.destroy$)).subscribe(loading => {
@@ -179,21 +237,6 @@ export class TransactionFormComponent implements OnInit, AfterViewInit, OnDestro
         this.accessibilityService.announceError(errorMessage);
       }
       this.cdr.markForCheck();
-    });
-
-    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      const id = params.get('id');
-      if (id) {
-        this.transactionId = id;
-        this.isEditMode = true;
-        this.pageTitle = 'Edit Transaction';
-        this.store.dispatch(TransactionActions.loadTransaction({ transactionId: id }));
-      } else {
-        this.isEditMode = false;
-        this.pageTitle = 'Add Transaction';
-        this.transactionForm.reset(this.initialFormValues()); // Reset to defaults for new transaction
-        this.store.dispatch(TransactionActions.clearSelectedTransaction());
-      }
     });
 
     this.transactionForm.get('type')?.valueChanges.subscribe(type => {
@@ -286,6 +329,16 @@ export class TransactionFormComponent implements OnInit, AfterViewInit, OnDestro
     });
   }
 
+  loadCategoriesForType(type: string): void {
+    // Load categories without clearing the current selection (for edit mode)
+    this.categoryService.getCategories().subscribe(categories => {
+      this.categories = categories;
+      this.expenseCategories = categories.filter(c => c.type === 'expense');
+      this.incomeCategories = categories.filter(c => c.type === 'income');
+      // Don't call updateCategoryOptions to avoid clearing selection
+    });
+  }
+
   updateCategoryOptions(type: string): void {
     // Clear current category selection
     this.transactionForm.get('category')?.setValue('');
@@ -312,36 +365,55 @@ export class TransactionFormComponent implements OnInit, AfterViewInit, OnDestro
   // }
 
   patchFormWithTransaction(transaction: Transaction): void {
-     setTimeout(() => { // Ensure view is stable before patching
-        this.transactionForm.patchValue({
-          amount: transaction.amount,
-          type: transaction.type,
-          category: transaction.category, // Assuming category is categoryId string
-          date: new Date(transaction.date),
-          description: transaction.description,
-          notes: transaction.notes || '',
-          payee: transaction.payee, // Make sure payee is part of Transaction model
-          paymentMethod: transaction.paymentMethod,
-          isRecurring: transaction.recurringConfig?.isRecurring || false,
-          // isSplitTransaction: transaction.isSplit || false, // Add if needed
-        });
+    console.log('Patching form with transaction:', transaction); // Debug log
+    setTimeout(() => { // Ensure view is stable before patching
+       try {
+         // Handle category field - it might be an object or string
+         const categoryId = typeof transaction.category === 'object' 
+           ? (transaction.category as any)?._id 
+           : transaction.category;
+         
+         console.log('Category data:', { 
+           original: transaction.category, 
+           extracted: categoryId 
+         }); // Debug log
 
-        this.tags = transaction.tags || [];
-        this.transactionForm.get('tags')?.setValue(this.tags);
+         // Update category options first without clearing selection
+         this.loadCategoriesForType(transaction.type);
 
-        if (transaction.recurringConfig?.isRecurring && transaction.recurringConfig) {
-          this.transactionForm.get('recurringDetails')?.patchValue({
-            frequency: transaction.recurringConfig.frequency,
-            interval: transaction.recurringConfig.interval,
-            endDate: transaction.recurringConfig.endDate ? new Date(transaction.recurringConfig.endDate) : null
-          });
-        }
+         this.transactionForm.patchValue({
+           amount: transaction.amount,
+           type: transaction.type,
+           category: categoryId, // Use extracted category ID
+           date: new Date(transaction.date),
+           description: transaction.description,
+           notes: transaction.notes || '',
+           payee: transaction.payee || '', // Make sure payee is part of Transaction model
+           paymentMethod: transaction.paymentMethod || '',
+           isRecurring: transaction.recurringConfig?.isRecurring || false,
+           // isSplitTransaction: transaction.isSplit || false, // Add if needed
+         });
 
-        // TODO: Handle attachments and split transactions if they are part of the loaded Transaction model
-        // this.attachments = transaction.attachments || [];
-        // if (transaction.splitDetails) { ... populate splitTransactionsArray ... }
+         this.tags = transaction.tags || [];
+         this.transactionForm.get('tags')?.setValue(this.tags);
 
-        this.cdr.markForCheck();
+         if (transaction.recurringConfig?.isRecurring && transaction.recurringConfig) {
+           this.transactionForm.get('recurringDetails')?.patchValue({
+             frequency: transaction.recurringConfig.frequency,
+             interval: transaction.recurringConfig.interval,
+             endDate: transaction.recurringConfig.endDate ? new Date(transaction.recurringConfig.endDate) : null
+           });
+         }
+
+         // TODO: Handle attachments and split transactions if they are part of the loaded Transaction model
+         // this.attachments = transaction.attachments || [];
+         // if (transaction.splitDetails) { ... populate splitTransactionsArray ... }
+
+         console.log('Form patched successfully:', this.transactionForm.value); // Debug log
+         this.cdr.markForCheck();
+       } catch (error) {
+         console.error('Error patching form with transaction:', error);
+       }
     });
   }
 
@@ -569,16 +641,135 @@ export class TransactionFormComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   filterDescriptions(value: string): Observable<string[]> {
-    const filterValue = value.toLowerCase();
+    const filterValue = (value || '').toLowerCase();
     return this.store.select(getSelectedTransaction).pipe(
       take(1),
       map(transaction => {
         const allDescriptions = transaction ? [transaction.description, ...this.descriptionSuggestions] : this.descriptionSuggestions;
-        return allDescriptions.filter(desc => desc.toLowerCase().includes(filterValue));
+        // Filter out null/undefined descriptions before calling toLowerCase
+        return allDescriptions.filter(desc => desc && desc.toLowerCase().includes(filterValue));
       })
     );
   }
 
+  /**
+   * Gets the icon for the currently selected payment method
+   */
+  getSelectedPaymentMethodIcon(): string | null {
+    const selectedMethodId = this.transactionForm.get('paymentMethod')?.value;
+    if (!selectedMethodId) return null;
+    
+    const selectedMethod = this.paymentMethods.find(method => method.id === selectedMethodId);
+    return selectedMethod?.icon || null;
+  }
+
+  /**
+   * Gets the name of the currently selected payment method
+   */
+  getSelectedPaymentMethodName(): string {
+    const selectedMethodId = this.transactionForm.get('paymentMethod')?.value;
+    if (!selectedMethodId) return 'None';
+    
+    const selectedMethod = this.paymentMethods.find(method => method.id === selectedMethodId);
+    return selectedMethod?.name || 'Unknown method';
+  }
+  
+  /**
+   * Gets the icon for the currently selected category
+   */
+  getSelectedCategoryIcon(): string | null {
+    const selectedCategoryId = this.transactionForm.get('category')?.value;
+    if (!selectedCategoryId) return null;
+    
+    const transactionType = this.transactionForm.get('type')?.value;
+    const categories = transactionType === 'expense' ? this.expenseCategories : this.incomeCategories;
+    
+    const selectedCategory = categories.find(cat => cat._id === selectedCategoryId);
+    return selectedCategory?.icon || null;
+  }
+
+  /**
+   * Gets the name of the currently selected category
+   */
+  getSelectedCategoryName(): string {
+    const selectedCategoryId = this.transactionForm.get('category')?.value;
+    if (!selectedCategoryId) return 'None';
+    
+    const transactionType = this.transactionForm.get('type')?.value;
+    const categories = transactionType === 'expense' ? this.expenseCategories : this.incomeCategories;
+    
+    const selectedCategory = categories.find(cat => cat._id === selectedCategoryId);
+    return selectedCategory?.name || 'Unknown category';
+  }
+  
+  /**
+   * Gets the color for the currently selected category
+   */
+  getSelectedCategoryColor(): string {
+    const selectedCategoryId = this.transactionForm.get('category')?.value;
+    if (!selectedCategoryId) return '#ccc'; // Default gray color
+    
+    const transactionType = this.transactionForm.get('type')?.value;
+    const categories = transactionType === 'expense' ? this.expenseCategories : this.incomeCategories;
+    
+    const selectedCategory = categories.find(cat => cat._id === selectedCategoryId);
+    return selectedCategory?.color || '#ccc';
+  }
+  
+  /**
+   * Gets the icon for a category in a split transaction
+   * @param index The index of the split transaction in the form array
+   */
+  getSplitCategoryIcon(index: number): string | null {
+    const splitTransactions = this.transactionForm.get('splitTransactions') as FormArray;
+    if (!splitTransactions || index >= splitTransactions.length) return null;
+
+    const categoryId = splitTransactions.at(index).get('categoryId')?.value;
+    if (!categoryId) return null;
+
+    const transactionType = this.transactionForm.get('type')?.value;
+    const categories = transactionType === 'expense' ? this.expenseCategories : this.incomeCategories;
+    
+    const selectedCategory = categories.find(cat => cat._id === categoryId);
+    return selectedCategory?.icon || null;
+  }
+
+  /**
+   * Gets the name of a category in a split transaction
+   * @param index The index of the split transaction in the form array
+   */
+  getSplitCategoryName(index: number): string {
+    const splitTransactions = this.transactionForm.get('splitTransactions') as FormArray;
+    if (!splitTransactions || index >= splitTransactions.length) return 'None';
+
+    const categoryId = splitTransactions.at(index).get('categoryId')?.value;
+    if (!categoryId) return 'None';
+
+    const transactionType = this.transactionForm.get('type')?.value;
+    const categories = transactionType === 'expense' ? this.expenseCategories : this.incomeCategories;
+    
+    const selectedCategory = categories.find(cat => cat._id === categoryId);
+    return selectedCategory?.name || 'Unknown category';
+  }
+  
+  /**
+   * Gets the color for a category in a split transaction
+   * @param index The index of the split transaction in the form array
+   */
+  getSplitCategoryColor(index: number): string {
+    const splitTransactions = this.transactionForm.get('splitTransactions') as FormArray;
+    if (!splitTransactions || index >= splitTransactions.length) return '#ccc';
+
+    const categoryId = splitTransactions.at(index).get('categoryId')?.value;
+    if (!categoryId) return '#ccc';
+
+    const transactionType = this.transactionForm.get('type')?.value;
+    const categories = transactionType === 'expense' ? this.expenseCategories : this.incomeCategories;
+    
+    const selectedCategory = categories.find(cat => cat._id === categoryId);
+    return selectedCategory?.color || '#ccc';
+  }
+  
   // --- Methods/properties required by the template ---
   onAmountInput(event: any): void {
     const value = event.target.value;

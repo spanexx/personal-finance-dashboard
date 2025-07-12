@@ -23,43 +23,8 @@ import autoTable from 'jspdf-autotable';
 import { BudgetService } from '../budget.service';
 import { Budget, CategoryAllocation } from '../../../shared/models/budget.model';
 
-interface ChartData {
-  labels: string[];
-  datasets: any[];
-}
+import { ChartData, AnalysisData, CategoryAnalysis, TrendAnalysis, PerformanceMetrics } from './interfaces'; // Import interfaces
 
-interface AnalysisData {
-  categoryAnalysis: CategoryAnalysis[];
-  trendAnalysis: TrendAnalysis;
-  performanceMetrics: PerformanceMetrics;
-}
-
-interface CategoryAnalysis {
-  categoryName: string;
-  budgeted: number;
-  spent: number;
-  remaining: number;
-  percentage: number;
-  status: 'good' | 'warning' | 'over';
-  color: string;
-}
-
-interface TrendAnalysis {
-  totalBudget: number;
-  totalSpent: number;
-  projectedSpending: number;
-  savingsRate: number;
-  daysRemaining: number;
-  averageDailySpending: number;
-}
-
-interface PerformanceMetrics {
-  onTrackCategories: number;
-  warningCategories: number;
-  overBudgetCategories: number;
-  totalCategories: number;
-  budgetUtilization: number;
-}
 
 @Component({
   selector: 'app-budget-analysis',
@@ -97,8 +62,9 @@ export class BudgetAnalysisComponent implements OnInit, AfterViewInit, OnDestroy
   // Chart configurations
   chartOptions = {
     responsive: true,
-    maintainAspectRatio: false,
+    maintainAspectRatio: true, // Changed to true to prevent chart expansion
     aspectRatio: 2,
+    animation: false, // Disable animation for performance
     interaction: {
       intersect: false,
       mode: 'index' as const
@@ -131,8 +97,9 @@ export class BudgetAnalysisComponent implements OnInit, AfterViewInit, OnDestroy
   // Specific options for pie/doughnut charts
   pieChartOptions = {
     responsive: true,
-    maintainAspectRatio: false,
+    maintainAspectRatio: true, // Changed to true to prevent chart expansion
     aspectRatio: 1,
+    animation: false, // Disable animation for performance
     interaction: {
       intersect: false
     },
@@ -172,40 +139,33 @@ export class BudgetAnalysisComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   ngOnInit(): void {
-    this.store.dispatch({ type: 'Load Current Budget' }); // Dispatch action to load/select current budget
+    this.store.dispatch({ type: 'Load Current Budget' });
 
     this.selectedBudget$.pipe(takeUntil(this.destroy$)).subscribe(budget => {
-      // this.currentBudget = budget; // local copy if needed, template can use async
       if (budget) {
+        console.log('Selected budget:', budget);
         this.analysisData = this.generateAnalysisData(budget);
-        this.generateCharts(); // Prepare chart data
-        if (this.chartsInitialized) { // If view is ready, re-initialize/update charts
-             requestAnimationFrame(() => this.initializeCharts());
+        console.log('Generated analysis data:', this.analysisData);
+        this.generateCharts();
+        // Only initialize charts if not already initialized and view is ready
+        if (!this.chartsInitialized && this.budgetVsSpentCanvas && this.categoryBreakdownCanvas && this.progressCanvas) {
+          this.initializeCharts();
         }
       } else {
         this.analysisData = null;
-        this.destroyCharts(); // Clear charts if no budget
+        this.destroyCharts();
       }
     });
 
-    // Optionally, handle general loading/error states for the component
-    this.isLoading$.pipe(takeUntil(this.destroy$)).subscribe(loading => {
-      // You might use this for a general loading spinner for the whole component
-      // if (!this.analysisData && loading) this.loading = true; else this.loading = false;
-    });
-    this.error$.pipe(takeUntil(this.destroy$)).subscribe(error => {
-      // if (error) this.error = error;
-    });
+    this.isLoading$.pipe(takeUntil(this.destroy$)).subscribe();
+    this.error$.pipe(takeUntil(this.destroy$)).subscribe();
   }
 
   ngAfterViewInit(): void {
-    // Initialize charts if data is already available from selectedBudget$
-    this.selectedBudget$.pipe(
-        filter(budget => !!budget && !!this.analysisData && !this.chartsInitialized),
-        take(1) // Only once after view init and data is ready
-    ).subscribe(() => {
-        requestAnimationFrame(() => this.initializeCharts());
-    });
+    // Only initialize charts if data is ready and not already initialized
+    if (this.analysisData && !this.chartsInitialized) {
+      this.initializeCharts();
+    }
   }
 
   ngOnDestroy(): void {
@@ -229,9 +189,24 @@ export class BudgetAnalysisComponent implements OnInit, AfterViewInit, OnDestroy
   // loadBudgetAnalysis(): void { // Replaced by ngOnInit logic using NgRx store
   // }
 
-  private generateAnalysisData(budget: Budget): AnalysisData {
-    const categoryAnalysis = this.generateCategoryAnalysis(budget);
-    const trendAnalysis = this.generateTrendAnalysis(budget);
+  private normalizeBudget(budget: any): Budget {
+    if (Array.isArray(budget.categories)) return budget;
+    return {
+      ...budget,
+      categories: (budget.categoryAllocations || []).map((alloc: any) => ({
+        category: alloc.category?.name || alloc.category || '',
+        allocated: alloc.allocatedAmount ?? 0,
+        spent: alloc.spentAmount ?? 0,
+        // Add other fields as needed
+      }))
+    };
+  }
+
+  private generateAnalysisData(budget: any): AnalysisData {
+    console.log('Generating analysis data for budget:', budget);
+    const normalizedBudget = this.normalizeBudget(budget);
+    const categoryAnalysis = this.generateCategoryAnalysis(normalizedBudget);
+    const trendAnalysis = this.generateTrendAnalysis(normalizedBudget);
     const performanceMetrics = this.generatePerformanceMetrics(categoryAnalysis);
 
     return {
@@ -241,6 +216,9 @@ export class BudgetAnalysisComponent implements OnInit, AfterViewInit, OnDestroy
     };
   }
   private generateCategoryAnalysis(budget: Budget): CategoryAnalysis[] {
+    if (!budget || !Array.isArray(budget.categories)) {
+      return [];
+    }
     return budget.categories.map(category => {
       const percentage = category.allocated > 0 ? (category.spent / category.allocated) * 100 : 0;
       const status = this.budgetService.getCategoryStatus(category);
@@ -249,10 +227,10 @@ export class BudgetAnalysisComponent implements OnInit, AfterViewInit, OnDestroy
         categoryName: category.category,
         budgeted: category.allocated,
         spent: category.spent,
-        remaining: category.remaining,
+        remaining: category.allocated - category.spent,
         percentage,
         status,
-        color: '#2196F3' // Default color since CategoryAllocation doesn't have color
+        color: this.getStatusColor(status)
       };
     });
   }
@@ -261,11 +239,12 @@ export class BudgetAnalysisComponent implements OnInit, AfterViewInit, OnDestroy
     const startDate = new Date(budget.startDate);
     const endDate = new Date(budget.endDate);
     const now = new Date();
-    
+
     const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     const daysElapsed = Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     const daysRemaining = Math.max(0, totalDays - daysElapsed);
-      const totalSpent = budget.categories.reduce((sum, cat) => sum + cat.spent, 0);
+    const categories = Array.isArray(budget.categories) ? budget.categories : [];
+    const totalSpent = categories.reduce((sum, cat) => sum + cat.spent, 0);
     const averageDailySpending = daysElapsed > 0 ? totalSpent / daysElapsed : 0;
     const projectedSpending = totalSpent + (averageDailySpending * daysRemaining);
     const savingsRate = budget.totalAmount > 0 ? ((budget.totalAmount - totalSpent) / budget.totalAmount) * 100 : 0;
@@ -490,6 +469,19 @@ export class BudgetAnalysisComponent implements OnInit, AfterViewInit, OnDestroy
 
   getStatusClass(status: string): string {
     return `status-${status}`;
+  }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'good':
+        return '#43a047'; // Green
+      case 'warning':
+        return '#ffc107'; // Amber
+      case 'over':
+        return '#f44336'; // Red
+      default:
+        return '#90a4ae'; // Grey fallback
+    }
   }
 
   formatCurrency(amount: number): string {

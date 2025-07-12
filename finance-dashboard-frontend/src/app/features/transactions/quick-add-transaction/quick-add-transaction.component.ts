@@ -29,6 +29,7 @@ export class QuickAddTransactionComponent implements OnInit, OnDestroy { // Impl
   error$: Observable<any | null>;
   private destroyed$ = new Subject<void>();
 
+  
   paymentMethods: PaymentMethod[] = [
     { id: 'cash', name: 'Cash', type: 'cash', icon: 'payments' },
     { id: 'credit_card', name: 'Credit Card', type: 'credit_card', icon: 'credit_card' },
