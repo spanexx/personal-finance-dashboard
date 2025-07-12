@@ -1,0 +1,129 @@
+<div class="ai-chat-container">
+  <div class="chat-header">
+    <h5 class="mb-0">
+      <i class="fas fa-robot me-2"></i>
+      AI Financial Assistant
+    </h5>
+    <div class="chat-actions">
+      <button 
+        class="btn btn-sm btn-outline-primary me-2"
+        (click)="loadChatHistory()"
+        title="Load Chat History"
+        *ngIf="messages.length === 0">
+        <i class="fas fa-history"></i>
+      </button>
+      <button 
+        class="btn btn-sm btn-outline-secondary"
+        (click)="clearChat()"
+        title="Clear Chat">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="messages-container" #messagesContainer>
+    <!-- Loading state -->
+    <div *ngIf="isLoading && messages.length === 0" class="loading-state">
+      <div class="d-flex align-items-center">
+        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+        <span>Loading chat history...</span>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div *ngFor="let message of messages; let i = index" class="message-group">
+      <!-- User Message -->
+      <div class="message user-message">
+        <div class="message-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="message-content">
+          <div class="message-text">{{ message.userMessage }}</div>
+          <div class="message-time">{{ formatTimestamp(message.timestamp) }}</div>
+        </div>
+      </div>
+
+      <!-- AI Response -->
+      <div class="message ai-message" *ngIf="message.aiResponse">
+        <div class="message-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <!-- Text Response -->
+          <div *ngIf="!isActionMessage(message)" class="message-text">
+            {{ message.aiResponse }}
+          </div>
+
+          <!-- Action Response -->
+          <div *ngIf="isActionMessage(message)" class="action-response">
+            <div class="action-message">{{ getActionFromMessage(message)?.message }}</div>
+            <div class="action-card">
+              <div class="action-header">
+                <span class="action-type">{{ getActionFromMessage(message)?.action | titlecase }}</span>
+                <span class="action-category">{{ getActionFromMessage(message)?.type | titlecase }}</span>
+              </div>
+              <div class="action-data">
+                <pre>{{ getActionFromMessage(message)?.data | json }}</pre>
+              </div>
+              <div class="action-buttons" *ngIf="!message.actionExecuted">
+                <button 
+                  class="btn btn-primary btn-sm"
+                  (click)="executeAction(getActionFromMessage(message)!, i)">
+                  Execute Action
+                </button>
+                <button class="btn btn-outline-secondary btn-sm ms-2">
+                  Modify
+                </button>
+              </div>
+              <div class="action-executed" *ngIf="message.actionExecuted">
+                <i class="fas fa-check-circle text-success me-1"></i>
+                Action executed successfully
+              </div>
+            </div>
+          </div>
+
+          <div class="message-time">{{ formatTimestamp(message.timestamp) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Typing Indicator -->
+    <div *ngIf="isTyping" class="message ai-message typing">
+      <div class="message-avatar">
+        <i class="fas fa-robot"></i>
+      </div>
+      <div class="message-content">
+        <div class="typing-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Input -->
+  <div class="chat-input">
+    <form [formGroup]="chatForm" (ngSubmit)="sendMessage()">
+      <div class="input-group">
+        <textarea
+          class="form-control"
+          formControlName="message"
+          placeholder="Ask me about your finances..."
+          rows="2"
+          (keypress)="onKeyPress($event)"></textarea>
+        <button 
+          class="btn btn-primary"
+          type="submit"
+          [disabled]="chatForm.invalid || isTyping">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+      <div class="input-help">
+        <small class="text-muted">
+          Press Enter to send, Shift+Enter for new line
+        </small>
+      </div>
+    </form>
+  </div>
+</div>

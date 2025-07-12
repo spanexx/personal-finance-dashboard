@@ -35,8 +35,14 @@ const server = http.createServer(app);
 // Initialize Socket.IO after server creation (only if not in test environment)
 if (process.env.NODE_ENV !== 'test') {
   const { socketService, socketEventsService } = require('./services');
-  socketService.initialize(server);
+  const AIWebSocketService = require('./services/aiWebSocket.service');
+  
+  const io = socketService.initialize(server);
   socketEventsService.registerEventHandlers();
+  
+  // Initialize AI WebSocket service with the Socket.IO instance
+  new AIWebSocketService(io);
+  logger.info('AI WebSocket service initialized');
 }
 
 // Graceful shutdown handling (only if not in test environment)

@@ -19,9 +19,49 @@ import { TransactionService } from '../../core/services/transaction.service';
 import { BudgetService } from '../../core/services/budget.service';
 import { GoalsService } from '../../core/services/goals.service';
 import { CategoryService } from '../../core/services/category.service';
-import { TimePeriod, BudgetItem, SavingsGoal, CategoryExpense, PeriodCashflow } from './interfaces';
-import { MaterialModule } from '../../shared/modules';
+import { MaterialModule } from '../../shared/material.module';
+import { AiInsightsComponent } from './components/ai-insights/ai-insights.component';
+import { AiChatComponent } from './components/ai-chat/ai-chat.component';
 
+interface TimePeriod {
+  value: string;
+  label: string;
+}
+
+interface BudgetItem {
+  category: string;
+  limit: number;
+  spent: number;
+  color?: string;
+}
+
+interface SavingsGoal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  targetDate: string;
+}
+
+interface CategoryExpense {
+  category: {
+    id: string;
+    name: string;
+    color: string;
+  };
+  amount: number;
+  percentage: number;
+}
+
+interface PeriodCashflow {
+  period?: string | number;
+  year?: number;
+  income: number;
+  expenses?: number;
+  expense?: number;
+  net?: number;
+  periodLabel?: string;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -31,7 +71,9 @@ import { MaterialModule } from '../../shared/modules';
     RouterLink,
     MaterialModule,
     FormsModule,
-    NgChartsModule
+    NgChartsModule,
+    AiInsightsComponent,
+    AiChatComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
