@@ -19,6 +19,7 @@ import { TransactionService } from '../../core/services/transaction.service';
 import { BudgetService } from '../../core/services/budget.service';
 import { GoalsService } from '../../core/services/goals.service';
 import { CategoryService } from '../../core/services/category.service';
+import { AiInsightsComponent } from './components/ai-insights/ai-insights.component';
 
 interface TimePeriod {
   value: string;
@@ -71,7 +72,8 @@ interface PeriodCashflow {
     MatSelectModule,
     MatFormFieldModule,
     FormsModule,
-    NgChartsModule
+    NgChartsModule,
+    AiInsightsComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
