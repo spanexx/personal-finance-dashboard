@@ -20,6 +20,8 @@ import { MaterialModule, MatSnackBar } from '../../../shared/modules';
 import { LiveAnnouncer } from '@angular/cdk/a11y'; // Import LiveAnnouncer
 import { AccessibilityService, FocusTarget } from '../../../shared/services/accessibility.service';
 import { FocusTrapDirective } from '../../../shared/directives/focus-trap.directive';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 
 interface BudgetCategoryForm {
   category: string;
@@ -38,7 +40,9 @@ interface BudgetCategoryForm {
     CommonModule,
     ReactiveFormsModule,
     MaterialModule,
-    FocusTrapDirective
+    FocusTrapDirective,
+    MatDatepickerModule,
+    MatNativeDateModule
   ],
   templateUrl: './budget-setup.component.html',
   styleUrls: ['./budget-setup.component.scss']

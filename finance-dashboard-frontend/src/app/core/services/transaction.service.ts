@@ -152,6 +152,13 @@ export class TransactionService extends ApiService {
   getTransactionAnalytics(
     filters?: TransactionFilters
   ): Observable<TransactionAnalytics> {
+    console.log('🔍 [FRONTEND-SERVICE] TransactionService.getTransactionAnalytics called:', {
+      filters,
+      endpoint: `${this.endpoint}/analytics`,
+      filtersType: typeof filters,
+      filtersKeys: filters ? Object.keys(filters) : 'no filters'
+    });
+    
     return this.extractData(
       this.get<TransactionAnalytics>(`${this.endpoint}/analytics`, filters)
     );
@@ -330,5 +337,12 @@ export class TransactionService extends ApiService {
         errors: any[];
       }>(`${this.endpoint}/import`, formData)
     );
+  }
+
+  /**
+   * Create missing transactions for a given date range
+   */
+  createMissingTransactions(startDate: string, endDate: string): Observable<any> {
+    return this.post<any>(`${this.endpoint}/create-missing`, { startDate, endDate });
   }
 }

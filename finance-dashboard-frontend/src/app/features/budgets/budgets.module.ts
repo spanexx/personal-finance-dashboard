@@ -95,7 +95,9 @@ import { BudgetsRoutingModule } from './budgets-routing.module';
     BudgetAnalysisComponent,
     BudgetWizardComponent,
     BudgetTemplatesComponent,
-    BudgetTrackingEnhancedComponent
+    BudgetTrackingEnhancedComponent,
+    MatDatepickerModule,
+    MatNativeDateModule
   ],
   exports: [
     // Export all components for use in other modules

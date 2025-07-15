@@ -347,4 +347,9 @@ export class TransactionFacadeService {
     this.transactions$ = null;
     this.pagination$ = null;
   }
+
+  createMissingTransactions(startDate: string, endDate: string): Observable<any> {
+    this.store.dispatch(TransactionActions.createMissingTransactions({ startDate, endDate }));
+    return of(null);
+  }
 }

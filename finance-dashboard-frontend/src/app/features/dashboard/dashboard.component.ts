@@ -1,13 +1,7 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatListModule } from '@angular/material/list';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
+
 import { FormsModule } from '@angular/forms';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
@@ -19,9 +13,9 @@ import { TransactionService } from '../../core/services/transaction.service';
 import { BudgetService } from '../../core/services/budget.service';
 import { GoalsService } from '../../core/services/goals.service';
 import { CategoryService } from '../../core/services/category.service';
-import { MaterialModule } from '../../shared/material.module';
 import { AiInsightsComponent } from './components/ai-insights/ai-insights.component';
 import { AiChatComponent } from './components/ai-chat/ai-chat.component';
+import { MaterialModule } from '../../shared/modules/material.module';
 
 interface TimePeriod {
   value: string;

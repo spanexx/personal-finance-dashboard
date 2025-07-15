@@ -109,3 +109,19 @@ export const setTransactionLoading = createAction(
   '[Transaction] Set Loading',
   props<{ loading: boolean }>()
 );
+
+// Create Missing Transactions Actions
+export const createMissingTransactions = createAction(
+  '[Transaction] Create Missing Transactions',
+  props<{ startDate: string; endDate: string }>()
+);
+
+export const createMissingTransactionsSuccess = createAction(
+  '[Transaction] Create Missing Transactions Success',
+  props<{ createdCount: number }>()
+);
+
+export const createMissingTransactionsFailure = createAction(
+  '[Transaction] Create Missing Transactions Failure',
+  props<{ error: any }>()
+);

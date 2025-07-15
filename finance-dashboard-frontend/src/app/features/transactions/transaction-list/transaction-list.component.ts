@@ -801,5 +801,12 @@ export class TransactionListComponent implements OnInit, OnDestroy, AfterViewIni
     });
   }
 
-}
+  createMissingTransactions(): void {
+    const startDate = prompt('Enter start date (YYYY-MM-DD):');
+    const endDate = prompt('Enter end date (YYYY-MM-DD):');
 
+    if (startDate && endDate) {
+      this.transactionFacade.createMissingTransactions(startDate, endDate);
+    }
+  }
+}

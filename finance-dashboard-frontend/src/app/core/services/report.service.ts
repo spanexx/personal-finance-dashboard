@@ -216,6 +216,13 @@ export class ReportService extends ApiService {
     accounts?: string[];
     groupBy?: 'category' | 'merchant' | 'date';
   }): Observable<SpendingAnalysis> {
+    console.log('🔍 [FRONTEND-REPORT] ReportService.getSpendingAnalysis called:', {
+      params,
+      endpoint: `${this.endpoint}/spending-analysis`,
+      paramsType: typeof params,
+      paramsKeys: params ? Object.keys(params) : 'no params'
+    });
+    
     return this.extractData(
       this.get<SpendingAnalysis>(`${this.endpoint}/spending-analysis`, params)
     );
@@ -231,6 +238,13 @@ export class ReportService extends ApiService {
     accounts?: string[];
     includeProjections?: boolean;
   }): Observable<IncomeAnalysis> {
+    console.log('🔍 [FRONTEND-REPORT] ReportService.getIncomeAnalysis called:', {
+      params,
+      endpoint: `${this.endpoint}/income`,
+      paramsType: typeof params,
+      paramsKeys: params ? Object.keys(params) : 'no params'
+    });
+    
     return this.extractData(
       this.get<IncomeAnalysis>(`${this.endpoint}/income`, params)
     );

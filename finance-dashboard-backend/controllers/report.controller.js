@@ -119,6 +119,21 @@ class ReportController {
 
     logger.info(`Income report generated successfully for user ${userId}`);
     
+    console.log('✅ [BACKEND-INCOME] Raw income report from service:', {
+      reportType: typeof report,
+      keys: report ? Object.keys(report) : 'null/undefined',
+      summaryKeys: report?.summary ? Object.keys(report.summary) : 'no summary',
+      totalIncome: report?.summary?.totalIncome,
+      sourceAnalysisLength: report?.sourceAnalysis?.length
+    });
+    
+    console.log('📊 [BACKEND-INCOME] Sending income report to frontend:', {
+      totalIncome: report?.summary?.totalIncome,
+      sourceCount: report?.summary?.sourceCount,
+      hasSourceAnalysis: !!report?.sourceAnalysis,
+      hasPeriod: !!report?.period
+    });
+    
     return ApiResponse.success(res, report, 'Income report generated successfully');
   });
   /**
@@ -672,6 +687,13 @@ class ReportController {
    * @param {Object} res - Express response object
    */
   static getSpendingAnalysis = ErrorHandler.asyncHandler(async (req, res) => {
+    console.log('🔍 [BACKEND-SPENDING] Spending analysis request:', {
+      userId: req.user.id,
+      queryParams: req.query,
+      method: req.method,
+      url: req.url
+    });
+    
     logger.info(`Generating spending analysis for user ${req.user.id}`);
     const { startDate, endDate, groupBy = 'category' } = req.query;
     const userId = req.user.id;
@@ -681,7 +703,18 @@ class ReportController {
       endDate: endDate ? new Date(endDate) : undefined,
       groupBy
     };
+    
+    console.log('📡 [BACKEND-SPENDING] Calling ReportService.generateSpendingReport with options:', options);
     const report = await ReportService.generateSpendingReport(userId, options);
+    
+    console.log('✅ [BACKEND-SPENDING] Raw spending report from service:', {
+      reportType: typeof report,
+      keys: report ? Object.keys(report) : 'null/undefined',
+      categoryAnalysisLength: report?.categoryAnalysis?.length,
+      summaryKeys: report?.summary ? Object.keys(report.summary) : 'no summary',
+      totalSpent: report?.summary?.totalSpent
+    });
+    
     // Map to frontend expected structure
     const categoryBreakdown = (report.categoryAnalysis || []).map(cat => ({
       category: {

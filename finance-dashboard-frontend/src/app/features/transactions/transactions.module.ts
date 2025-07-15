@@ -30,6 +30,8 @@ import { NgChartsModule } from 'ng2-charts';
 
 // Material Imports
 import { MaterialModule } from '../../shared/modules';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 
 
 @NgModule({  declarations: [
@@ -59,6 +61,8 @@ import { MaterialModule } from '../../shared/modules';
     FocusTrapDirective,
     // Material Modules
     MaterialModule,
+    MatDatepickerModule,
+    MatNativeDateModule
   ]
 })
 

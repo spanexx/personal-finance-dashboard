@@ -480,10 +480,30 @@ static deleteAttachment = ErrorHandler.asyncHandler(async (req, res) => {
    */
   static getTransactionAnalytics = ErrorHandler.asyncHandler(async (req, res) => {
     const options = req.query;
+    console.log('🔍 [BACKEND-ANALYTICS] Transaction analytics request:', {
+      userId: req.user.id,
+      options,
+      queryParams: req.query,
+      method: req.method,
+      url: req.url
+    });
+    
     logger.info('[Analytics] Incoming analytics request', { userId: req.user.id, options });
     try {
       // Use service to get transaction analytics
+      console.log('📡 [BACKEND-ANALYTICS] Calling transactionService.getTransactionAnalytics...');
       const analyticsData = await transactionService.getTransactionAnalytics(req.user.id, options);
+      
+      console.log('✅ [BACKEND-ANALYTICS] Raw analytics data from service:', {
+        dataType: typeof analyticsData,
+        isArray: Array.isArray(analyticsData),
+        keys: analyticsData ? Object.keys(analyticsData) : 'null/undefined',
+        totalIncome: analyticsData?.totalIncome,
+        totalExpenses: analyticsData?.totalExpenses,
+        netIncome: analyticsData?.netIncome,
+        transactionCount: analyticsData?.transactionCount
+      });
+      
       logger.info('[Analytics] Analytics data generated', { userId: req.user.id, analyticsData });
       // Defensive: ensure all expected fields are present
       const completeAnalytics = {
@@ -498,6 +518,17 @@ static deleteAttachment = ErrorHandler.asyncHandler(async (req, res) => {
         spendingPatterns: analyticsData.spendingPatterns ?? [],
         ...analyticsData // spread in any additional fields
       };
+      
+      console.log('📊 [BACKEND-ANALYTICS] Complete analytics being sent to frontend:', {
+        totalIncome: completeAnalytics.totalIncome,
+        totalExpenses: completeAnalytics.totalExpenses,
+        netIncome: completeAnalytics.netIncome,
+        transactionCount: completeAnalytics.transactionCount,
+        categoryBreakdownLength: completeAnalytics.categoryBreakdown?.length,
+        monthlyTrendsLength: completeAnalytics.monthlyTrends?.length,
+        topMerchantsLength: completeAnalytics.topMerchants?.length,
+        spendingPatternsLength: completeAnalytics.spendingPatterns?.length
+      });
       return ApiResponse.success(res, completeAnalytics, 'Transaction analytics retrieved successfully');
     } catch (err) {
       logger.error('[Analytics] Error generating analytics', { userId: req.user.id, error: err.stack || err });
@@ -576,6 +607,24 @@ static searchTransactionsAutocomplete = ErrorHandler.asyncHandler(async (req, re
 
   return ApiResponse.success(res, responseData, 'Autocomplete suggestions retrieved successfully');
 });
+
+  /**
+   * Create missing transactions for a given date range
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  static createMissingTransactions = ErrorHandler.asyncHandler(async (req, res) => {
+    const { startDate, endDate } = req.body;
+    const userId = req.user.id;
+
+    if (!startDate || !endDate) {
+      throw new ValidationError('Start date and end date are required');
+    }
+
+    const result = await transactionService.createMissingTransactions(userId, startDate, endDate);
+
+    return ApiResponse.success(res, result, 'Missing transactions created successfully');
+  });
 }
 
 module.exports = TransactionController;

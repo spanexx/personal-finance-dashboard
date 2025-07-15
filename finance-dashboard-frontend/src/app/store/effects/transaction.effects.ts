@@ -167,4 +167,20 @@ export class TransactionEffects {
   //     })
   //   )
   // );
+
+  createMissingTransactions$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TransactionActions.createMissingTransactions),
+      mergeMap(({ startDate, endDate }) =>
+        this.transactionService.createMissingTransactions(startDate, endDate).pipe(
+          map((result: any) =>
+            TransactionActions.createMissingTransactionsSuccess({ createdCount: result.createdCount })
+          ),
+          catchError((error) =>
+            of(TransactionActions.createMissingTransactionsFailure({ error: error.error || error }))
+          )
+        )
+      )
+    )
+  );
 }

@@ -92,7 +92,7 @@ class AIWebSocketService {
           // Get AI response
           const response = await aiService.getAIResponse(socket.userId, message, sessionId);
           
-          console.log('✅ AI response generated:', typeof response, response ? response.substring(0, 100) : 'No response');
+          console.log('✅ AI response generated:', typeof response, response?.response ? response.response.substring(0, 100) : 'No response');
           
           // Stop typing indicator
           socket.emit('ai:typing', { isTyping: false });

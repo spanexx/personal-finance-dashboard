@@ -708,7 +708,7 @@ transactionSchema.statics.getTransactionsByCategory = function(userId, options =
   } = options;
   
   const matchStage = {
-    user: mongoose.Types.ObjectId(userId)
+    user: new mongoose.Types.ObjectId(userId)
   };
   
   if (!includeDeleted) {
@@ -755,11 +755,11 @@ transactionSchema.statics.getTransactionsByCategory = function(userId, options =
   ]);
 };
 
-// Get spending trends
+// Get spending trends (including both income and expenses)
 transactionSchema.statics.getSpendingTrends = function(userId, period = 'monthly', count = 12) {
   const matchStage = {
-    user: mongoose.Types.ObjectId(userId),
-    type: 'expense',
+    user: new mongoose.Types.ObjectId(userId),
+    type: { $in: ['income', 'expense'] }, // Include both income and expense
     isDeleted: { $ne: true },
     status: 'completed'
   };
@@ -793,7 +793,16 @@ transactionSchema.statics.getSpendingTrends = function(userId, period = 'monthly
     {
       $group: {
         _id: groupBy,
-        totalSpent: { $sum: '$amount' },
+        totalSpent: { 
+          $sum: { 
+            $cond: [{ $eq: ['$type', 'expense'] }, '$amount', 0] 
+          } 
+        },
+        totalIncome: { 
+          $sum: { 
+            $cond: [{ $eq: ['$type', 'income'] }, '$amount', 0] 
+          } 
+        },
         transactionCount: { $sum: 1 },
         avgTransaction: { $avg: '$amount' }
       }
@@ -857,6 +866,140 @@ transactionSchema.statics.cleanupDeletedTransactions = function(olderThanDays = 
     isDeleted: true,
     deletedAt: { $lt: cutoffDate }
   });
+};
+
+// Get spending patterns by day of week
+transactionSchema.statics.getSpendingPatternsByDayOfWeek = function(userId, options = {}) {
+  const {
+    dateFrom = null,
+    dateTo = null,
+    type = 'expense', // Default to expenses for spending patterns
+    includeDeleted = false
+  } = options;
+  
+  const matchStage = {
+    user: new mongoose.Types.ObjectId(userId),
+    isDeleted: { $ne: true },
+    status: 'completed'
+  };
+  
+  if (!includeDeleted) {
+    matchStage.isDeleted = { $ne: true };
+  }
+  
+  if (type) {
+    matchStage.type = type;
+  }
+  
+  if (dateFrom || dateTo) {
+    matchStage.date = {};
+    if (dateFrom) matchStage.date.$gte = new Date(dateFrom);
+    if (dateTo) matchStage.date.$lte = new Date(dateTo);
+  }
+  
+  return this.aggregate([
+    { $match: matchStage },
+    {
+      $group: {
+        _id: { $dayOfWeek: '$date' }, // 1 = Sunday, 2 = Monday, ..., 7 = Saturday
+        totalAmount: { $sum: '$amount' },
+        transactionCount: { $sum: 1 },
+        averageAmount: { $avg: '$amount' },
+        minAmount: { $min: '$amount' },
+        maxAmount: { $max: '$amount' }
+      }
+    },
+    {
+      $project: {
+        _id: 1,
+        dayOfWeek: {
+          $switch: {
+            branches: [
+              { case: { $eq: ['$_id', 1] }, then: 'Sunday' },
+              { case: { $eq: ['$_id', 2] }, then: 'Monday' },
+              { case: { $eq: ['$_id', 3] }, then: 'Tuesday' },
+              { case: { $eq: ['$_id', 4] }, then: 'Wednesday' },
+              { case: { $eq: ['$_id', 5] }, then: 'Thursday' },
+              { case: { $eq: ['$_id', 6] }, then: 'Friday' },
+              { case: { $eq: ['$_id', 7] }, then: 'Saturday' }
+            ],
+            default: 'Unknown'
+          }
+        },
+        totalAmount: 1,
+        transactionCount: 1,
+        averageAmount: { $round: ['$averageAmount', 2] },
+        minAmount: 1,
+        maxAmount: 1
+      }
+    },
+    {
+      $sort: { _id: 1 } // Sort by day of week (Sunday first)
+    }
+  ]);
+};
+
+// Get top merchants by payee field
+transactionSchema.statics.getTopMerchantsByPayee = function(userId, options = {}) {
+  const {
+    dateFrom = null,
+    dateTo = null,
+    type = 'expense', // Default to expenses for merchant spending
+    includeDeleted = false,
+    limit = 10 // Top 10 merchants by default
+  } = options;
+  
+  const matchStage = {
+    user: new mongoose.Types.ObjectId(userId),
+    payee: { $ne: null, $ne: '' }, // Only transactions with payee information
+    isDeleted: { $ne: true },
+    status: 'completed'
+  };
+  
+  if (!includeDeleted) {
+    matchStage.isDeleted = { $ne: true };
+  }
+  
+  if (type) {
+    matchStage.type = type;
+  }
+  
+  if (dateFrom || dateTo) {
+    matchStage.date = {};
+    if (dateFrom) matchStage.date.$gte = new Date(dateFrom);
+    if (dateTo) matchStage.date.$lte = new Date(dateTo);
+  }
+  
+  return this.aggregate([
+    { $match: matchStage },
+    {
+      $group: {
+        _id: '$payee',
+        totalAmount: { $sum: '$amount' },
+        transactionCount: { $sum: 1 },
+        averageAmount: { $avg: '$amount' },
+        minAmount: { $min: '$amount' },
+        maxAmount: { $max: '$amount' },
+        lastTransaction: { $max: '$date' }
+      }
+    },
+    {
+      $project: {
+        _id: 1,
+        name: '$_id', // Use payee name as merchant name
+        totalAmount: 1,
+        transactionCount: 1,
+        averageAmount: { $round: ['$averageAmount', 2] },
+        minAmount: 1,
+        maxAmount: 1,
+        lastTransaction: 1
+      }
+    },
+    {
+      $sort: { totalAmount: -1 } // Sort by total amount descending
+    },
+    { $limit: limit }
+  ]);
 };
 
 // Export the model

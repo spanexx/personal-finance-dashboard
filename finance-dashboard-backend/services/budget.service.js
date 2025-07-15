@@ -1,6 +1,7 @@
 const Budget = require('../models/Budget');
 const Transaction = require('../models/Transaction');
 const Category = require('../models/Category');
+const CategoryService = require('./category.service');
 const mongoose = require('mongoose');
 const { 
   ValidationError, 
@@ -1662,16 +1663,37 @@ class BudgetService {
       throw new ValidationError(`Total allocated amount (${totalAllocated}) exceeds budget total (${totalAmount})`);
     }
     // Validate individual allocations
-    for (const allocation of allocations) {
+    for (let allocation of allocations) {
       if (typeof allocation.allocatedAmount !== 'number' || allocation.allocatedAmount <= 0) {
         throw new ValidationError(`Invalid allocation amount for category ${allocation.category}`);
       }
-      // Verify the category exists and belongs to the user
-      const category = await Category.findOne({
-        _id: new mongoose.Types.ObjectId(allocation.category),
-        user: new mongoose.Types.ObjectId(userId),
-        isActive: true
-      });
+      
+      let category;
+      
+      // Check if allocation.category is a string name or ObjectId
+      if (mongoose.Types.ObjectId.isValid(allocation.category)) {
+        // It's already an ObjectId, verify it exists
+        category = await Category.findOne({
+          _id: new mongoose.Types.ObjectId(allocation.category),
+          user: new mongoose.Types.ObjectId(userId),
+          isActive: true
+        });
+      } else {
+        // It's a category name, find it by name
+        console.log(`[validateCategoryAllocations] Looking up category by name: "${allocation.category}"`);
+        category = await Category.findOne({
+          name: { $regex: new RegExp(`^${allocation.category}$`, 'i') }, // Case-insensitive match
+          user: new mongoose.Types.ObjectId(userId),
+          isActive: true
+        });
+        
+        if (category) {
+          // Update the allocation to use the category ID
+          allocation.category = category._id.toString();
+          console.log(`[validateCategoryAllocations] Found category "${category.name}" with ID: ${category._id}`);
+        }
+      }
+      
       if (!category) {
         throw new ValidationError(`Category not found or not accessible: ${allocation.category}`);
       }

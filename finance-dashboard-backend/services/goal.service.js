@@ -565,7 +565,7 @@ class GoalService {
     }
     
     // Status validation
-    if (goalData.status && !['active', 'paused', 'completed', 'abandoned'].includes(goalData.status)) {
+    if (goalData.status && !['active', 'completed', 'paused', 'cancelled'].includes(goalData.status)) {
       errors.push('Invalid status value');
     }
     
@@ -575,7 +575,7 @@ class GoalService {
     }
     
     // Goal type validation
-    if (goalData.goalType && !['savings', 'debt_payment', 'investment', 'purchase', 'emergency_fund', 'education', 'retirement', 'other'].includes(goalData.goalType)) {
+    if (goalData.goalType && !['savings', 'debt_payoff', 'investment', 'purchase', 'emergency_fund', 'other'].includes(goalData.goalType)) {
       errors.push('Invalid goal type');
     }
     

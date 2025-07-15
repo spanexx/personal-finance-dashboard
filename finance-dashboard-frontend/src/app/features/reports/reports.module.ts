@@ -13,6 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatNativeDateModule } from '@angular/material/core';
 
 const routes: Routes = [
   {
@@ -38,7 +39,8 @@ const routes: Routes = [
     MatSelectModule,
     MatDatepickerModule,
     MatTableModule,
-    MatProgressBarModule
+    MatProgressBarModule,
+    MatNativeDateModule
   ],
   declarations: []
 })

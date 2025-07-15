@@ -94,12 +94,12 @@
   </div>
   
   <!-- Analytics Dashboard -->
-  <div *ngIf="!loading && !error && transactionAnalytics" class="analytics-content">    <!-- Financial Summary -->
+  <div *ngIf="!loading && !error && transactionAnalytics" class="analytics-content">  
     <mat-card class="summary-card" tabindex="0" #summarySection>
       <mat-card-header>
         <mat-card-title>Financial Summary</mat-card-title>
       </mat-card-header>
-      <mat-card-content class="summary-content" aria-label="Financial summary showing income, expenses, and net income">>
+      <mat-card-content class="summary-content" aria-label="Financial summary showing income, expenses, and net income">
         <div class="summary-item income">
           <div class="summary-label">Income</div>
           <div class="summary-value">{{ transactionAnalytics.totalIncome | currency }}</div>
@@ -149,7 +149,8 @@
     
     <!-- Category Breakdown Chart -->
     <mat-card class="chart-card">
-      <mat-card-header>        <mat-card-title>Category Breakdown</mat-card-title>
+      <mat-card-header>        
+        <mat-card-title>Category Breakdown</mat-card-title>
         <div class="chart-actions">
           <button mat-icon-button (click)="exportChartAsImage('categoryBreakdownChart')" aria-label="Export chart">
             <mat-icon>download</mat-icon>
@@ -170,7 +171,7 @@
     </mat-card>
     
     <!-- Spending Patterns Chart -->
-    <mat-card class="chart-card">
+    <mat-card class="chart-card" *ngIf="spendingPatternsChart && transactionAnalytics && transactionAnalytics.spendingPatterns && transactionAnalytics.spendingPatterns.length > 0">
       <mat-card-header>        <mat-card-title>Spending Patterns by Day of Week</mat-card-title>
         <div class="chart-actions">
           <button mat-icon-button (click)="exportChartAsImage('spendingPatternsChart')" aria-label="Export chart">
@@ -202,7 +203,7 @@
     </mat-card>
     
     <!-- Top Merchants -->
-    <mat-card class="data-card">
+    <mat-card class="data-card" *ngIf="transactionAnalytics && transactionAnalytics.topMerchants && transactionAnalytics.topMerchants.length > 0">
       <mat-card-header>
         <mat-card-title>Top Merchants</mat-card-title>
       </mat-card-header>
@@ -242,25 +243,25 @@
           <!-- Category Column -->
           <ng-container matColumnDef="category">
             <th mat-header-cell *matHeaderCellDef>Category</th>
-            <td mat-cell *matCellDef="let category">{{ category.category }}</td>
+            <td mat-cell *matCellDef="let category">{{ getCategoryName(category) }}</td>
           </ng-container>
           
           <!-- Amount Column -->
           <ng-container matColumnDef="amount">
             <th mat-header-cell *matHeaderCellDef>Amount</th>
-            <td mat-cell *matCellDef="let category">{{ category.amount | currency }}</td>
+            <td mat-cell *matCellDef="let category">{{ getCategoryAmount(category) | currency }}</td>
           </ng-container>
           
           <!-- Percentage Column -->
           <ng-container matColumnDef="percentage">
             <th mat-header-cell *matHeaderCellDef>Percentage</th>
-            <td mat-cell *matCellDef="let category">{{ category.percentage | number:'1.1-1' }}%</td>
+            <td mat-cell *matCellDef="let category">{{ getCategoryPercentage(category) }}%</td>
           </ng-container>
           
           <!-- Count Column -->
           <ng-container matColumnDef="count">
             <th mat-header-cell *matHeaderCellDef>Transactions</th>
-            <td mat-cell *matCellDef="let category">{{ category.count }}</td>
+            <td mat-cell *matCellDef="let category">{{ getCategoryCount(category) }}</td>
           </ng-container>
           
           <!-- Actions Column -->

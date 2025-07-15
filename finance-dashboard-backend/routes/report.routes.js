@@ -28,6 +28,14 @@ router.get('/spending', reportController.getSpendingReport);
 router.get('/income', reportController.getIncomeReport);
 
 /**
+ * @route   GET /api/reports/income-analysis
+ * @desc    Generate income analysis (frontend compatible)
+ * @access  Private
+ * @params  startDate, endDate, sources, accounts, includeProjections
+ */
+router.get('/income-analysis', reportController.getIncomeReport);
+
+/**
  * @route   GET /api/reports/cashflow
  * @desc    Generate cash flow analysis report
  * @access  Private

@@ -201,4 +201,14 @@ router.delete('/:id/attachments/:attachmentId',
   TransactionController.deleteAttachment
 );
 
+/**
+ * @route   POST /api/transactions/create-missing
+ * @desc    Create missing transactions for a given date range
+ * @access  Private
+ */
+router.post('/create-missing',
+  verifyToken,
+  TransactionController.createMissingTransactions
+);
+
 module.exports = router;

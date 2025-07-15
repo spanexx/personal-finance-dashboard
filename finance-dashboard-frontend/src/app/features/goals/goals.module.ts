@@ -11,6 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatNativeDateModule } from '@angular/material/core';
 
 const routes: Routes = [
   {
@@ -38,7 +39,8 @@ const routes: Routes = [
     MatFormFieldModule,
     MatInputModule,
     MatDatepickerModule,
-    MatProgressBarModule
+    MatProgressBarModule,
+    MatNativeDateModule
   ],
   declarations: []
 })

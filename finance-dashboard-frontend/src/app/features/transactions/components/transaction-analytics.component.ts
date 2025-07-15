@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { FormGroup, FormBuilder } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -52,7 +52,8 @@ export class TransactionAnalyticsComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private fb: FormBuilder,
     private dialog: MatDialog,
-    private liveAnnouncer: LiveAnnouncer
+    private liveAnnouncer: LiveAnnouncer,
+    private cdr: ChangeDetectorRef
   ) {
     // Initialize date range form
     const today = new Date();
@@ -81,8 +82,8 @@ export class TransactionAnalyticsComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
     
-    // Announce loading state to screen readers
-    this.liveAnnouncer.announce('Loading analytics data for the selected time period.');
+    // Trigger change detection immediately when loading starts
+    this.cdr.detectChanges();
     
     // Calculate date range based on selected timeframe
     const dateRange = this.calculateDateRange();
@@ -100,6 +101,9 @@ export class TransactionAnalyticsComponent implements OnInit, OnDestroy {
         this.generateCharts();
         this.loading = false;
         
+        // Trigger change detection
+        this.cdr.detectChanges();
+        
         // Announce data loaded to screen readers
         const period = this.getPeriodDescription();
         this.liveAnnouncer.announce(`Analytics data loaded for ${period}. Income: ${data.totalIncome.toFixed(2)}, Expenses: ${data.totalExpenses.toFixed(2)}, Net: ${data.netIncome.toFixed(2)}`);
@@ -115,6 +119,7 @@ export class TransactionAnalyticsComponent implements OnInit, OnDestroy {
         this.error = 'Failed to load transaction analytics';
         this.notificationService.error('Error loading analytics data');
         this.loading = false;
+        this.cdr.detectChanges();
         console.error(err);
         
         // Announce error to screen readers
@@ -131,6 +136,7 @@ export class TransactionAnalyticsComponent implements OnInit, OnDestroy {
     .subscribe({
       next: (data) => {
         this.spendingAnalysis = data;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Failed to load spending analysis', err);
@@ -146,6 +152,7 @@ export class TransactionAnalyticsComponent implements OnInit, OnDestroy {
     .subscribe({
       next: (data) => {
         this.incomeAnalysis = data;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Failed to load income analysis', err);
@@ -196,6 +203,9 @@ export class TransactionAnalyticsComponent implements OnInit, OnDestroy {
     this.selectedTimeframe = timeframe;
     this.isCustomDateRange = timeframe === 'custom';
     
+    // Trigger change detection immediately
+    this.cdr.detectChanges();
+    
     if (!this.isCustomDateRange) {
       this.loadAnalyticsData();
     }
@@ -238,19 +248,36 @@ export class TransactionAnalyticsComponent implements OnInit, OnDestroy {
     /**
    * Show category details in a dialog
    */
+  private categoryDialogRef: any = null;
   showCategoryDetails(category: any): void {
+    if (this.categoryDialogRef) {
+      return;
+    }
     const dateRange = this.calculateDateRange();
-    
-    this.dialog.open(CategoryDetailsDialogComponent, {
+    // Always try to pass the category ID if available, fallback to name (for legacy data)
+    let categoryId: string | undefined = undefined;
+    if (category.category && typeof category.category === 'object' && category.category._id) {
+      categoryId = category.category._id;
+    } else if (category.category && typeof category.category === 'string' && category._id) {
+      // Some legacy data may have category as string and _id at root
+      categoryId = category._id;
+    }
+    const amount = category.totalAmount || category.amount;
+    // Calculate percentage if not present
+    let percentage = typeof category.percentage === 'number' ? category.percentage : this.getCategoryPercentage(category);
+    this.categoryDialogRef = this.dialog.open(CategoryDetailsDialogComponent, {
       width: '800px',
       data: {
-        category: category.category,
-        amount: category.amount,
-        percentage: category.percentage,
-        count: category.count,
+        category: categoryId || category.category, // Prefer ID, fallback to name
+        amount: amount,
+        percentage: percentage,
+        count: category.transactionCount || category.count,
         startDate: dateRange.startDate.toISOString(),
         endDate: dateRange.endDate.toISOString()
       }
+    });
+    this.categoryDialogRef.afterClosed().subscribe(() => {
+      this.categoryDialogRef = null;
     });
   }
   
@@ -258,159 +285,378 @@ export class TransactionAnalyticsComponent implements OnInit, OnDestroy {
    * Generate charts based on analytics data
    */
   generateCharts(): void {
-    if (!this.transactionAnalytics) return;
+    if (!this.transactionAnalytics) {
+      return;
+    }
+
+    // Ensure arrays exist and have data
+    const monthlyTrends = this.transactionAnalytics.monthlyTrends || [];
+    const categoryBreakdown = this.transactionAnalytics.categoryBreakdown || [];
+    const spendingPatterns = this.transactionAnalytics.spendingPatterns || [];
+    const topMerchants = this.transactionAnalytics.topMerchants || [];
+
+    // Log Top Merchants data for analysis
+    if (topMerchants.length > 0) {
+      console.log('🏪 [TOP-MERCHANTS] Processing top merchants data:', {
+        rawTopMerchantsCount: topMerchants.length,
+        rawTopMerchantsData: topMerchants,
+        selectedTimeframe: this.selectedTimeframe,
+        dataStructure: topMerchants.map(merchant => {
+          const merchantData = merchant as any;
+          return {
+            name: merchant.name,
+            amount: merchant.amount,
+            count: merchant.count,
+            averageAmount: merchantData.averageAmount,
+            lastTransaction: merchantData.lastTransaction,
+            keys: Object.keys(merchant)
+          };
+        }),
+        totalSpending: topMerchants.reduce((sum, merchant) => sum + (merchant.amount || 0), 0),
+        topMerchantName: topMerchants[0]?.name || 'N/A',
+        topMerchantAmount: topMerchants[0]?.amount || 0
+      });
+    } else {
+      console.log('🏪 [TOP-MERCHANTS] No merchant data available for current timeframe:', {
+        selectedTimeframe: this.selectedTimeframe,
+        transactionAnalyticsKeys: Object.keys(this.transactionAnalytics)
+      });
+    }
+
+    // Log Category Breakdown data for analysis
+    if (categoryBreakdown.length > 0) {
+      console.log('📊 [CATEGORY-BREAKDOWN] Processing category breakdown data:', {
+        rawCategoryBreakdownCount: categoryBreakdown.length,
+        rawCategoryBreakdownData: categoryBreakdown,
+        selectedTimeframe: this.selectedTimeframe,
+        dataStructure: categoryBreakdown.map(category => {
+          const categoryData = category as any;
+          return {
+            category: category.category,
+            categoryType: typeof category.category,
+            categoryName: categoryData.category?.name || 'N/A',
+            amount: category.amount,
+            totalAmount: categoryData.totalAmount,
+            percentage: category.percentage,
+            count: category.count,
+            transactionCount: categoryData.transactionCount,
+            keys: Object.keys(category)
+          };
+        }),
+        totalAmount: categoryBreakdown.reduce((sum, cat) => sum + (cat.amount || (cat as any).totalAmount || 0), 0),
+        topCategoryName: (() => {
+          const firstCategory = categoryBreakdown[0];
+          if (!firstCategory) return 'N/A';
+          const categoryData = firstCategory as any;
+          if (categoryData.category && typeof categoryData.category === 'object' && categoryData.category.name) {
+            return categoryData.category.name;
+          }
+          return String(firstCategory.category || 'N/A');
+        })()
+      });
+    } else {
+      console.log('📊 [CATEGORY-BREAKDOWN] No category breakdown data available for current timeframe:', {
+        selectedTimeframe: this.selectedTimeframe,
+        transactionAnalyticsKeys: Object.keys(this.transactionAnalytics)
+      });
+    }
+
+    // Only generate charts if we have data
+    if (monthlyTrends.length === 0 && categoryBreakdown.length === 0 && spendingPatterns.length === 0) {
+      this.monthlyTrendsChart = null;
+      this.categoryBreakdownChart = null;
+      this.spendingPatternsChart = null;
+      return;
+    }
     
     // Monthly trends chart configuration
-    this.monthlyTrendsChart = {
-      type: this.selectedChartType === 'pie' ? 'line' : this.selectedChartType,
-      data: {
-        labels: this.transactionAnalytics.monthlyTrends.map(trend => trend.month),
-        datasets: [
-          {
-            label: 'Income',
-            data: this.transactionAnalytics.monthlyTrends.map(trend => trend.income),
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1
-          },
-          {
-            label: 'Expenses',
-            data: this.transactionAnalytics.monthlyTrends.map(trend => trend.expenses),
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            borderWidth: 1
-          },
-          {
-            label: 'Net Income',
-            data: this.transactionAnalytics.monthlyTrends.map(trend => trend.net),
-            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'top',
-          },
-          tooltip: {
-            mode: 'index',
-            intersect: false,
-          },
-          title: {
-            display: true,
-            text: 'Monthly Financial Trends'
-          }
+    if (monthlyTrends.length > 0) {
+      // Ensure all data is properly formatted
+      const labels = monthlyTrends.map(trend => String(trend.month || 'Unknown'));
+      const incomeData = monthlyTrends.map(trend => Number(trend.income) || 0);
+      const expenseData = monthlyTrends.map(trend => Number(trend.expenses) || 0);
+      const netData = monthlyTrends.map(trend => Number(trend.net) || 0);
+      
+      this.monthlyTrendsChart = {
+        type: this.selectedChartType === 'pie' ? 'line' : this.selectedChartType,
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Income',
+              data: incomeData,
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Expenses',
+              data: expenseData,
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Net Income',
+              data: netData,
+              backgroundColor: 'rgba(54, 162, 235, 0.2)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1
+            }
+          ]
         },
-        scales: {
-          y: {
-            beginAtZero: true,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                generateLabels: function(chart: any) {
+                  const data = chart.data;
+                  if (data.datasets && data.datasets.length) {
+                    return data.datasets.map((dataset: any, i: number) => {
+                      return {
+                        text: String(dataset.label || `Dataset ${i + 1}`),
+                        fillStyle: dataset.backgroundColor,
+                        strokeStyle: dataset.borderColor,
+                        lineWidth: dataset.borderWidth || 1,
+                        index: i
+                      };
+                    });
+                  }
+                  return [];
+                }
+              }
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+            },
             title: {
               display: true,
-              text: 'Amount'
+              text: 'Monthly Financial Trends'
             }
-          }
-        }
-      }
-    };
-      // Category breakdown chart
-    this.categoryBreakdownChart = {
-      type: 'pie',
-      data: {
-        labels: this.transactionAnalytics.categoryBreakdown.map(cat => cat.category),
-        datasets: [
-          {
-            data: this.transactionAnalytics.categoryBreakdown.map(cat => cat.amount),
-            backgroundColor: [
-              'rgba(255, 99, 132, 0.6)',
-              'rgba(54, 162, 235, 0.6)',
-              'rgba(255, 206, 86, 0.6)',
-              'rgba(75, 192, 192, 0.6)',
-              'rgba(153, 102, 255, 0.6)',
-              'rgba(255, 159, 64, 0.6)',
-              'rgba(199, 199, 199, 0.6)',
-              'rgba(83, 102, 255, 0.6)',
-              'rgba(40, 159, 64, 0.6)',
-              'rgba(210, 199, 199, 0.6)'
-            ],
-            borderWidth: 1
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'right',
           },
-          tooltip: {
-            callbacks: {
-              label: function(context: any) {
-                const label = context.label || '';
-                const value = context.parsed || 0;
-                const dataset = context.dataset;
-                const total = dataset.data.reduce((acc: number, data: number) => acc + data, 0);
-                const percentage = Math.round((value / total) * 100);
-                return `${label}: ${value} (${percentage}%)`;
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Amount'
               }
             }
-          },
-          title: {
-            display: true,
-            text: 'Spending by Category'
-          }
-        },
-        onClick: (event: any, elements: any) => {
-          if (elements && elements.length > 0) {
-            const index = elements[0].index;
-            const category = this.transactionAnalytics?.categoryBreakdown[index];
-            if (category) {
-              this.showCategoryDetails(category);
-            }
           }
         }
-      }
-    };
-    
-    // Spending patterns chart
-    this.spendingPatternsChart = {
-      type: this.selectedChartType === 'pie' ? 'bar' : this.selectedChartType,
-      data: {
-        labels: this.transactionAnalytics.spendingPatterns.map(pattern => pattern.dayOfWeek),
-        datasets: [
-          {
-            label: 'Average Amount',
-            data: this.transactionAnalytics.spendingPatterns.map(pattern => pattern.averageAmount),
-            backgroundColor: 'rgba(153, 102, 255, 0.2)',
-            borderColor: 'rgba(153, 102, 255, 1)',
-            borderWidth: 1
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'top',
-          },
-          title: {
-            display: true,
-            text: 'Spending Patterns by Day of Week'
-          }
+      };
+    } else {
+      this.monthlyTrendsChart = null;
+    }
+
+    // Category breakdown chart
+    if (categoryBreakdown.length > 0) {
+      // Ensure all labels are strings - handle both interface format and actual backend format
+      const labels = categoryBreakdown.map(cat => {
+        const categoryData = cat as any;
+        // Check if category is an object with name property (actual backend format)
+        if (categoryData.category && typeof categoryData.category === 'object' && categoryData.category.name) {
+          return String(categoryData.category.name);
+        }
+        // Fallback to treating category as string (interface format)
+        return String(cat.category || 'Unknown');
+      });
+      
+      // Use totalAmount if available (actual backend format), otherwise use amount (interface format)
+      const data = categoryBreakdown.map(cat => {
+        const categoryData = cat as any;
+        return Number(categoryData.totalAmount || cat.amount) || 0;
+      });
+      
+      this.categoryBreakdownChart = {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              data: data,
+              backgroundColor: [
+                'rgba(255, 99, 132, 0.6)',
+                'rgba(54, 162, 235, 0.6)',
+                'rgba(255, 206, 86, 0.6)',
+                'rgba(75, 192, 192, 0.6)',
+                'rgba(153, 102, 255, 0.6)',
+                'rgba(255, 159, 64, 0.6)',
+                'rgba(199, 199, 199, 0.6)',
+                'rgba(83, 102, 255, 0.6)',
+                'rgba(40, 159, 64, 0.6)',
+                'rgba(210, 199, 199, 0.6)'
+              ].slice(0, labels.length),
+              borderWidth: 1
+            }
+          ]
         },
-        scales: {
-          y: {
-            beginAtZero: true,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                generateLabels: function(chart: any) {
+                  const data = chart.data;
+                  if (data.labels && data.datasets.length) {
+                    return data.labels.map((label: any, i: number) => {
+                      const dataset = data.datasets[0];
+                      return {
+                        text: String(label),
+                        fillStyle: dataset.backgroundColor[i],
+                        strokeStyle: dataset.backgroundColor[i],
+                        lineWidth: 0,
+                        index: i
+                      };
+                    });
+                  }
+                  return [];
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context: any) {
+                  const label = String(context.label || '');
+                  const value = Number(context.parsed) || 0;
+                  const dataset = context.dataset;
+                  const total = dataset.data.reduce((acc: number, data: number) => acc + data, 0);
+                  const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                  return `${label}: ${value.toFixed(2)} (${percentage}%)`;
+                }
+              }
+            },
             title: {
               display: true,
-              text: 'Average Amount'
+              text: 'Spending by Category'
+            }
+          },
+          onClick: (event: any, elements: any) => {
+            if (elements && elements.length > 0) {
+              const index = elements[0].index;
+              const category = categoryBreakdown[index];
+              if (category) {
+                this.showCategoryDetails(category);
+              }
             }
           }
         }
-      }
-    };
+      };
+    } else {
+      this.categoryBreakdownChart = null;
+    }
+    
+    // Spending patterns chart
+    if (spendingPatterns.length > 0) {
+      console.log('� [SPENDING-PATTERNS-CHART] Processing spending patterns by day of week:', {
+        rawSpendingPatternsCount: spendingPatterns.length,
+        rawSpendingPatternsData: spendingPatterns,
+        selectedTimeframe: this.selectedTimeframe,
+        dataStructure: spendingPatterns.map(pattern => {
+          const patternData = pattern as any;
+          return {
+            dayOfWeek: pattern.dayOfWeek,
+            averageAmount: pattern.averageAmount,
+            transactionCount: pattern.transactionCount,
+            totalAmount: patternData.totalAmount,
+            keys: Object.keys(pattern)
+          };
+        })
+      });
+      
+      console.log('� [SPENDING-PATTERNS-CHART] Processing spending patterns by day of week:', {
+        rawSpendingPatternsCount: spendingPatterns.length,
+        rawSpendingPatternsData: spendingPatterns,
+        selectedTimeframe: this.selectedTimeframe,
+        dataStructure: spendingPatterns.map(pattern => {
+          const patternData = pattern as any;
+          return {
+            dayOfWeek: pattern.dayOfWeek,
+            averageAmount: pattern.averageAmount,
+            transactionCount: pattern.transactionCount,
+            totalAmount: patternData.totalAmount,
+            keys: Object.keys(pattern)
+          };
+        })
+      });
+      
+      // Ensure all data is properly formatted
+      const labels = spendingPatterns.map(pattern => String(pattern.dayOfWeek || 'Unknown'));
+      const data = spendingPatterns.map(pattern => Number(pattern.averageAmount) || 0);
+      
+      console.log('📈 [SPENDING-PATTERNS-CHART] Processed chart data:', {
+        labels,
+        data,
+        totalAverageAmount: data.reduce((sum, amount) => sum + amount, 0),
+        chartType: this.selectedChartType === 'pie' ? 'bar' : this.selectedChartType
+      });
+      
+      this.spendingPatternsChart = {
+        type: this.selectedChartType === 'pie' ? 'bar' : this.selectedChartType,
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Average Amount',
+              data: data,
+              backgroundColor: 'rgba(153, 102, 255, 0.2)',
+              borderColor: 'rgba(153, 102, 255, 1)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                generateLabels: function(chart: any) {
+                  const data = chart.data;
+                  if (data.datasets && data.datasets.length) {
+                    return data.datasets.map((dataset: any, i: number) => {
+                      return {
+                        text: String(dataset.label || `Dataset ${i + 1}`),
+                        fillStyle: dataset.backgroundColor,
+                        strokeStyle: dataset.borderColor,
+                        lineWidth: dataset.borderWidth || 1,
+                        index: i
+                      };
+                    });
+                  }
+                  return [];
+                }
+              }
+            },
+            title: {
+              display: true,
+              text: 'Spending Patterns by Day of Week'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Average Amount'
+              }
+            }
+          }
+        }
+      };
+    } else {
+      this.spendingPatternsChart = null;
+    }
+    
+    // Trigger change detection to update the UI
+    this.cdr.detectChanges();
   }
   
   /**
@@ -483,5 +729,36 @@ export class TransactionAnalyticsComponent implements OnInit, OnDestroy {
       default:
         return 'the selected period';
     }
+  }
+
+  // Template helper methods
+  getCategoryName(category: any): string {
+    if (category?.category && typeof category.category === 'object') {
+      return category.category.name || 'Unknown Category';
+    }
+    return category?.category || 'Unknown Category';
+  }
+
+  getCategoryAmount(category: any): number {
+    return category?.totalAmount || category?.amount || 0;
+  }
+
+  getCategoryCount(category: any): number {
+    return category?.transactionCount || category?.count || 0;
+  }
+
+  /**
+   * Calculates the percentage of the total for a given category in the breakdown table.
+   * Returns a number between 0 and 100 (rounded to 1 decimal place).
+   */
+  getCategoryPercentage(category: any): number {
+    if (!this.transactionAnalytics || !this.transactionAnalytics.categoryBreakdown) return 0;
+    const total = this.transactionAnalytics.categoryBreakdown.reduce(
+      (sum: number, cat: any) => sum + (cat.totalAmount || cat.amount || 0),
+      0
+    );
+    const value = category.totalAmount || category.amount || 0;
+    if (total === 0) return 0;
+    return +(100 * value / total).toFixed(1);
   }
 }

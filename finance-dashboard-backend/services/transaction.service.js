@@ -233,11 +233,14 @@ class TransactionService {
    */
   static async getTransactionAnalytics(userId, options = {}) {
     const logger = require('../utils/logger');
+    
     const {
       period = 'monthly',
       count = 12,
-      dateFrom,
-      dateTo,
+      dateFrom = options.startDate,  // Support both dateFrom and startDate
+      dateTo = options.endDate,      // Support both dateTo and endDate
+      startDate,                     // Also destructure these for logging
+      endDate,
       type,
       categoryId
     } = options;
@@ -260,16 +263,29 @@ class TransactionService {
     try {
       logger.info('[Analytics] Running spending trends aggregation', { userId, period, count });
       const spendingTrends = await Transaction.getSpendingTrends(userId, period, parseInt(count));
-      logger.info('[Analytics] Spending trends result', { userId, spendingTrends });
-
+      
       logger.info('[Analytics] Running category breakdown aggregation', { userId, filter });
-      const categoryBreakdown = await Transaction.getTransactionsByCategory(userId, {
+      const categoryBreakdownOptions = {
         dateFrom: filter.date?.$gte,
         dateTo: filter.date?.$lte,
         type,
         includeDeleted: false
+      };
+      
+      const categoryBreakdown = await Transaction.getTransactionsByCategory(userId, categoryBreakdownOptions);
+
+      console.log('🥧 [CATEGORY-BREAKDOWN] Category breakdown processing:', {
+        optionsUsed: categoryBreakdownOptions,
+        resultCount: categoryBreakdown?.length || 0,
+        rawCategoryData: categoryBreakdown?.slice(0, 3).map(cat => ({
+          _id: cat._id,
+          totalAmount: cat.totalAmount,
+          transactionCount: cat.transactionCount,
+          categoryName: cat.category?.name,
+          categoryType: cat.category?.type,
+          keys: Object.keys(cat)
+        }))
       });
-      logger.info('[Analytics] Category breakdown result', { userId, categoryBreakdown });
 
       // Calculate summary fields
       let totalIncome = 0, totalExpenses = 0, netIncome = 0, transactionCount = 0, averageTransaction = 0;
@@ -277,18 +293,22 @@ class TransactionService {
       let topMerchants = [];
       let spendingPatterns = [];
 
-      // Example: Calculate from categoryBreakdown and spendingTrends if available
+      // Calculate from categoryBreakdown and spendingTrends if available
       if (Array.isArray(categoryBreakdown)) {
         for (const cat of categoryBreakdown) {
-          if (cat.category && cat.category.type === 'income') totalIncome += cat.totalAmount;
-          if (cat.category && cat.category.type === 'expense') totalExpenses += cat.totalAmount;
+          if (cat.category && cat.category.type === 'income') {
+            totalIncome += cat.totalAmount;
+          }
+          if (cat.category && cat.category.type === 'expense') {
+            totalExpenses += cat.totalAmount;
+          }
           transactionCount += cat.transactionCount;
         }
         averageTransaction = transactionCount > 0 ? (totalIncome + totalExpenses) / transactionCount : 0;
       }
       netIncome = totalIncome - totalExpenses;
 
-      // Example: Map spendingTrends to monthlyTrends
+      // Map spendingTrends to monthlyTrends
       if (Array.isArray(spendingTrends)) {
         monthlyTrends = spendingTrends.map(trend => ({
           month: trend._id.month || '',
@@ -298,9 +318,78 @@ class TransactionService {
         }));
       }
 
-      // TODO: Implement topMerchants and spendingPatterns if needed
+      // Get top merchants by payee
+      logger.info('[Analytics] Running top merchants aggregation', { userId, filter });
+      const merchantOptions = {
+        dateFrom: filter.date?.$gte,
+        dateTo: filter.date?.$lte,
+        type: 'expense', // Focus on expense transactions for merchant spending
+        includeDeleted: false,
+        limit: 10
+      };
+      
+      try {
+        const merchantAnalysis = await Transaction.getTopMerchantsByPayee(userId, merchantOptions);
+        
+        if (Array.isArray(merchantAnalysis)) {
+          topMerchants = merchantAnalysis.map(merchant => ({
+            name: merchant.name || 'Unknown Merchant',
+            amount: merchant.totalAmount || 0,
+            count: merchant.transactionCount || 0,
+            averageAmount: merchant.averageAmount || 0,
+            lastTransaction: merchant.lastTransaction
+          }));
+        }
+        
+        logger.info('[Analytics] Top merchants aggregation completed', { 
+          userId, 
+          merchantCount: topMerchants.length,
+          totalMerchantSpending: topMerchants.reduce((sum, m) => sum + m.amount, 0)
+        });
+      } catch (err) {
+        logger.error('[Analytics] Error in top merchants aggregation', { userId, error: err.stack || err });
+        topMerchants = [];
+      }
 
-      return {
+      // Get spending patterns by day of week
+      logger.info('[Analytics] Running spending patterns by day of week aggregation', { userId, filter });
+      const spendingPatternOptions = {
+        dateFrom: filter.date?.$gte,
+        dateTo: filter.date?.$lte,
+        type: 'expense', // Focus on expense patterns for spending analysis
+        includeDeleted: false
+      };
+      
+      try {
+        const dayOfWeekPatterns = await Transaction.getSpendingPatternsByDayOfWeek(userId, spendingPatternOptions);
+        
+        console.log('📊 [SPENDING-PATTERNS] Day of week patterns processing:', {
+          optionsUsed: spendingPatternOptions,
+          resultCount: dayOfWeekPatterns?.length || 0,
+          rawPatternData: dayOfWeekPatterns?.slice(0, 3).map(pattern => ({
+            _id: pattern._id,
+            dayOfWeek: pattern.dayOfWeek,
+            totalAmount: pattern.totalAmount,
+            averageAmount: pattern.averageAmount,
+            transactionCount: pattern.transactionCount,
+            keys: Object.keys(pattern)
+          }))
+        });
+        
+        if (Array.isArray(dayOfWeekPatterns)) {
+          spendingPatterns = dayOfWeekPatterns.map(pattern => ({
+            dayOfWeek: pattern.dayOfWeek,
+            averageAmount: pattern.averageAmount || 0,
+            transactionCount: pattern.transactionCount || 0,
+            totalAmount: pattern.totalAmount || 0
+          }));
+        }
+      } catch (patternError) {
+        logger.error('[Analytics] Error getting spending patterns by day of week', { userId, error: patternError.message });
+        spendingPatterns = []; // Default to empty array on error
+      }
+
+      const result = {
         totalIncome,
         totalExpenses,
         netIncome,
@@ -317,6 +406,8 @@ class TransactionService {
           dateTo: filter.date?.$lte
         }
       };
+      
+      return result;
     } catch (err) {
       logger.error('[Analytics] Error in getTransactionAnalytics', { userId, error: err.stack || err });
       // Return a safe default object
@@ -759,6 +850,57 @@ class TransactionService {
       })),
       recentMatches: recentTransactions,
       totalMatches: suggestions.length
+    };
+  }
+
+  /**
+   * Create missing transactions for a given date range
+   * @param {string} userId - User ID
+   * @param {string} startDate - Start date of the range
+   * @param {string} endDate - End date of the range
+   * @returns {Promise<Object>} Result of the operation
+   */
+  static async createMissingTransactions(userId, startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // Get all dates with existing transactions in the range
+    const existingDates = await Transaction.distinct('date', {
+      user: userId,
+      date: { $gte: start, $lte: end }
+    });
+
+    const existingDateSet = new Set(existingDates.map(d => d.toISOString().split('T')[0]));
+
+    const missingTransactions = [];
+    let currentDate = new Date(start);
+
+    while (currentDate <= end) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      if (!existingDateSet.has(dateStr)) {
+        missingTransactions.push({
+          user: userId,
+          amount: 0,
+          type: 'expense', // or a default type
+          category: null, // or a default category
+          description: 'Missing transaction',
+          date: new Date(currentDate),
+          status: 'pending'
+        });
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    if (missingTransactions.length > 0) {
+      await Transaction.insertMany(missingTransactions);
+    }
+
+    return {
+      createdCount: missingTransactions.length,
+      dateRange: {
+        start,
+        end
+      }
     };
   }
 }

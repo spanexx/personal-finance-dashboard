@@ -298,7 +298,7 @@ class EmailService {
    */
   async sendVerificationEmail(user, verificationToken) {
     try {
-      const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const baseUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
       const verificationUrl = `${baseUrl}/auth/verify-email?token=${verificationToken}&email=${encodeURIComponent(user.email)}`;
       
       const templateData = {
@@ -373,7 +373,7 @@ class EmailService {
    */
   async sendEmailVerification(user, verificationToken) {
     try {
-      const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const baseUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
       const verificationUrl = `${baseUrl}/auth/verify-email?token=${verificationToken}&email=${encodeURIComponent(user.email)}`;
       
       const templateData = {
