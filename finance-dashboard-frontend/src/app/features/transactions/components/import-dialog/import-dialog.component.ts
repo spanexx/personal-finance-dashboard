@@ -2,6 +2,8 @@ import { Component, Inject, OnInit, ViewChild, ElementRef } from '@angular/core'
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ExportImportService, ImportOptions, ImportResult } from '../../../../core/services/export-import.service';
+import { NotificationService } from '../../../../core/services/notification.service';
+import { HttpEventType, HttpResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-import-dialog',
@@ -30,8 +32,9 @@ export class ImportDialogComponent implements OnInit {
     { value: 'budgets', label: 'Budgets' },
     { value: 'goals', label: 'Goals' }
   ];
-  currentStep = 1; // 1: Select File, 2: Validate
-  
+  currentStep = 1; // 1: Select File, 2: Validate, 3: Options, 4: Results
+  uploadProgress = 0;
+
   openFileDialog(): void {
     this.fileInput.nativeElement.click();
   }
@@ -40,7 +43,8 @@ export class ImportDialogComponent implements OnInit {
     private dialogRef: MatDialogRef<ImportDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private fb: FormBuilder,
-    private exportImportService: ExportImportService
+    private exportImportService: ExportImportService,
+    private notificationService: NotificationService
   ) {
     this.importForm = this.fb.group({
       type: ['transactions', Validators.required],
@@ -66,7 +70,7 @@ export class ImportDialogComponent implements OnInit {
         this.importOptions = options;
       },
       error: (error: Error) => {
-        this.errorMessage = 'Failed to load import options: ' + error.message;
+        this.notificationService.showError('Failed to load import options: ' + error.message);
       }
     });
   }
@@ -81,13 +85,14 @@ export class ImportDialogComponent implements OnInit {
 
   validateFile(): void {
     if (!this.selectedFile) {
-      this.errorMessage = 'Please select a file to import.';
+      this.notificationService.showError('Please select a file to import.');
       return;
     }
 
     this.isValidating = true;
     this.errorMessage = null;
-    
+    this.currentStep = 2;
+
     this.exportImportService.validateImportFile(
       this.selectedFile,
       this.importForm.get('type')?.value
@@ -99,14 +104,16 @@ export class ImportDialogComponent implements OnInit {
       },
       error: (error: Error) => {
         this.errorMessage = 'Validation failed: ' + error.message;
+        this.notificationService.showError(this.errorMessage);
         this.isValidating = false;
+        this.currentStep = 1;
       }
     });
   }
 
   importFile(): void {
     if (!this.selectedFile) {
-      this.errorMessage = 'Please select a file to import.';
+      this.notificationService.showError('Please select a file to import.');
       return;
     }
 
@@ -123,13 +130,18 @@ export class ImportDialogComponent implements OnInit {
     };
 
     this.exportImportService.importData(this.selectedFile, options).subscribe({
-      next: (result: ImportResult) => {
-        this.importResult = result;
-        this.isImporting = false;
-        this.currentStep = 4; // Move to results step
+      next: (event: any) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          this.uploadProgress = Math.round(100 * event.loaded / event.total);
+        } else if (event instanceof HttpResponse) {
+          this.importResult = event.body;
+          this.isImporting = false;
+          this.currentStep = 4; // Move to results step
+        }
       },
       error: (error: Error) => {
         this.errorMessage = 'Import failed: ' + error.message;
+        this.notificationService.showError(this.errorMessage);
         this.isImporting = false;
       }
     });

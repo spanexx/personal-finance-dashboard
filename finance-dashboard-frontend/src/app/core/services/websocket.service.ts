@@ -150,7 +150,7 @@ export class WebSocketService implements OnDestroy {
     }
 
     try {
-      this.socket = io(environment.apiUrl, {
+      this.socket = io(environment.baseUrl, {
         auth: { token },
         transports: ['websocket', 'polling'],
         timeout: 20000,

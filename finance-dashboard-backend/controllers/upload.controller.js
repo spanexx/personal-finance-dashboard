@@ -4,6 +4,7 @@
  */
 
 const { FileService } = require('../services');
+const { fileService } = require('../services');
 const { File } = require('../models');
 const logger = require('../utils/logger');
 const { createResponse } = require('../utils/helpers');
@@ -32,7 +33,7 @@ class UploadController {
       }
 
       // Upload file using FileService
-      const uploadResult = await FileService.uploadFile(req.file, {
+      const uploadResult = await fileService.uploadFile(req.file, {
         entityType,
         entityId,
         userId,
@@ -80,7 +81,7 @@ class UploadController {
       }
 
       // Upload files using FileService
-      const uploadResults = await FileService.uploadMultipleFiles(req.files, {
+      const uploadResults = await fileService.uploadMultipleFiles(req.files, {
         entityType,
         entityId,
         userId,
@@ -135,7 +136,7 @@ class UploadController {
       }
 
       // Generate signed URL for file access
-      const fileUrl = await FileService.generateFileUrl(file);
+      const fileUrl = await fileService.generateFileUrl(file);
 
       const response = {
         ...file.toObject(),
@@ -181,7 +182,7 @@ class UploadController {
       // Generate signed URLs for all files
       const filesWithUrls = await Promise.all(
         files.map(async (file) => {
-          const fileUrl = await FileService.generateFileUrl(file);
+          const fileUrl = await fileService.generateFileUrl(file);
           return {
             ...file.toObject(),
             url: fileUrl
@@ -229,7 +230,7 @@ class UploadController {
       }
 
       // Delete file using FileService
-      await FileService.deleteFile(file);
+      await fileService.deleteFile(file);
 
       logger.info(`File deleted successfully: ${id}`, {
         userId,
@@ -265,7 +266,7 @@ class UploadController {
       }
 
       // Generate signed URL for avatar
-      const avatarUrl = await FileService.generateFileUrl(avatar);
+      const avatarUrl = await fileService.generateFileUrl(avatar);
 
       const response = {
         ...avatar.toObject(),
@@ -331,7 +332,7 @@ class UploadController {
     try {
       const userId = req.user.id;
 
-      const stats = await FileService.getStorageStats(userId);
+      const stats = await fileService.getStorageStats(userId);
 
       res.json(createResponse('success', 'Storage statistics retrieved', stats));
     } catch (error) {
@@ -377,7 +378,7 @@ class UploadController {
       await file.save();
 
       // Generate download URL
-      const downloadUrl = await FileService.generateFileUrl(file, { download: true });
+      const downloadUrl = await fileService.generateFileUrl(file, { download: true });
 
       res.json(createResponse('success', 'Download URL generated', { 
         downloadUrl,

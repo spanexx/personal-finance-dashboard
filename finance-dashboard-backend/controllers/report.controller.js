@@ -974,6 +974,20 @@ class ReportController {
       updatedAt: now.toISOString()
     };
 
+    // Send notification to user via WebSocket
+    const socketService = require('../services/socket.service');
+    if (socketService && typeof socketService.emitToUser === 'function') {
+      socketService.emitToUser(
+        req.user.id,
+        'report:generated',
+        {
+          message: `Your report '${name}' is ready.`,
+          reportId: financialReport.id,
+          timestamp: new Date().toISOString()
+        }
+      );
+    }
+
     logger.info(`Report generated successfully for user ${userId}, type: ${type}, options: ${JSON.stringify(options)}`);
     logger.info(`Report response data: ${JSON.stringify(financialReport)}`);
 

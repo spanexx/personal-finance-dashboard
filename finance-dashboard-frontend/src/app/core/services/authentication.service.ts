@@ -51,8 +51,9 @@ export class AuthenticationService {
     );
   }
 
-  logout(): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/logout`, {});
+  logout(refreshToken?: string): Observable<{ message: string }> {
+    const body = refreshToken ? { refreshToken } : {};
+    return this.http.post<{ message: string }>(`${this.apiUrl}/logout`, body);
   }
 
   refreshToken(refreshToken: string): Observable<{ tokens: AuthTokens }> {

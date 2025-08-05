@@ -296,6 +296,20 @@ class TransactionController {
       recurringSchedule: isRecurring ? recurringConfig : null
     };
 
+    // Send notification to user via WebSocket
+    const socketService = require('../services/socket.service');
+    if (socketService && typeof socketService.emitToUser === 'function') {
+      socketService.emitToUser(
+        req.user.id,
+        'transaction:created',
+        {
+          message: `A new transaction of ${transaction.amount} was added.`,
+          transactionId: transaction._id,
+          timestamp: new Date().toISOString()
+        }
+      );
+    }
+
     return ApiResponse.created(res, responseData, 'Transaction created successfully');
   });
   /**
@@ -309,6 +323,20 @@ static updateTransaction = ErrorHandler.asyncHandler(async (req, res) => {
 
   // Use service to update transaction
   const result = await transactionService.updateTransaction(id, req.user.id, updateData);
+
+  // Send notification to user via WebSocket
+  const socketService = require('../services/socket.service');
+  if (socketService && typeof socketService.emitToUser === 'function') {
+    socketService.emitToUser(
+      req.user.id,
+      'transaction:updated',
+      {
+        message: `Your transaction was updated.`,
+        transactionId: id,
+        timestamp: new Date().toISOString()
+      }
+    );
+  }
 
   // Trigger budget alerts if this is an expense transaction update - keeping original logic
   if (result.transaction.type === 'expense') {
@@ -341,6 +369,20 @@ static deleteTransaction = ErrorHandler.asyncHandler(async (req, res) => {
     req.user.id, 
     permanent === 'true' || permanent === true
   );
+
+  // Send notification to user via WebSocket
+  const socketService = require('../services/socket.service');
+  if (socketService && typeof socketService.emitToUser === 'function') {
+    socketService.emitToUser(
+      req.user.id,
+      'transaction:deleted',
+      {
+        message: `Your transaction was deleted.`,
+        transactionId: id,
+        timestamp: new Date().toISOString()
+      }
+    );
+  }
 
   return ApiResponse.success(res, result, 
     result.permanent ? 'Transaction permanently deleted' : 'Transaction moved to trash'
@@ -406,6 +448,21 @@ static importTransactions = ErrorHandler.asyncHandler(async (req, res) => {
       defaultCategoryId
     }
   );
+
+  // Send notification to user via WebSocket
+  const socketService = require('../services/socket.service');
+  if (socketService && typeof socketService.emitToUser === 'function') {
+    socketService.emitToUser(
+      userId,
+      'transaction:bulk_import',
+      {
+        message: `Transactions imported successfully. Total: ${responseData.importedCount}, Skipped: ${responseData.skippedCount}`,
+        importedCount: responseData.importedCount,
+        skippedCount: responseData.skippedCount,
+        timestamp: new Date().toISOString()
+      }
+    );
+  }
 
   return ApiResponse.created(res, responseData, 'Transactions imported successfully');
 });

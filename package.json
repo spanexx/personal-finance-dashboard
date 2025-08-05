@@ -1,5 +1,9 @@
 {
   "dependencies": {
-    "@google/generative-ai": "^0.24.1"
+    "@google/generative-ai": "^0.24.1",
+    "brew": "^0.0.8"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
   }
 }

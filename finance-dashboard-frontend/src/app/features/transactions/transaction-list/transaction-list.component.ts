@@ -20,6 +20,7 @@ import { CategoryService } from '../../../core/services/category.service';
 import * as fromTransactionUtils from './utils';
 import { ExportImportService } from '../../../core/services/export-import.service';
 import { ImportDialogComponent } from '../components/import-dialog/import-dialog.component';
+import { ExportImportHistoryComponent } from '../components/export-import-history/export-import-history.component';
 
 @Component({
   selector: 'app-transaction-list',
@@ -738,6 +739,13 @@ export class TransactionListComponent implements OnInit, OnDestroy, AfterViewIni
         this.dispatchLoadTransactions(1, this.currentFilters);
         this.liveAnnouncer.announce(`Import completed. ${result.recordsImported} new transactions added.`, 'polite');
       }
+    });
+  }
+
+  openHistoryDialog(): void {
+    this.dialog.open(ExportImportHistoryComponent, {
+      width: '800px',
+      maxHeight: '90vh'
     });
   }
 

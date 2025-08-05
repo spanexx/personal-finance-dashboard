@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const path = require('path');
 require('dotenv').config();
 
 // Import middleware components
@@ -23,7 +24,7 @@ app.use(requestIdMiddleware);
 app.use(loggingMiddleware);
 
 // Enhanced Security Middleware
-app.use(helmet());
+app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));
 
 // Enhanced rate limiting
 app.use(globalRateLimit);
@@ -55,6 +56,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve static files from public directory
 app.use(express.static('public'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Enhanced input sanitization
 const mongoSanitize = require('express-mongo-sanitize');
@@ -83,6 +85,7 @@ app.get('/', (req, res) => {
 // Import and use API routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/user.routes'));
+app.use('/api/users', require('./routes/profileImage.routes'));
 app.use('/api/email-verification', require('./routes/emailVerification.routes'));
 app.use('/api/email-preferences', require('./routes/emailPreferences.routes'));
 app.use('/api/categories', require('./routes/category.routes'));
@@ -96,6 +99,23 @@ app.use('/api/socket', require('./routes/socket.routes'));
 app.use('/api/cashflow', require('./routes/cashflow'));
 app.use('/api/ai', require('./routes/ai.routes'));
 app.use('/api/ai-data', require('./routes/ai-data.routes')); // AI-specific data endpoints
+app.use('/api/feedback', require('./routes/feedback.routes'));
+
+// Conditionally load ML routes when TensorFlow is available
+if (!global.ML_DISABLED) {
+  app.use('/api/ml', require('./routes/ml.routes'));
+} else {
+  // ML disabled mode
+  app.use('/api/ml', (req, res) => {
+    res.status(503).json({ 
+      success: false,
+      message: 'ML functionality is temporarily disabled',
+      statusCode: 503
+    });
+  });
+  console.log('ML routes disabled - TensorFlow not loaded');
+  logger.warn('ML routes disabled - TensorFlow not loaded');
+}
 
 // 404 handler (must be before error handler)
 app.use(notFoundHandler);

@@ -15,6 +15,8 @@ const Category = require('../models/Category');
 const User = require('../models/User');
 const ChatHistory = require('../models/ChatHistory');
 const AIPreferences = require('../models/AIPreferences');
+const PROMPT_TEMPLATES = require('../ai/prompt.library');
+const predictionService = require('../ml/prediction.service');
 
 // Services
 const TransactionService = require('./transaction.service');
@@ -32,7 +34,18 @@ const {
 
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
 
+
 class AIService {
+
+  /**
+   * Predicts the category of a transaction using the loaded ML model.
+   * @param {string} description - The transaction description.
+   * @returns {Promise<string|null>} - The predicted category ID or null if prediction fails.
+   */
+  static async predictCategory(description) {
+    return await predictionService.predictSingleCategory(description);
+  }
+
   constructor(io = null) {
     // WebSocket setup if io is provided
     if (io) {
@@ -510,6 +523,10 @@ class AIService {
 
       // Top spending categories
       insights.summary.topCategories = categoryBreakdown.slice(0, 5);
+
+      // Anomaly Detection
+      const anomalies = this.detectAnomalies(context.transactions.transactions);
+      insights.alerts.push(...anomalies);
     }
 
     // Budget insights
@@ -551,7 +568,7 @@ class AIService {
         } else if (goal.status === 'needs-attention') {
           insights.opportunities.push({
             type: 'goal-acceleration',
-            message: `Consider increasing contributions to "${goal.name}" - needs $${goal.monthlyRequired.toFixed(2)}/month`,
+            message: `Consider increasing contributions to "${goal.name}" - needs ${goal.monthlyRequired.toFixed(2)}/month`,
             priority: 'medium'
           });
         }
@@ -559,6 +576,95 @@ class AIService {
     }
 
     return insights;
+  }
+
+  /**
+   * Detects anomalies in transaction data.
+   * @param {Array} transactions - Array of transaction objects.
+   * @returns {Array} - Array of detected anomalies.
+   */
+  detectAnomalies(transactions) {
+    const anomalies = [];
+    const now = new Date();
+    const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+
+    const recentExpenses = transactions.filter(t => t.type === 'expense' && new Date(t.date) >= oneMonthAgo);
+
+    if (recentExpenses.length === 0) return anomalies;
+
+    // Calculate mean and standard deviation for expense amounts
+    const amounts = recentExpenses.map(t => t.amount);
+    const mean = amounts.reduce((sum, amount) => sum + amount, 0) / amounts.length;
+    const stdDev = Math.sqrt(amounts.map(amount => Math.pow(amount - mean, 2)).reduce((sum, sqDiff) => sum + sqDiff, 0) / amounts.length);
+
+    // Rule 1: Outlier detection using Z-score (transactions significantly higher than average)
+    recentExpenses.forEach(t => {
+      const zScore = (t.amount - mean) / stdDev;
+      if (zScore > 2 && t.amount > 100) { // Z-score > 2 (2 standard deviations above mean) and amount > $100
+        anomalies.push({
+          type: 'large-transaction',
+          message: `Unusually large expense: ${t.amount} for ${t.description}. This is significantly higher than your typical spending. (Z-score: ${zScore.toFixed(2)})`,
+          severity: 'high',
+          transactionId: t._id,
+          date: t.date,
+          amount: t.amount,
+          description: t.description
+        });
+      }
+    });
+
+    // Rule 2: Multiple transactions of the same large amount in a short period
+    const amountFrequency = {};
+    recentExpenses.forEach(t => {
+      const key = `${t.amount}-${t.description}`;
+      if (!amountFrequency[key]) {
+        amountFrequency[key] = [];
+      }
+      amountFrequency[key].push(t.date);
+    });
+
+    for (const key in amountFrequency) {
+      const dates = amountFrequency[key].sort((a, b) => new Date(a) - new Date(b));
+      if (dates.length > 1) {
+        for (let i = 0; i < dates.length - 1; i++) {
+          const timeDiff = new Date(dates[i + 1]) - new Date(dates[i]); // milliseconds
+          if (timeDiff < (24 * 60 * 60 * 1000) && parseFloat(key.split('-')[0]) > 50) { // Within 24 hours and amount > $50
+            anomalies.push({
+              type: 'duplicate-transaction',
+              message: `Multiple transactions of ${key.split('-')[0]} for "${key.split('-')[1]}" detected within a short period. This could indicate a duplicate charge or unusual activity.`,
+              severity: 'high',
+              amount: parseFloat(key.split('-')[0]),
+              description: key.split('-')[1],
+              dates: [dates[i], dates[i + 1]]
+            });
+            break; // Only report once per set of duplicates
+          }
+        }
+      }
+    }
+
+    // Rule 3: Spending in unusual categories (requires historical data and more advanced ML)
+    const categorySpend = {};
+    recentExpenses.forEach(t => {
+      const categoryName = t.category?.name || 'Uncategorized';
+      categorySpend[categoryName] = (categorySpend[categoryName] || 0) + t.amount;
+    });
+
+    const frequentCategories = new Set(transactions.filter(t => new Date(t.date) < oneMonthAgo).map(t => t.category?.name || 'Uncategorized'));
+
+    for (const category in categorySpend) {
+      if (!frequentCategories.has(category) && categorySpend[category] > 200) { // New category with high spend
+        anomalies.push({
+          type: 'unusual-category-spend',
+          message: `Significant spending (${categorySpend[category]}) in a less frequently used category: "${category}".`,
+          severity: 'medium',
+          category: category,
+          amount: categorySpend[category]
+        });
+      }
+    }
+
+    return anomalies;
   }
 
   // ==========================================
@@ -663,34 +769,50 @@ Please contact your administrator to configure the AI service for enhanced featu
    * @returns {string} System prompt
    */
   static buildSystemPrompt(context, preferences) {
-    const prompt = `You are an AI financial assistant helping users manage their personal finances. 
+    return PROMPT_TEMPLATES.FINANCIAL_OVERVIEW(context);
+  }
 
-FINANCIAL CONTEXT:
-- User: ${context.user?.firstName || 'User'}
-- Current Balance: $${context.transactions?.summary?.netBalance || 0}
-- Monthly Income: $${context.transactions?.summary?.totalIncome || 0}
-- Monthly Expenses: $${context.transactions?.summary?.totalExpenses || 0}
-- Savings Rate: ${context.insights?.summary?.spending?.savingsRate || 0}%
+  /**
+   * Get general financial advice from AI
+   * @param {string} userId - User ID
+   * @param {string} topic - Topic for advice
+   * @returns {Promise<Object>} AI response
+   */
+  static async getFinancialAdvice(userId, topic) {
+    try {
+      if (!genAI || !process.env.GEMINI_API_KEY) {
+        throw new Error('AI service not configured.');
+      }
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const prompt = PROMPT_TEMPLATES.GENERAL_FINANCIAL_ADVICE(topic);
+      const result = await model.generateContent(prompt);
+      return { advice: result.response.text() };
+    } catch (error) {
+      console.error('Error getting financial advice:', error);
+      throw new DatabaseError('Failed to generate financial advice');
+    }
+  }
 
-BUDGETS: ${context.budgets?.overallStats?.totalBudgets || 0} active budgets
-GOALS: ${context.goals?.overallStats?.activeGoals || 0} active goals
-
-CAPABILITIES:
-You can help users:
-1. Create, update, and delete transactions
-2. Manage budgets and track spending
-3. Set and monitor financial goals
-4. Analyze spending patterns
-5. Provide financial advice and insights
-
-When suggesting actions, format them as JSON in your response like:
-[ACTION:CREATE_TRANSACTION:{"amount": 50, "description": "Groceries", "category": "groceries", "type": "expense"}]
-
-Available actions: CREATE_TRANSACTION, UPDATE_TRANSACTION, DELETE_TRANSACTION, CREATE_BUDGET, CREATE_GOAL, CREATE_CATEGORY
-
-Be helpful, concise, and provide actionable financial advice.`;
-
-    return prompt;
+  /**
+   * Get AI suggested category for a transaction description
+   * @param {string} userId - User ID
+   * @param {string} transactionDescription - Description of the transaction
+   * @returns {Promise<Object>} AI suggested category
+   */
+  static async getSuggestedCategory(userId, transactionDescription) {
+    try {
+      if (!genAI || !process.env.GEMINI_API_KEY) {
+        throw new Error('AI service not configured.');
+      }
+      const categories = await Category.find({ user: userId }).lean();
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const prompt = PROMPT_TEMPLATES.TRANSACTION_CATEGORIZATION_ASSIST(transactionDescription, categories);
+      const result = await model.generateContent(prompt);
+      return { suggestedCategory: result.response.text() };
+    } catch (error) {
+      console.error('Error getting suggested category:', error);
+      throw new DatabaseError('Failed to get suggested category');
+    }
   }
 
   /**

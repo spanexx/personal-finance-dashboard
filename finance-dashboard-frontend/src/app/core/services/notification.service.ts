@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { MatSnackBar, MatSnackBarConfig, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
 // Subject and Observable might not be needed if MatSnackBar is used directly for display
 // import { Subject, Observable } from 'rxjs';
@@ -22,7 +23,22 @@ export class NotificationService {
   private verticalPosition: MatSnackBarVerticalPosition = 'bottom';
   private actionButtonLabel = 'Dismiss';
 
-  constructor(private snackBar: MatSnackBar) { }
+  constructor(private snackBar: MatSnackBar, private http: HttpClient) { }
+  /**
+   * Send a system-wide notification (admin only)
+   */
+  sendSystemNotification(message: string, severity: string = 'info', event: string = 'SYSTEM_NOTIFICATION') {
+    const body = { event, message, severity };
+    return this.http.post('/api/socket/notify/system', body);
+  }
+
+  /**
+   * Send a notification to a specific user (admin only)
+   */
+  sendUserNotification(userId: string, message: string, event: string = 'USER_ALERT', data: any = {}) {
+    const body = { event, message, data };
+    return this.http.post(`/api/socket/notify/user/${userId}`, body);
+  }
 
   private showNotification(message: string, type: NotificationType, duration?: number, title?: string, actionLabel?: string) {
     const fullMessage = title ? `${title}: ${message}` : message;

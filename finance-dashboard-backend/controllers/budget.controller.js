@@ -79,7 +79,21 @@ class BudgetController {
     };
 
     const result = await budgetService.createBudget(budgetData, req.user.id);
-    
+
+    // Send notification to user via WebSocket
+    const socketService = require('../services/socket.service');
+    if (socketService && typeof socketService.emitToUser === 'function') {
+      socketService.emitToUser(
+        req.user.id,
+        'budget:created',
+        {
+          message: `Your budget '${result.name}' was created successfully.`,
+          budgetId: result._id,
+          timestamp: new Date().toISOString()
+        }
+      );
+    }
+
     return ApiResponse.created(
       res,
       result,
@@ -107,6 +121,21 @@ class BudgetController {
     try {
       const result = await budgetService.updateBudget(id, updateData, req.user.id);
       console.log('[BudgetController] updateBudget result:', result);
+
+      // Send notification to user via WebSocket
+      const socketService = require('../services/socket.service');
+      if (socketService && typeof socketService.emitToUser === 'function') {
+        socketService.emitToUser(
+          req.user.id,
+          'budget:updated',
+          {
+            message: `Your budget '${result.name}' was updated.`,
+            budgetId: result._id,
+            timestamp: new Date().toISOString()
+          }
+        );
+      }
+
       return ApiResponse.success(
         res,
         result,
@@ -131,8 +160,22 @@ class BudgetController {
   static deleteBudget = ErrorHandler.asyncHandler(async (req, res) => {
     const { budgetId } = req.params;
 
-    await budgetService.deleteBudget(budgetId, req.user.id);
-    
+    const deletedBudget = await budgetService.deleteBudget(budgetId, req.user.id);
+
+    // Send notification to user via WebSocket
+    const socketService = require('../services/socket.service');
+    if (socketService && typeof socketService.emitToUser === 'function') {
+      socketService.emitToUser(
+        req.user.id,
+        'budget:deleted',
+        {
+          message: `Your budget was deleted.`,
+          budgetId: budgetId,
+          timestamp: new Date().toISOString()
+        }
+      );
+    }
+
     return ApiResponse.success(
       res,
       null,

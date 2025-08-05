@@ -25,6 +25,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 // Services
 import { AccessibilityService } from '../../../shared/services/accessibility.service';
 import { UserProfileService } from '../../../core/services/user-profile.service';
+import { FileService } from '../../../core/services/file.service';
 
 // Models
 import { UserProfile } from '../../../shared/models';
@@ -72,6 +73,7 @@ export class ProfileSettingsComponent implements OnInit, AfterViewInit, OnDestro
   hasUnsavedChanges = false;
   selectedImageFile: File | null = null;
   imagePreviewUrl: string | null = null;
+  fetchedProfileImage: string | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -80,6 +82,7 @@ export class ProfileSettingsComponent implements OnInit, AfterViewInit, OnDestro
     private router: Router,
     private accessibilityService: AccessibilityService,
     private userProfileService: UserProfileService,
+    private fileService: FileService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {
@@ -135,8 +138,13 @@ export class ProfileSettingsComponent implements OnInit, AfterViewInit, OnDestro
       )
       .subscribe({
         next: (profile) => {
-          this.currentProfile = profile;
-          this.populateForm(profile);
+          console.log('Loaded profile:', profile);
+          const user = (typeof profile === 'object' && 'user' in profile) ? (profile as any).user : profile;
+          this.currentProfile = user;
+          this.populateForm(user);
+          // Use profileImage directly from user object
+          this.fetchedProfileImage = user.profileImage || null;
+          console.log('Fetched profile image:', this.fetchedProfileImage);
         },
         error: (error) => {
           console.error('Error loading profile:', error);
@@ -187,16 +195,8 @@ export class ProfileSettingsComponent implements OnInit, AfterViewInit, OnDestro
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
-      
-      // Validate file
-      const validation = this.userProfileService.validateProfileImage(file);
-      if (!validation.valid) {
-        this.showError(validation.error!);
-        return;
-      }
-
+      // TODO: Add file validation if needed
       this.selectedImageFile = file;
-      
       // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -208,25 +208,29 @@ export class ProfileSettingsComponent implements OnInit, AfterViewInit, OnDestro
 
   uploadProfileImage(): void {
     if (!this.selectedImageFile) return;
-
     this.isUploadingImage = true;
-    this.userProfileService.uploadProfileImage(this.selectedImageFile)
+    // Use FileService to upload avatar
+    this.fileService.uploadAvatar(this.selectedImageFile)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
           this.isUploadingImage = false;
           this.selectedImageFile = null;
           this.imagePreviewUrl = null;
-          // Reset file input
           if (this.fileInput) {
             this.fileInput.nativeElement.value = '';
           }
         })
       )
       .subscribe({
-        next: (profile) => {
-          this.showSuccess('Profile image updated successfully');
-          this.accessibilityService.announce('Profile image updated');
+        next: (res) => {
+          if (res.success && res.data && res.data.url) {
+            this.fetchedProfileImage = res.data.url;
+            this.showSuccess('Profile image updated successfully');
+            this.accessibilityService.announce('Profile image updated');
+          } else {
+            this.showError('Failed to update profile image');
+          }
         },
         error: (error) => {
           console.error('Error uploading image:', error);
@@ -234,22 +238,35 @@ export class ProfileSettingsComponent implements OnInit, AfterViewInit, OnDestro
         }
       });
   }
+
   deleteProfileImage(): void {
     if (!this.currentProfile?.profileImage) return;
-
     if (confirm('Are you sure you want to delete your profile image?')) {
-      this.userProfileService.deleteProfileImage()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.showSuccess('Profile image deleted successfully');
-            this.accessibilityService.announce('Profile image deleted');
-          },
-          error: (error) => {
-            console.error('Error deleting image:', error);
-            this.showError('Failed to delete profile image');
+      // Use FileService to get current avatar and delete
+      this.fileService.getUserAvatar().subscribe({
+        next: (res) => {
+          if (res.success && res.data && (res.data.id || res.data._id)) {
+            const fileId = res.data.id || res.data._id;
+            this.fileService.deleteFile(fileId).subscribe({
+              next: () => {
+                this.fetchedProfileImage = null;
+                this.showSuccess('Profile image deleted successfully');
+                this.accessibilityService.announce('Profile image deleted');
+              },
+              error: (error) => {
+                console.error('Error deleting image:', error);
+                this.showError('Failed to delete profile image');
+              }
+            });
+          } else {
+            this.showError('No avatar found to delete');
           }
-        });
+        },
+        error: (error) => {
+          console.error('Error fetching avatar:', error);
+          this.showError('Failed to fetch avatar');
+        }
+      });
     }
   }
 
@@ -309,14 +326,27 @@ export class ProfileSettingsComponent implements OnInit, AfterViewInit, OnDestro
 
   // Utility Methods
   getProfileImageUrl(): string {
+    // Use preview if available
     if (this.imagePreviewUrl) {
       return this.imagePreviewUrl;
     }
-    return this.currentProfile?.profileImage || '/assets/images/default-avatar.png';
+    // If fetchedProfileImage is a direct URL (e.g., S3 or cloud), use it
+    if (this.fetchedProfileImage && this.fetchedProfileImage.startsWith('http')) {
+      return this.fetchedProfileImage;
+    }
+    // If fetchedProfileImage is a file id, use the backend API endpoint
+    if (this.fetchedProfileImage && this.fetchedProfileImage.length < 100 && !this.fetchedProfileImage.includes('/')) {
+      // Assume it's a MongoDB ObjectId or short string
+      return `http://localhost:5000/api/uploads/${this.fetchedProfileImage}`;
+    }
+    // Fallback to default
+    return '/assets/images/default-avatar.png';
   }
 
   getProfileCompletionText(): string {
-    if (!this.currentProfile) return '';
+    if (!this.currentProfile || !this.currentProfile.profileCompleteness || typeof this.currentProfile.profileCompleteness.percentage !== 'number') {
+      return 'Profile completion data unavailable';
+    }
     const percentage = this.currentProfile.profileCompleteness.percentage;
     return `${percentage}% complete`;
   }

@@ -40,8 +40,8 @@
 
       <!-- Step 2: Validating -->
       <div class="step-content" *ngIf="currentStep === 2">
-        <div class="validating-spinner">
-          <mat-spinner diameter="40"></mat-spinner>
+        <div class="progress-container">
+          <mat-progress-bar mode="indeterminate" *ngIf="isValidating"></mat-progress-bar>
           <p>Validating file, please wait...</p>
         </div>
       </div>
@@ -73,8 +73,13 @@
             </div>
           </div>
 
-          <div *ngIf="validationResult.errors && validationResult.errors.length > 0" class="errors-section">
-            <h4>Errors Found</h4>
+          <mat-expansion-panel *ngIf="validationResult.errors && validationResult.errors.length > 0">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon color="warn">error</mat-icon>
+                Errors Found
+              </mat-panel-title>
+            </mat-expansion-panel-header>
             <mat-list>
               <mat-list-item *ngFor="let error of validationResult.errors">
                 <mat-icon mat-list-icon color="warn">error</mat-icon>
@@ -82,7 +87,7 @@
                 <div mat-line *ngIf="error.row">Row {{ error.row }}</div>
               </mat-list-item>
             </mat-list>
-          </div>
+          </mat-expansion-panel>
 
           <form [formGroup]="importForm" class="options-form">
             <h3>Import Options</h3>
@@ -100,6 +105,10 @@
 
       <!-- Step 4: Results -->
       <div class="step-content" *ngIf="currentStep === 4">
+        <div *ngIf="isImporting" class="progress-container">
+          <mat-progress-bar [value]="uploadProgress"></mat-progress-bar>
+          <p>Importing file... {{uploadProgress}}%</p>
+        </div>
         <div *ngIf="importResult" class="import-result">
           <div class="result-summary">
             <h3>Import Completed</h3>
@@ -127,8 +136,13 @@
             </div>
           </div>
 
-          <div *ngIf="importResult.errors && importResult.errors.length > 0" class="errors-section">
-            <h4>Error Details</h4>
+          <mat-expansion-panel *ngIf="importResult.errors && importResult.errors.length > 0">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon color="warn">error</mat-icon>
+                Error Details
+              </mat-panel-title>
+            </mat-expansion-panel-header>
             <mat-list>
               <mat-list-item *ngFor="let error of importResult.errors">
                 <mat-icon mat-list-icon color="warn">error</mat-icon>
@@ -136,7 +150,7 @@
                 <div mat-line *ngIf="error.row">Row {{ error.row }}</div>
               </mat-list-item>
             </mat-list>
-          </div>
+          </mat-expansion-panel>
 
           <div *ngIf="importResult.summary" class="summary-section">
             <h4>Summary</h4>
@@ -152,11 +166,6 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="error-message" *ngIf="errorMessage">
-      <mat-icon color="warn">error</mat-icon>
-      <span>{{ errorMessage }}</span>
     </div>
   </mat-dialog-content>
   

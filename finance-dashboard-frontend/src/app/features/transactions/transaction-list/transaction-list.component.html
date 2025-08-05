@@ -18,6 +18,9 @@
       <button mat-button color="accent" routerLink="/transactions/analytics" aria-label="View transaction analytics">
         <mat-icon aria-hidden="true">insights</mat-icon> Analytics
       </button>
+      <button mat-button color="accent" (click)="openHistoryDialog()" aria-label="View import and export history">
+        <mat-icon aria-hidden="true">history</mat-icon> History
+      </button>
       <!-- Export/Import Component -->
       <app-transaction-export-import
         [exportFormats]="exportFormats"

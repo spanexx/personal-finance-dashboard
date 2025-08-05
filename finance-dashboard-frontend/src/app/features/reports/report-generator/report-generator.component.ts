@@ -43,6 +43,14 @@ import { FocusTrapDirective } from '../../../shared/directives/focus-trap.direct
 
 })
 export class ReportGeneratorComponent implements OnInit, AfterViewInit {
+  // Map frontend report type values to backend-accepted values
+  private static readonly REPORT_TYPE_MAP: Record<string, string> = {
+    expense: 'expense',
+    income: 'income',
+    budget: 'budget',
+    net_worth: 'net_worth',
+    goals: 'goal', // backend expects 'goal' not 'goals'
+  };
   @ViewChild('firstField') firstField!: ElementRef;
   
   reportForm!: FormGroup;
@@ -140,9 +148,11 @@ export class ReportGeneratorComponent implements OnInit, AfterViewInit {
     this.accessibilityService.announceOperationStatus('Report generation', 'started');
     
     const formValue = this.reportForm.value;
+    // Map the report type to the backend-accepted value
+    const backendType = ReportGeneratorComponent.REPORT_TYPE_MAP[formValue.reportType] || formValue.reportType;
     const config: GenerateReportRequest = {
       name: `${formValue.reportType} report`,
-      type: formValue.reportType,
+      type: backendType,
       period: formValue.groupBy,
       startDate: formValue.startDate.toISOString(),
       endDate: formValue.endDate.toISOString(),
@@ -162,7 +172,7 @@ export class ReportGeneratorComponent implements OnInit, AfterViewInit {
         this.accessibilityService.announceSuccess(`${reportData.type} report generated successfully`);
         // Navigate to report viewer with fallback if id is missing
         const reportId = reportData.id || 'latest';
-        // this.router.navigate(['/reports/view', reportId]);
+        this.router.navigate(['/reports/view', reportId]);
       },
       error: (error) => {
         this.generating = false;

@@ -6,6 +6,8 @@
 const Transaction = require('../models/Transaction');
 const Category = require('../models/Category');
 const mongoose = require('mongoose');
+const AIService = require('./ai.service');
+const FeedbackService = require('./feedback.service');
 
 class TransactionService {
   /**
@@ -15,9 +17,21 @@ class TransactionService {
    * @returns {Promise<Object>} Created transaction
    */
   static async createTransaction(userId, transactionData) {
+    let categoryId = transactionData.categoryId;
+    let predictedCategoryId = null;
+
+    // If no category is provided, try to predict it using the ML model
+    if (!categoryId && transactionData.description) {
+      predictedCategoryId = await AIService.predictCategory(transactionData.description);
+      if (predictedCategoryId) {
+        categoryId = predictedCategoryId;
+        console.log(`AI predicted category for "${transactionData.description}": ${categoryId}`);
+      }
+    }
+
     // Validate category ownership
     const category = await Category.findOne({
-      _id: transactionData.categoryId,
+      _id: categoryId,
       user: userId
     });
 
@@ -33,11 +47,21 @@ class TransactionService {
     const transaction = new Transaction({
       ...transactionData,
       user: userId,
-      category: transactionData.categoryId
+      category: categoryId
     });
 
     await transaction.save();
     await transaction.populate('category', 'name type color icon');
+
+    // If a prediction was made, store feedback
+    if (predictedCategoryId) {
+      await FeedbackService.createFeedback({
+        transaction: transaction._id,
+        predictedCategory: predictedCategoryId,
+        actualCategory: category._id, // The category that was ultimately used
+        user: userId
+      });
+    }
 
     return transaction;
   }

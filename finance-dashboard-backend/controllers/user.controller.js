@@ -83,6 +83,19 @@ class UserController {
     // Use service to update user profile
     const result = await UserService.updateUserProfile(req.user.id, req.body);
 
+    // Send notification to user via WebSocket
+    const socketService = require('../services/socket.service');
+    if (socketService && typeof socketService.emitToUser === 'function') {
+      socketService.emitToUser(
+        req.user.id,
+        'user:profile_updated',
+        {
+          message: 'Your profile was updated.',
+          timestamp: new Date().toISOString()
+        }
+      );
+    }
+
     // Log profile update
     securityMonitor.logActivity(req.user.id, {
       type: 'profile_update',
@@ -136,6 +149,19 @@ class UserController {
       userAgent: req.get('User-Agent')
     });
 
+    // Send notification to user via WebSocket
+    const socketService = require('../services/socket.service');
+    if (socketService && typeof socketService.emitToUser === 'function') {
+      socketService.emitToUser(
+        req.user.id,
+        'user:password_changed',
+        {
+          message: 'Your password was changed.',
+          timestamp: new Date().toISOString()
+        }
+      );
+    }
+
     // Log successful password change
     securityMonitor.logActivity(req.user.id, {
       type: 'password_change',
@@ -158,6 +184,19 @@ class UserController {
 
     // Use service to deactivate account
     await UserService.deactivateAccount(req.user.id, reason);
+
+    // Send notification to user via WebSocket
+    const socketService = require('../services/socket.service');
+    if (socketService && typeof socketService.emitToUser === 'function') {
+      socketService.emitToUser(
+        req.user.id,
+        'user:account_deactivated',
+        {
+          message: 'Your account was deactivated.',
+          timestamp: new Date().toISOString()
+        }
+      );
+    }
 
     // Log account deactivation
     securityMonitor.logActivity(req.user.id, {
@@ -204,6 +243,19 @@ class UserController {
 
     // Use service to delete account
     await UserService.deleteAccount(req.user.id);
+
+    // Send notification to user via WebSocket
+    const socketService = require('../services/socket.service');
+    if (socketService && typeof socketService.emitToUser === 'function') {
+      socketService.emitToUser(
+        req.user.id,
+        'user:account_deleted',
+        {
+          message: 'Your account was deleted.',
+          timestamp: new Date().toISOString()
+        }
+      );
+    }
 
     // Log account deletion
     securityMonitor.logActivity(req.user.id, {

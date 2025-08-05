@@ -10,10 +10,31 @@ const {
   DatabaseError 
 } = require('../../utils/errorHandler');
 
-// Mock the models
+// Mock the models and services
 jest.mock('../../models/Budget');
 jest.mock('../../models/Transaction');
 jest.mock('../../models/Category');
+jest.mock('../../services/socket.service');
+
+const socketService = require('../../services/socket.service');
+const BudgetController = require('../../controllers/budget.controller');
+const ApiResponse = require('../../utils/apiResponse');
+const { ErrorHandler } = require('../../utils/errorHandler');
+
+jest.mock('../../utils/apiResponse');
+jest.mock('../../utils/errorHandler', () => ({
+  ErrorHandler: {
+    asyncHandler: jest.fn(fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next))
+  },
+  ValidationError: jest.fn((message, errors) => {
+    const error = new Error(message);
+    error.errors = errors;
+    return error;
+  }),
+  NotFoundError: jest.fn(message => new Error(message)),
+  ConflictError: jest.fn(message => new Error(message)),
+  DatabaseError: jest.fn(message => new Error(message))
+}));
 
 describe('BudgetService', () => {
   let mockUserId;

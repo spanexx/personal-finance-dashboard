@@ -8,6 +8,7 @@ const securityMonitor = require('../services/securityMonitor.service');
 const { createPasswordMeter } = require('../utils/passwordUtils');
 const { validationResult } = require('express-validator');
 const ApiResponse = require('../utils/apiResponse');
+
 const { 
   ErrorHandler, 
   ValidationError, 
@@ -16,6 +17,7 @@ const {
   NotFoundError,
   RateLimitError 
 } = require('../utils/errorHandler');
+const logger = require('../utils/logger');
 
 /**
  * Authentication Controller
@@ -166,23 +168,61 @@ class AuthController {
    * @param {Object} res - Express response object
    */  
   static logout = ErrorHandler.asyncHandler(async (req, res) => {
-    const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
-    const accessToken = AuthService.extractTokenFromHeader(req.headers.authorization);
+    let refreshToken, accessToken;
+    try {
+      // Prefer refreshToken from body for API clients
+      refreshToken = req.body.refreshToken || req.cookies.refreshToken;
+      accessToken = AuthService.extractTokenFromHeader(req.headers.authorization);
+    } catch (err) {
+      logger.error('Logout error: Could not extract tokens', {
+        error: err,
+        ip: req.ip,
+        url: req.originalUrl,
+        method: req.method,
+        body: req.body,
+        cookies: req.cookies,
+        headers: req.headers
+      });
+      return ApiResponse.error(res, 'Logout failed: Could not extract tokens', 400, 'TokenExtractionError');
+    }
 
-    if (refreshToken) {
+    if (!refreshToken) {
+      // Improved error log for missing refresh token
+      logger.error('Logout failed: No refresh token provided', {
+        userId: req.user?.id,
+        ip: req.ip,
+        url: req.originalUrl,
+        method: req.method,
+        body: req.body,
+        cookies: req.cookies,
+        headers: req.headers
+      });
+      return ApiResponse.error(res, 'Logout failed: No refresh token provided', 400, 'MissingRefreshToken');
+    }
+
+    try {
       // Remove refresh token from database
-      await AuthService.revokeRefreshToken(req.user.id, refreshToken);
+      await AuthService.revokeRefreshToken(req.user?.id, refreshToken);
+      if (accessToken) {
+        // Add access token to blacklist
+        await AuthService.blacklistToken(accessToken);
+      }
+      // Clear refresh token cookie
+      AuthService.clearRefreshTokenCookie(res);
+      return ApiResponse.success(res, null, 'Logout successful');
+    } catch (err) {
+      logger.error('Logout error', {
+        error: err,
+        userId: req.user?.id,
+        ip: req.ip,
+        url: req.originalUrl,
+        method: req.method,
+        body: req.body,
+        cookies: req.cookies,
+        headers: req.headers
+      });
+      return ApiResponse.error(res, 'Logout failed: Internal server error', 500, 'LogoutError');
     }
-
-    if (accessToken) {
-      // Add access token to blacklist
-      await AuthService.blacklistToken(accessToken);
-    }
-
-    // Clear refresh token cookie
-    AuthService.clearRefreshTokenCookie(res);
-
-    return ApiResponse.success(res, null, 'Logout successful');
   });
   /**
    * Logout from all devices (revoke all refresh tokens)

@@ -1,5 +1,51 @@
 # Gemini Project: Personal Finance Dashboard
 
+## Code Agent Role and Collaboration Flow
+
+As the Code Agent for this project, I operate under the Orchestrator's guidance and follow the established collaboration protocol:
+
+**Responsibilities:**
+- Implement features according to detailed specifications
+- Follow coding standards and best practices
+- Create and maintain automated tests
+- Provide regular, timestamped progress updates in `Communication.md`
+- Flag blockers and ask clarifying questions promptly
+- Document implementation details and trade-offs
+- Perform self-review before submitting code
+- Address edge cases and ensure security best practices
+- Write maintainable, readable code
+- Apply feedback from reviews to future work
+- Suggest process improvements
+
+**Workflow:**
+1. **Task Assignment:**
+   - Receive task specification from Orchestrator in `Communication.md`
+   - Acknowledge receipt and provide timeline estimate
+   - Update status to IN PROGRESS
+2. **Development:**
+   - Implement task per instructions
+   - Provide regular progress updates
+   - Document deviations and flag blockers
+3. **Review:**
+   - Complete implementation and self-review
+   - Update status to READY FOR REVIEW
+   - Summarize changes and testing performed
+4. **Closure:**
+   - Mark task as COMPLETED upon approval
+   - Document lessons learned and update project documentation
+
+**Communication Protocol:**
+- Use strict message formats for all updates (see `Communication.md`)
+- Never edit previous messages; always add new, timestamped entries
+- Maintain chronological integrity for audit trail
+
+**Continuous Improvement:**
+- Suggest workflow/process improvements
+- Document solutions to recurring issues
+- Follow and help refine best practices
+
+Refer to the Orchestrator Guide for full details on collaboration, review standards, and exception handling.
+
 ## Purpose, Role, and Persona
 
 My role as an AI assistant for this project is to assist in the development and maintenance of the Personal Finance Dashboard. I will help with tasks such as:

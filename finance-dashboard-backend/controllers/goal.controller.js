@@ -95,7 +95,21 @@ exports.createGoal = ErrorHandler.asyncHandler(async (req, res) => {
     }
   };
   console.log('Response Data:', responseData);
-  
+
+  // Send notification to user via WebSocket
+  const socketService = require('../services/socket.service');
+  if (socketService && typeof socketService.emitToUser === 'function') {
+    socketService.emitToUser(
+      req.user.id,
+      'goal:created',
+      {
+        message: `Your goal '${goal.name}' was created.`,
+        goalId: goal._id,
+        timestamp: new Date().toISOString()
+      }
+    );
+  }
+
   return ApiResponse.created(res, responseData, 'Goal created successfully');
 });
 
@@ -140,7 +154,21 @@ exports.updateGoal = ErrorHandler.asyncHandler(async (req, res) => {
     impactAnalysis: Object.keys(impactAnalysis).length > 0 ? impactAnalysis : undefined,
     changes: result.changes
   };
-  
+
+  // Send notification to user via WebSocket
+  const socketService = require('../services/socket.service');
+  if (socketService && typeof socketService.emitToUser === 'function') {
+    socketService.emitToUser(
+      req.user.id,
+      'goal:updated',
+      {
+        message: `Your goal '${result.goal.name}' was updated.`,
+        goalId: result.goal._id,
+        timestamp: new Date().toISOString()
+      }
+    );
+  }
+
   return ApiResponse.success(res, responseData, 'Goal updated successfully');
 });
 
@@ -164,7 +192,21 @@ exports.deleteGoal = ErrorHandler.asyncHandler(async (req, res) => {
     name: result.goalName,
     deletedAt: result.deletedAt
   };
-  
+
+  // Send notification to user via WebSocket
+  const socketService = require('../services/socket.service');
+  if (socketService && typeof socketService.emitToUser === 'function') {
+    socketService.emitToUser(
+      req.user.id,
+      'goal:deleted',
+      {
+        message: `Your goal '${result.goalName}' was deleted.`,
+        goalId: result.goalId,
+        timestamp: new Date().toISOString()
+      }
+    );
+  }
+
   return ApiResponse.success(res, responseData, 'Goal deleted successfully');
 });
 

@@ -48,6 +48,28 @@ export interface SettingsUpdateRequest {
   providedIn: 'root'
 })
 export class UserProfileService {
+  /**
+   * Fetches the profile image filename for a user by ID
+   * @param userId - The user's MongoDB ObjectId
+   * @returns Observable<{ profileImage: string | null }>
+   */
+  getProfileImageById(userId: string): Observable<{ profileImage: string | null }> {
+    return this.http.get<ApiResponse<{ profileImage: string | null }>>(`${this.baseUrl}/users/profile-image/${userId}`)
+      .pipe(
+        map(response => {
+          // If profileImage exists, construct full URL using baseUrl for static files
+          if (response.data && response.data.profileImage) {
+            const filename = response.data.profileImage;
+            const url = filename.startsWith('http')
+              ? filename
+              : `${environment.baseUrl}/uploads/profiles/${filename}`;
+            return { profileImage: url };
+          }
+          return { profileImage: null };
+        }),
+        catchError(this.handleError)
+      );
+  }
   private readonly baseUrl = `${environment.apiUrl}`;
   private profileSubject = new BehaviorSubject<UserProfile | null>(null);
   private sessionsSubject = new BehaviorSubject<UserSession[]>([]);
@@ -61,7 +83,30 @@ export class UserProfileService {
   getProfile(): Observable<UserProfile> {
     return this.http.get<ApiResponse<UserProfile>>(`${this.baseUrl}/auth/profile`)
       .pipe(
-        map(response => response.data),
+        map(response => {
+          // Type guard for user property with type assertion
+          if (
+            response.data &&
+            typeof response.data === 'object' &&
+            'user' in response.data &&
+            (response.data as any).user &&
+            (response.data as any).user.profileImage
+          ) {
+            const user = (response.data as any).user;
+            const filename = user.profileImage as string;
+            user.profileImage = filename.startsWith('http')
+              ? filename
+              : `${environment.baseUrl}/uploads/profiles/${filename}`;
+            console.log('Service transformed user.profileImage:', user.profileImage);
+          } else if (response.data && (response.data as any).profileImage) {
+            const filename = (response.data as any).profileImage as string;
+            (response.data as any).profileImage = filename.startsWith('http')
+              ? filename
+              : `${environment.baseUrl}/uploads/profiles/${filename}`;
+            console.log('Service transformed profileImage:', (response.data as any).profileImage);
+          }
+          return response.data;
+        }),
         tap(profile => this.profileSubject.next(profile)),
         catchError(this.handleError)
       );

@@ -19,6 +19,7 @@ import { TransactionTableComponent } from './components/transaction-table/transa
 import { TransactionBulkOperationsComponent } from './components/transaction-bulk-operations/transaction-bulk-operations.component';
 import { TransactionExportImportComponent } from './components/transaction-export-import/transaction-export-import.component';
 import { TransactionStatisticsComponent } from './components/transaction-statistics/transaction-statistics.component';
+import { ExportImportHistoryComponent } from './components/export-import-history/export-import-history.component';
 
 // Shared Directives
 import { FocusTrapDirective } from '../../shared/directives/focus-trap.directive';
@@ -48,7 +49,8 @@ import { MatNativeDateModule } from '@angular/material/core';
     TransactionTableComponent,
     TransactionBulkOperationsComponent,
     TransactionExportImportComponent,
-    TransactionStatisticsComponent
+    TransactionStatisticsComponent,
+    ExportImportHistoryComponent
   ],
   imports: [
     CommonModule,

@@ -1,10 +1,16 @@
+
 const mongoose = require('mongoose');
 const http = require('http');
 require('dotenv').config();
 
+const path = require('path');
+const express = require('express');
+
 const app = require('./app');
 const logger = require('./utils/logger');
 const PORT = process.env.PORT || 5000;
+
+
 
 // Only connect to MongoDB and start services if not in test environment
 if (process.env.NODE_ENV !== 'test') {
@@ -96,16 +102,16 @@ if (process.env.NODE_ENV !== 'test') {
   });
 
   // Unhandled promise rejection handler
-  process.on('unhandledRejection', (reason, promise) => {
-    logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    process.exit(1);
-  });
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Server will keep running. Investigate and fix the root cause.
+});
 
   // Uncaught exception handler
-  process.on('uncaughtException', (error) => {
-    logger.error('Uncaught Exception:', error);
-    process.exit(1);
-  });
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception:', error);
+  // Server will keep running. Investigate and fix the root cause.
+});
 }
 
 // Start server (only if not in test environment)

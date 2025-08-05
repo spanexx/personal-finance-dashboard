@@ -86,6 +86,8 @@ class AuthMiddleware {
       next();
     } catch (error) {
       console.error('Token verification error:', error.message);
+      console.log('JWT_ACCESS_SECRET in middleware:', process.env.JWT_ACCESS_SECRET);
+      console.log('Token being verified:', token);
 
       // Handle specific token errors
       if (error.message.includes('expired')) {

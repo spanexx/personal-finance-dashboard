@@ -1,18 +1,15 @@
-@import '../../../../assets/styles/variables';
-@import '../../../../assets/styles/mixins';
 
-/**
- * Modern, minimal, clean header and notification styles
- */
+
+// Simple, classic financial dashboard header styles
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff;
+  background: whitesmoke;
   padding: 0 2rem;
   height: 64px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #ececec;
   z-index: 10;
 }
 
@@ -27,6 +24,7 @@
     color: #2d3748;
     margin: 0;
     letter-spacing: 0.5px;
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
   }
 
   .menu-toggle {
@@ -113,7 +111,7 @@
   position: absolute;
   top: 60px;
   right: 0;
-  min-width: 180px;
+  min-width: 200px;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.08);
@@ -124,28 +122,53 @@
     margin: 0;
     padding: 0;
     li {
-      padding: 0.5rem 1.25rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 1rem;
-      color: #2d3748;
-      border: none;
-      background: none;
-      transition: background 0.2s;
-      &:hover {
-        background: #f7fafc;
-      }
-      .material-icons {
-        color: #a0aec0;
-        font-size: 1.2rem;
-      }
+      padding: 0;
+      margin: 0;
     }
     .divider {
       height: 1px;
       background: #e2e8f0;
       margin: 0.25rem 0;
+    }
+  }
+}
+
+.dropdown-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1rem;
+  color: #2d3748;
+  border: none;
+  background: none;
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  border-radius: 0;
+  font-family: inherit;
+  &:hover, &:focus {
+    background: #f7fafc;
+    color: #3182ce;
+    outline: none;
+  }
+  .material-icons {
+    color: #a0aec0;
+    font-size: 1.2rem;
+  }
+}
+
+.logout-btn {
+  color: #e53e3e;
+  .material-icons {
+    color: #e53e3e;
+  }
+  &:hover, &:focus {
+    background: #ffeaea;
+    color: #b91c1c;
+    .material-icons {
+      color: #b91c1c;
     }
   }
 }

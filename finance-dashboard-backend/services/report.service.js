@@ -84,7 +84,7 @@ class ReportService {
         const daysInPeriod = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
         const averageDailySpending = periodTotals.totalExpenses / daysInPeriod;
 
-        return {
+        const result = {
             summary: {
                 totalIncome: periodTotals.totalIncome,
                 totalExpenses: periodTotals.totalExpenses,
@@ -97,8 +97,10 @@ class ReportService {
             },
             categoryAnalysis,
             ...(includeCharts && { timeBasedAnalysis }),
-            period: { startDate, endDate }
-        };
+        period: { startDate, endDate }
+    };
+    console.log('[generateSpendingReport] FINAL REPORT (type: expense):', JSON.stringify(result, null, 2));
+    return result;
     }
 
     /**
@@ -162,7 +164,7 @@ class ReportService {
         const averageDailyIncome = periodTotals.totalIncome / daysInPeriod;
         const averageMonthlyIncome = periodTotals.totalIncome / (daysInPeriod / 30);
 
-        return {
+        const result = {
             summary: {
                 totalIncome: periodTotals.totalIncome,
                 totalExpenses: periodTotals.totalExpenses,
@@ -175,8 +177,10 @@ class ReportService {
             },
             sourceAnalysis,
             ...(includeCharts && { timeBasedAnalysis: await this._getTimeBasedAnalysis(baseQuery, groupBy) }),
-            period: { startDate, endDate }
-        };
+        period: { startDate, endDate }
+    };
+    console.log('[generateIncomeReport] FINAL REPORT (type: income):', JSON.stringify(result, null, 2));
+    return result;
     }
 
     /**
@@ -339,13 +343,15 @@ class ReportService {
             }).lean();
         }
 
-        return {
+        const result = {
             summary: overallPerformance,
             budgetPerformance,
             ...(includeCharts && { historicalTrends }),
             ...(includeTransactionDetails && { transactionDetails }),
-            period: { startDate, endDate }
-        };
+        period: { startDate, endDate }
+    };
+    console.log('[generateBudgetPerformanceReport] FINAL REPORT (type: budget):', JSON.stringify(result, null, 2));
+    return result;
     }
 
     /**
@@ -403,11 +409,13 @@ class ReportService {
             averageProgress: goalProgress.reduce((sum, g) => sum + g.progressPercentage, 0) / goalProgress.length || 0
         };
 
-        return {
+        const result = {
             summary,
             goalProgress,
-            recommendations: this._generateGoalRecommendations(goalProgress)
-        };
+        recommendations: this._generateGoalRecommendations(goalProgress)
+    };
+    console.log('[generateGoalProgressReport] FINAL REPORT (type: goals):', JSON.stringify(result, null, 2));
+    return result;
     }
 
     /**
@@ -470,7 +478,7 @@ class ReportService {
             projections = this._projectNetWorth(historicalNetWorth, 12); // 12 months ahead
         }
 
-        return {
+        const result = {
             current: {
                 netWorth: currentNetWorth,
                 totalAssets,
@@ -480,8 +488,10 @@ class ReportService {
             historical: historicalNetWorth,
             trend: trendAnalysis,
             projections,
-            accountBreakdown: accountBalances
-        };
+        accountBreakdown: accountBalances
+    };
+    console.log('[calculateNetWorth] FINAL REPORT (type: net_worth):', JSON.stringify(result, null, 2));
+    return result;
     }
 
     /**

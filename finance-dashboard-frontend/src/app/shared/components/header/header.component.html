@@ -50,20 +50,20 @@
         aria-label="User account options">
         <ul role="none">
           <li role="none">
-            <button type="button" role="menuitem" tabindex="0">
+            <button type="button" role="menuitem" tabindex="0" class="dropdown-btn" (click)="onProfile()">
               <span class="material-icons" aria-hidden="true">person</span>
               <span>Profile</span>
             </button>
           </li>
           <li role="none">
-            <button type="button" role="menuitem" tabindex="0">
+            <button type="button" role="menuitem" tabindex="0" class="dropdown-btn" (click)="onSettings()">
               <span class="material-icons" aria-hidden="true">settings</span>
               <span>Settings</span>
             </button>
           </li>
           <li class="divider" role="separator" aria-hidden="true"></li>
           <li role="none">
-            <button type="button" role="menuitem" tabindex="0">
+            <button type="button" role="menuitem" tabindex="0" class="dropdown-btn logout-btn" (click)="onLogout()">
               <span class="material-icons" aria-hidden="true">logout</span>
               <span>Logout</span>
             </button>
@@ -77,10 +77,21 @@
       <button 
         class="notification-btn" 
         [attr.aria-label]="'Notifications (' + notificationCount + ' unread)'"
-        aria-describedby="notification-count">
+        aria-describedby="notification-count"
+        (click)="onNotificationButtonClick()">
         <span class="material-icons" aria-hidden="true">notifications</span>
         <span class="badge" id="notification-count" [attr.aria-label]="notificationCount + ' unread notifications'">{{ notificationCount }}</span>
       </button>
+      <!-- Notification Dropdown -->
+      <div *ngIf="isNotificationDropdownOpen" class="notification-dropdown" role="menu" aria-label="Notifications">
+        <ul class="notification-list">
+          <li *ngFor="let notification of notifications; let i = index" class="notification-item" role="menuitem">
+            <span class="notification-message">{{ notification.message }}</span>
+            <span class="notification-timestamp">{{ notification.timestamp | date:'shortTime' }}</span>
+          </li>
+          <li *ngIf="notifications.length === 0" class="notification-empty">No notifications</li>
+        </ul>
+      </div>
     </div>
   </div>
 </header>

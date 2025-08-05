@@ -1,60 +1,37 @@
-# Transaction Import/Export Implementation Task
+# Task List: Transaction Import/Export Implementation
 
-## Overview
-This task involves implementing the import and export functionality for transactions in the personal finance dashboard application.
+This file tracks the progress of implementing the Transaction Import/Export functionality.
 
-## Background
-The transaction list component has UI elements for import and export functionality, but they are not fully implemented. The backend already has a comprehensive API for handling import/export operations, but the frontend needs to integrate with these endpoints.
+**Task ID:** #TRANS-IMPORT-01
 
-## Current Status
-- **Backend**: Complete API with controllers, routes, and services for export/import
-- **Frontend**: UI components exist but functionality not implemented
+## 1. Unit Tests for Existing Components
 
-## Tasks
+- [ ] Write unit tests for `TransactionFiltersComponent`.
+- [ ] Write unit tests for `TransactionTableComponent`.
+- [ ] Write unit tests for `TransactionBulkOperationsComponent`.
+- [ ] Write unit tests for `TransactionExportImportComponent`.
+- [ ] Write unit tests for `TransactionStatisticsComponent`.
 
-### 1. Create Export/Import Service (Frontend)
-- [ ] Create a new service `ExportImportService` in `src/app/core/services/export-import.service.ts`
-- [ ] Implement methods to interact with backend export/import API endpoints
+## 2. History View Implementation
 
-### 2. Implement Export Functionality
-- [ ] Update `exportTransactions()` method in transaction-list component
-- [ ] Connect to backend export API
-- [ ] Handle different export formats (CSV, Excel, PDF)
-- [ ] Add progress indication for large exports
-- [ ] Implement export of selected transactions
+- [ ] Create `ExportImportHistoryComponent` with two tabs for Export and Import history.
+- [ ] Use `ExportImportService` to fetch and display history data in tables.
+- [ ] Add a button to `TransactionListComponent` to open the history component in a dialog.
 
-### 3. Implement Import Functionality
-- [ ] Create import dialog component
-- [ ] Implement file upload mechanism
-- [ ] Add validation for imported files
-- [ ] Connect to backend import API
-- [ ] Show import progress and results
-- [ ] Handle errors gracefully
+## 3. UI/UX and Error Handling Enhancements
 
-### 4. Add Import/Export History
-- [ ] Create a component to display export/import history
-- [ ] Connect to backend history API endpoints
-- [ ] Allow downloading of previously exported files
+- [ ] Add a progress bar to `ImportDialogComponent` for file validation and import processes.
+- [ ] Update `HttpClientService` and `ExportImportService` to support and report upload progress.
+- [ ] Improve error messages in `ImportDialogComponent` to be more specific and user-friendly.
+- [ ] Implement a "Cancel" button in the import dialog that calls the `cancelOperation` service method.
 
-### 5. Testing
-- [ ] Write unit tests for new service and components
-- [ ] Test all export formats
-- [ ] Test different import scenarios (valid file, invalid file, etc.)
-- [ ] Test with large datasets
+## 4. Testing of New and Existing Features
 
-### 6. UI/UX Improvements
-- [ ] Add loading indicators during import/export operations
-- [ ] Improve error messaging
-- [ ] Add confirmation dialogs for potentially destructive import operations
+- [ ] Write unit tests for `ExportImportService`.
+- [ ] Write unit tests for `ImportDialogComponent`.
+- [ ] Write unit tests for the new `ExportImportHistoryComponent`.
+- [ ] Manually test the complete import/export flow with various file types (CSV, Excel, PDF) and edge cases (large files, invalid data).
 
-## Acceptance Criteria
-- Users can export transactions in various formats (CSV, Excel, PDF)
-- Users can import transactions from compatible files
-- The UI provides clear feedback during and after import/export operations
-- Error handling is robust and user-friendly
-- Previously exported files can be downloaded from history
+## 5. Documentation
 
-## Technical Notes
-- Backend API is available at `/api/export-import/`
-- File upload should use the existing upload middleware
-- Consider implementing streaming for large exports
+- [ ] Update frontend documentation to explain the import/export features, supported formats, and usage instructions.

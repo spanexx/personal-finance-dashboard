@@ -1,0 +1,122 @@
+<h2 mat-dialog-title>Export/Import History</h2>
+<mat-dialog-content>
+  <mat-tab-group>
+    <mat-tab label="Export History">
+      <ng-template matTabContent>
+        <div class="history-container">
+          <div *ngIf="isLoadingExports" class="loading-shade">
+            <mat-spinner></mat-spinner>
+          </div>
+          <table mat-table [dataSource]="(exports$ | async)?.data" class="mat-elevation-z8">
+            <!-- File Name Column -->
+            <ng-container matColumnDef="fileName">
+              <th mat-header-cell *matHeaderCellDef> File Name </th>
+              <td mat-cell *matCellDef="let element"> {{element.fileName}} </td>
+            </ng-container>
+
+            <!-- Format Column -->
+            <ng-container matColumnDef="format">
+              <th mat-header-cell *matHeaderCellDef> Format </th>
+              <td mat-cell *matCellDef="let element"> {{element.format}} </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef> Status </th>
+              <td mat-cell *matCellDef="let element"> {{element.status}} </td>
+            </ng-container>
+
+            <!-- Record Count Column -->
+            <ng-container matColumnDef="recordCount">
+              <th mat-header-cell *matHeaderCellDef> Record Count </th>
+              <td mat-cell *matCellDef="let element"> {{element.recordCount}} </td>
+            </ng-container>
+
+            <!-- Created At Column -->
+            <ng-container matColumnDef="createdAt">
+              <th mat-header-cell *matHeaderCellDef> Date </th>
+              <td mat-cell *matCellDef="let element"> {{element.createdAt | date:'short'}} </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef> Actions </th>
+              <td mat-cell *matCellDef="let element">
+                <button mat-icon-button (click)="downloadExport(element)" [disabled]="element.status !== 'completed'">
+                  <mat-icon>download</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="exportDisplayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: exportDisplayedColumns;"></tr>
+          </table>
+          <mat-paginator [length]="(exports$ | async)?.total"
+                         [pageSize]="(exports$ | async)?.limit"
+                         [pageSizeOptions]="[5, 10, 25, 100]"
+                         (page)="onExportPageChange($event)">
+          </mat-paginator>
+        </div>
+      </ng-template>
+    </mat-tab>
+    <mat-tab label="Import History">
+      <ng-template matTabContent>
+        <div class="history-container">
+          <div *ngIf="isLoadingImports" class="loading-shade">
+            <mat-spinner></mat-spinner>
+          </div>
+          <table mat-table [dataSource]="(imports$ | async)?.data" class="mat-elevation-z8">
+            <!-- Original File Name Column -->
+            <ng-container matColumnDef="originalFileName">
+              <th mat-header-cell *matHeaderCellDef> File Name </th>
+              <td mat-cell *matCellDef="let element"> {{element.originalFileName}} </td>
+            </ng-container>
+
+            <!-- Type Column -->
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef> Type </th>
+              <td mat-cell *matCellDef="let element"> {{element.type}} </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef> Status </th>
+              <td mat-cell *matCellDef="let element"> {{element.status}} </td>
+            </ng-container>
+
+            <!-- Records Imported Column -->
+            <ng-container matColumnDef="recordsImported">
+              <th mat-header-cell *matHeaderCellDef> Records Imported </th>
+              <td mat-cell *matCellDef="let element"> {{element.recordsImported}} </td>
+            </ng-container>
+
+            <!-- Created At Column -->
+            <ng-container matColumnDef="createdAt">
+              <th mat-header-cell *matHeaderCellDef> Date </th>
+              <td mat-cell *matCellDef="let element"> {{element.createdAt | date:'short'}} </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef> Actions </th>
+              <td mat-cell *matCellDef="let element">
+                <!-- Add actions for import history if needed -->
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="importDisplayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: importDisplayedColumns;"></tr>
+          </table>
+          <mat-paginator [length]="(imports$ | async)?.total"
+                         [pageSize]="(imports$ | async)?.limit"
+                         [pageSizeOptions]="[5, 10, 25, 100]"
+                         (page)="onImportPageChange($event)">
+          </mat-paginator>
+        </div>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>
